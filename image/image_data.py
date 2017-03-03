@@ -10,20 +10,20 @@ class Frame:
         self.image_path = image_path
         self.objects = objects
         
-    def LoadImage(self):
+    def load_image(self):
         assert os.path.isfile(self.image_path), "cant open file: %s" % self.image_path
         pil_im = Image.open(self.image_path, 'r')
         self.image = np.asarray(pil_im)
         
-    def ShowRawImage(self):
+    def show_raw_image(self):
         pass
 
-    def ShowImage(self):
+    def show_image(self):
         # Create figure and axes
         fig,ax = plt.subplots(1,figsize=(15, 8))
         ax.imshow(self.image)
         for obj in self.objects:
-            rect = patches.Rectangle(obj.box.XYmin(),obj.box.Edges()[0],obj.box.Edges()[1],linewidth=1,edgecolor='r',facecolor='none')
+            rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             ax.add_patch(rect)
         plt.show()
         
@@ -36,17 +36,27 @@ class Box:
         self.ymax=ymax
     
     @classmethod
-    def FromDoubleArray(cls,box):
+    def from_double_array(cls,box):
         return cls(box[0][0],box[0][1],box[1][0],box[1][1])
+
+    @classmethod
+    def from_single_array(cls,box):
+        return cls(box[0],box[1],box[2],box[3])
     
-    def XYmin(self):
+    def xy_min(self):
         return (self.xmin,self.ymin)
     
-    def Edges(self):
+    def edges(self):
         return (self.xmax-self.xmin,self.ymax-self.ymin)
     
-    def Area(self):
+    def area(self):
         return (self.xmax-self.xmin)*(self.ymax-self.ymin)
+
+    def __str__(self):
+        return 'Box:' + str([[self.xmin,self.xmax],[self.ymin,self.ymax]])
+
+    def __repr__(self):
+        return self.__str__()
         
 # and Object contains an id,box,and type
 class Object:
@@ -56,7 +66,7 @@ class Object:
         self.obj_type = obj_type
         
     @classmethod
-    def FromDict(cls,objdict):
+    def from_dict(cls,objdict):
         #print objdict
         box = Box(objdict['box']['min'][0],objdict['box']['max'][0],objdict['box']['min'][1],objdict['box']['max'][1])
         uid = objdict['unique_identifier']
