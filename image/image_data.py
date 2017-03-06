@@ -25,6 +25,8 @@ class Frame:
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             ax.add_patch(rect)
+            ax.text(obj.box.xmin, obj.box.ymin, str(obj.unique_id) + ' ' + str(obj.obj_type), 
+                color='white', fontsize=12, bbox={'facecolor':'red', 'alpha':0.5, 'pad':2})
         plt.show()
         
 class Box:
