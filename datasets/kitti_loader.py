@@ -26,7 +26,7 @@ class KITTILabel:
         self.bbox = [float(x) for x in linearr[6:10]]
         
     def to_object(self):
-        box_format = [self.bbox[0],self.bbox[2],self.bbox[1],self.bbox[3]]
+        box_format = [self.bbox[0],self.bbox[1],self.bbox[2],self.bbox[3]]
         return Object(Box.from_single_array(box_format),self.track_idx,self.type)
     
 class KITTILoader:

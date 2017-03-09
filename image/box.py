@@ -1,5 +1,5 @@
 class Box:
-    def __init__(self,xmin,xmax,ymin,ymax):
+    def __init__(self,xmin,ymin,xmax,ymax):
         assert xmax>xmin and ymax>ymin, "xmax>xmin and ymax>ymin!"
         self.xmin=xmin
         self.xmax=xmax
@@ -22,6 +22,9 @@ class Box:
     
     def area(self):
         return (self.xmax-self.xmin)*(self.ymax-self.ymin)
+
+    def to_single_array(self):
+        return [self.xmin,self.ymin,self.xmax,self.ymax]
 
     def __str__(self):
         return 'Box:' + str([[self.xmin,self.xmax],[self.ymin,self.ymax]])
