@@ -1,6 +1,6 @@
 import os
     
-def load_directory(dir_path,matcher=lambda x:True):
+def get_file_list(dir_path,matcher=lambda x:True):
     f = []
     # load all files, recursively descend into dirs
     for item in os.listdir(dir_path):
