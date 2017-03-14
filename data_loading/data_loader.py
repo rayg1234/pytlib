@@ -1,19 +1,27 @@
 # base class for input generation
-# a loader has
-# a) some source or grab the data from
-# b) an iterator to figure out the next sample to return
-# currently the DataLoader is responsible for translating the raw data 
-# to "trainable" data (for example, get some crop). So a subclass
-# here is very specific to the application. 
-# Ie: a CarDataLoader can grab data from a KITTI set, crop around cars
-# and return the tensor associated with the car.
+# Source provides frames (in order or out of order)
+# Source could be a sequence of multiple items
+# Transformer takes frames/sequence of frames and turns into samples
 
 class DataLoader:
-    def __init__(self,source):
+    def __init__(self,source,transformer):
         self.source = source
+        self.transformer = transformer
     
     def __iter__(self):
         return self
     
     def __next__(self):
         pass
+
+#### Data Loader factory for kind of dependency injection
+from data_loading.sources.kitti_source import KITTISource
+from data_loading.transformers.crop_transformer import CropTransformer
+
+class DataLoaderFactory:
+
+    @classmethod
+    def GetKITTILoader(cls):
+        source = KITTISource('path/to/source')
+        transformer = CropTransformer(['people'])
+        return DataLoader(source,transformer)
