@@ -2,6 +2,7 @@
 # Source provides frames (in order or out of order)
 # Source could be a sequence of multiple items
 # Transformer takes frames/sequence of frames and turns into samples
+# Add a Pertuber step to add perturbations?
 
 class DataLoader:
     def __init__(self,source,transformer):
@@ -10,9 +11,15 @@ class DataLoader:
     
     def __iter__(self):
         return self
-    
-    def __next__(self):
-        pass
+
+    # iterate over source inorder
+    # call transformer with each set of frames
+    # return the corresponding sample    
+    def next(self):
+        next_frames = self.source.next()
+        next_sample = self.transformer.transform(next_frames)
+        return next_sample
+
 
 #### Data Loader factory for kind of dependency injection
 from data_loading.sources.kitti_source import KITTISource

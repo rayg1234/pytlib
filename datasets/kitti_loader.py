@@ -4,7 +4,7 @@ from image.frame import Frame
 from image.object import Object
 from os import listdir
 from os.path import isfile, join, basename, splitext
-from data_loading.source import Source
+from data_loading.sources.source import Source
 from collections import defaultdict
 
 class KITTILabel:

@@ -63,7 +63,7 @@ class KITTISource(Source):
                         self.frames.extend(new_frames)
 
 
-    def __next__(self):
+    def next(self):
         cur+=1
         return frames[cur]
 

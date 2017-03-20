@@ -10,12 +10,17 @@ class Frame:
         self.image_path = image_path
         self.objects = objects
         self.image = None
-        
+    
+    # loads image into numpy ndarray with dims (HxWxC) 
+    # for Numpy 'C' Style row-major arrays, the first dimension is the
+    # slowest changing dimension, and thus continguous slices of memory is across the first dim
+    # so for numpy c-style arraynd, we should prefer B,H,W,C for accessing single elements from a batch
+    # the pytorch tensor should also have this memory layout
     def load_image(self):
         if not self.image:
             assert os.path.isfile(self.image_path), "cant open file: %s" % self.image_path
-            pil_im = Image.open(self.image_path, 'r')
-            self.image = np.asarray(pil_im)
+            self.image = Image.open(self.image_path, 'r')
+            # self.image = np.asarray(pil_im)
         
     def show_raw_image(self):
         pass
