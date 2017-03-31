@@ -1,4 +1,4 @@
-import scipy
+from scipy.ndimage.interpolation import affine_transform
 import numpy as np
 import math
 
@@ -22,18 +22,26 @@ class Affine:
         return np.array([[1,0,0],[0,1,0],[0,0,1]])
 
     def __init__(self):
-        self.transform = identity()
-        self.inverse = identity()
+        self.transform = self.identity()
+        self.inverse = self.identity()
 
     # matrix inoput has to be non-singular
-    def append(matrix):
-        self.transform = numpy.dot(self.transform * matrix)
-        self.inverse = numpy.dot(numpy.linalg.inv(matrix),self.inverse)
+    def append(self,matrix):
+        self.transform = np.dot(self.transform * matrix)
+        self.inverse = np.dot(np.linalg.inv(matrix),self.inverse)
 
-    def apply(input):
-        return numpy.dot(self.transform,input)
+    def applyToCoords(self,input):
+        return np.dot(self.transform,input)
 
-    def unapply(input):
-        return numpy.dot(self.inverse,input)
+    def unapplyToCoords(self,input):
+        return np.dot(self.inverse,input)
+
+    def applyToImage(self,image):
+        # use scipy here
+        pass
+
+    def unapplyToImage(self,image):
+        # use scipy here
+        pass
 
 
