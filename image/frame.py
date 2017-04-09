@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import matplotlib.patches as patches
 
+class ImageNotLoadedException(Exception):
+    pass
+
 class Frame:
     def __init__(self,image_path='',objects=[]):
         self.image_path = image_path
@@ -17,15 +20,17 @@ class Frame:
     # so for numpy c-style arraynd, we should prefer B,H,W,C for accessing single elements from a batch
     # the pytorch tensor should also have this memory layout
     def load_image(self):
-        if not self.image:
+        if self.image is None:
             assert os.path.isfile(self.image_path), "cant open file: %s" % self.image_path
             self.image = Image.open(self.image_path, 'r')
             # self.image = np.asarray(pil_im)
         
     def show_raw_image(self):
-        pass
+        raise NotImplementedError
 
     def show_image(self):
+        if self.image is None:
+            raise ImageNotLoadedException("Image was not loaded!")
         # Create figure and axes
         fig,ax = plt.subplots(1,figsize=(15, 8))
         ax.imshow(self.image)
