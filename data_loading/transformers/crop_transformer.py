@@ -62,8 +62,8 @@ class CropTransformer(Transformer):
         print 'targets shape {0}'.format(targets.shape)
         print 'data shape {0}'.format(data.shape)
 
-
-        sample = Sample(torch.Tensor(data),torch.Tensor(target))
+        # import pdb;pdb.set_trace()
+        sample = Sample(torch.Tensor(data.astype(float)),torch.Tensor(targets.astype(float)))
         # create sample tensor to return
         # sample.data = torch.Tensor(B,frame_shape[0],frame_shape[1],frame_shape[2])
         # sample.target = torch.Tensor(B,4)
