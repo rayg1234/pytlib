@@ -4,6 +4,7 @@ from image.box import Box
 from image.object import Object
 from data_loading.sample import Sample
 from image.affine import Affine
+from image.image_utils import PIL_to_cudnn_np
 import numpy as np
 
 import torch
@@ -20,9 +21,7 @@ class CropTransformer(Transformer):
         if not len(frames):
             raise NoFramesException('No frames given to the transformer!')
 
-        frames[0].load_image()
-        # frame numpy ndarray with dims (HxWxC)
-        frame_shape = np.asarray(frames[0].image).shape
+        frame_shape = frames[0].get_numpy_image().shape
 
         # data = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
         # targets = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
@@ -30,13 +29,13 @@ class CropTransformer(Transformer):
 
         count = 0
         for frame in frames:
-            frame.load_image()
-            crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.objects)
+            frame_image = frame.get_image()
+            crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
             print 'Num crop objs in sample: {0}'.format(len(crop_objs))
 
             for crop in crop_objs:
                 # crop and resize
-                crop_image = frame.image.crop(crop.box.to_single_array())
+                crop_image = frame_image.crop(crop.box.to_single_array())
                 resized_image = crop_image.resize(self.crop_size)
 
                 affine = Affine()
@@ -47,7 +46,7 @@ class CropTransformer(Transformer):
                 # import pdb;pdb.set_trace()
                 transformed_crop_box = Box.from_augmented_matrix(affine.apply_to_coords(crop.box.augmented_matrix()))
 
-                np_img = np.asarray(resized_image)
+                np_img = PIL_to_cudnn_np(resized_image)
                 if data is not None:
                     # stack crop on top of tensor along first aWWxis
                     reshaped_img = np_img.reshape([1]+list(np_img.shape))
@@ -55,7 +54,7 @@ class CropTransformer(Transformer):
                     targets = np.vstack((targets,transformed_crop_box.to_single_np_array()))
                 else:
                     # new data
-                    data = np.asarray(resized_image)
+                    data = np_img
                     data = data.reshape([1]+list(data.shape))
                     targets = transformed_crop_box.to_single_np_array()
 

@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import Image
 from image.box import Box
+from image.image_utils import cudnn_np_to_PIL
+import matplotlib.pyplot as plt
+import math
 
 # a sample should contain both the data and the optional targets
 # this is in pytorch tensor form
@@ -10,18 +13,19 @@ class Sample:
     self.target = target
 
   # these following functions only apply to CropObject samples, todo: move
+  # to helper  class
   def data_to_pil_images(self):
     bd = 0
-    nparray = sample.data.numpy()
+    nparray = self.data.numpy()
     # loop over batch dimension
     splitarr = np.split(nparray,nparray.shape[bd],axis=bd)
     images = []
     for img in splitarr:
-        images.append(Image.fromarray(np.uint8(img.squeeze())))
+        images.append(cudnn_np_to_PIL(img))
     return images
 
   def target_to_boxes(self):
-    target_arr = sample.target.numpy()
+    target_arr = self.target.numpy()
     split_target_arr = np.split(target_arr,target_arr.shape[bd],axis=bd)
     boxes = []
     for targ in split_target_arr:
@@ -29,9 +33,9 @@ class Sample:
     return boxes
 
   def draw_data(self,max_cols=5):
+    images = self.data_to_pil_images()
     rows = int(math.ceil(float(len(images)) / max_cols))
     cols = max_cols if len(images) > max_cols else len(images)
-    images = self.data_to_pil_images()
     fig,axes = plt.subplots(rows,cols,figsize=(15, 8))
     if rows==1:
         axes = [axes]
