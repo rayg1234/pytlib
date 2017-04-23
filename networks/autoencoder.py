@@ -1,22 +1,25 @@
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
+from networks.conv_stack import ConvolutionStack
 
-class Net(nn.Module):
+class AutoEncoder(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool  = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1   = nn.Linear(16 * 5 * 5, 120)
-        self.fc2   = nn.Linear(120, 84)
-        self.fc3   = nn.Linear(84, 10)
+        super(AutoEncoder, self).__init__()
+        # conv, deconv
+        self.convs = ConvolutionStack(3)
+        self.convs.append(6,3,2)
+        self.convs.append(16,3,1)
+        self.convs.append(32,3,2)
+
+        # get the output width height here
+
+        self.deconvs = ConvolutionStack(32,transposed=True)
+        self.deconvs.append(16,3,2)
+        self.deconvs.append(6,3,1)
+        self.deconvs.append(3,3,2)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.convs.forward(x)
+        x = self.deconvs.forward(x)
         return x
