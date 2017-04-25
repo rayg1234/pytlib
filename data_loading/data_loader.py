@@ -1,8 +1,8 @@
 # base class for input generation
-# Source provides frames (in order or out of order)
+# Source provides frames
 # Source could be a sequence of multiple items
 # Transformer takes frames/sequence of frames and turns into samples
-# Add a Pertuber step to add perturbations?
+# To add: a sampler and a perturber step
 
 class DataLoader:
     def __init__(self,source,transformer):
