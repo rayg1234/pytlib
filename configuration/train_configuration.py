@@ -1,4 +1,4 @@
-def TrainConfiguration:
+class TrainConfiguration:
     def __init__(self,loader,optimizer,model,lossfn):
         self.loader = loader
         self.optimizer = optimizer 

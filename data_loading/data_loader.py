@@ -29,6 +29,7 @@ class DataLoaderFactory:
 
     @classmethod
     def GetKITTILoader(cls):
-        source = KITTISource('path/to/source')
+        source = KITTISource('../Data/KITTI/training',max_frames=200)
         transformer = CropTransformer(['people'])
         return DataLoader(source,transformer)
+1
