@@ -10,4 +10,4 @@ model = AutoEncoder()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 loss = nn.BCELoss()
 
-train_config = TrainConfiguration(loader,opt,model,loss)
+train_config = TrainConfiguration(loader,optimizer,model,loss)

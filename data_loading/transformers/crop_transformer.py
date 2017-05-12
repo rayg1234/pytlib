@@ -13,7 +13,7 @@ class NoFramesException(Exception):
     pass
 
 class CropTransformer(Transformer):
-    def __init__(self,crop_size,obj_types=set()):
+    def __init__(self,crop_size,obj_types):
         self.crop_size = crop_size
         self.obj_types = obj_types
 
@@ -58,8 +58,13 @@ class CropTransformer(Transformer):
                     data = data.reshape([1]+list(data.shape))
                     targets = transformed_crop_box.to_single_np_array()
 
-        print 'targets shape {0}'.format(targets.shape)
-        print 'data shape {0}'.format(data.shape)
+        # if targets:
+        #     print 'targets shape {0}'.format(targets.shape)
+        # if data:
+        #     print 'data shape {0}'.format(data.shape)
+
+        if data is None:
+            return None
 
         # import pdb;pdb.set_trace()
         sample = Sample(torch.Tensor(data.astype(float)),torch.Tensor(targets.astype(float)))

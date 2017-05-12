@@ -1,5 +1,6 @@
 from torch.autograd import Variable
 import argparse
+import imp
 
 class Trainer:
 
@@ -9,23 +10,26 @@ class Trainer:
         # should use strings, namespace or functions here?
         self.loader = self.config.loader
         self.model = self.config.model
-        self.lossfn = self.config.lossfn
+        self.lossfn = self.config.loss
         self.optimizer = self.config.optimizer
 
-    def train(iterations):
+    def train(self,iterations):
         for i in range(0,iterations):
             sample = self.loader.next()
             inputs, target = Variable(sample.data), Variable(sample.target)
 
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
 
-            outputs = model(inputs)
-            loss = lossfn(outputs, labels)
+            outputs = self.model(inputs)
+            loss = self.lossfn(outputs, target)
             loss.backward()
-            optimizer.step()
+            self.optimizer.step()
 
 if __name__ == "__main__":
     parser=argparse.ArgumentParser()
-    parser.add_argument("--train_config", type=str, help="the train configuration")
+    parser.add_argument('-t',"--train_config", required=True, type=str, help="the train configuration")
     args=parser.parse_args()
 
+    train_config = imp.load_source('train_config', args.train_config)
+    trainer = Trainer(train_config)
+    trainer.train(1)

@@ -64,11 +64,11 @@ class KITTISource(Source):
 
 
     def next(self):
-        cur+=1
-        return frames[cur]
+        self.cur+=1
+        return [self.frames[self.cur]]
 
     def __iter__(self):
         return self
 
     def reset(self):
-        cur = 0
+        self.cur = 0
