@@ -2,11 +2,13 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from networks.conv_stack import ConvolutionStack
+import torch
 
 class AutoEncoder(nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__()
         # conv, deconv
+        torch.manual_seed(123)
         self.convs = ConvolutionStack(3)
         self.convs.append(6,3,2)
         self.convs.append(16,3,1)

@@ -21,7 +21,12 @@ class Trainer:
             self.optimizer.zero_grad()
 
             outputs = self.model(inputs)
-            loss = self.lossfn(outputs, target)
+            # print outputs.size()
+            # print inputs.size()
+            # print inputs.mean()
+            # print outputs.mean()
+            # import ipdb;ipdb.set_trace()
+            loss = self.lossfn(outputs, inputs)
             loss.backward()
             self.optimizer.step()
 
