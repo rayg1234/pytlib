@@ -37,4 +37,4 @@ if __name__ == "__main__":
 
     train_config = imp.load_source('train_config', args.train_config)
     trainer = Trainer(train_config)
-    trainer.train(1)
+    trainer.train(10)

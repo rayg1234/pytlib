@@ -15,7 +15,7 @@ class KITTISource(Source):
         self.frames = []
         self.max_frames = max_frames
 
-        self.load_frames(dir_path)
+        self.__load_frames(dir_path)
         self.size = len(self.frames)
         self.cur = 0
 
@@ -40,7 +40,7 @@ class KITTISource(Source):
         return file_name.isdigit()
 
     # assumes image dirs are of type image_xx and labels are label_xx.txt
-    def load_frames(self,dir_path,frame_dir_prefix='image',label_prefix='label'):
+    def __load_frames(self,dir_path,frame_dir_prefix='image',label_prefix='label'):
         imagedirs = dict()
         labelfiles = dict()
         for item in listdir(dir_path):
@@ -64,11 +64,21 @@ class KITTISource(Source):
 
 
     def next(self):
-        self.cur+=1
-        return [self.frames[self.cur]]
+        if self.cur >= len(self.frames):
+            raise StopIteration
+        else:
+            ret = self.frames[self.cur]
+            self.cur+=1
+            return ret
 
     def __iter__(self):
         return self
+
+    def __len__(self):
+        return len(self.frames)
+
+    def __getitem__(self,index):
+        return self.frames[index]
 
     def reset(self):
         self.cur = 0
