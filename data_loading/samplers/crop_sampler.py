@@ -4,7 +4,7 @@ from image.object import Object
 from data_loading.samplers.sampler import Sampler
 from data_loading.sample import Sample
 from image.affine import Affine
-from image.image_utils import PIL_to_cudnn_np
+from image.image_utils import PIL_to_cudnn_np, scale_np_img
 import numpy as np
 import random
 import torch
@@ -57,7 +57,8 @@ class CropSampler(Sampler):
             # import pdb;pdb.set_trace()
             transformed_crop_box = Box.from_augmented_matrix(affine.apply_to_coords(crop.box.augmented_matrix()))
 
-            np_img = PIL_to_cudnn_np(resized_image)
+            np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
+            # TODO as scale target boxes
             if data is not None:
                 # stack crop on top of tensor along first aWWxis
                 reshaped_img = np_img.reshape([1]+list(np_img.shape))

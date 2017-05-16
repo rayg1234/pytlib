@@ -9,3 +9,9 @@ def PIL_to_cudnn_np(image):
 def cudnn_np_to_PIL(np_array):
     hwc = np.transpose(np_array.squeeze(),axes=(1,2,0))
     return Image.fromarray(np.uint8(hwc))
+
+def scale_np_img(image,input_range,output_range):
+    assert len(input_range)==2 and len(output_range)==2
+    scale = float(output_range[1] - output_range[0])/(input_range[1] - input_range[0])
+    offset = output_range[0] - input_range[0]*scale;
+    return image*scale+offset;

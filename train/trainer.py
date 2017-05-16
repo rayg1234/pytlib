@@ -19,7 +19,6 @@ class Trainer:
             inputs, target = Variable(sample.data), Variable(sample.target)
 
             self.optimizer.zero_grad()
-
             outputs = self.model(inputs)
             # print outputs.size()
             # print inputs.size()
@@ -27,6 +26,7 @@ class Trainer:
             # print outputs.mean()
             # import ipdb;ipdb.set_trace()
             loss = self.lossfn(outputs, inputs)
+            print loss.data[0]
             loss.backward()
             self.optimizer.step()
 
@@ -37,4 +37,4 @@ if __name__ == "__main__":
 
     train_config = imp.load_source('train_config', args.train_config)
     trainer = Trainer(train_config)
-    trainer.train(10)
+    trainer.train(100)
