@@ -72,4 +72,5 @@ class CropSampler(Sampler):
 
         sample = Sample(torch.Tensor(data.astype(float)),torch.Tensor(targets.astype(float)))
 
+
         return sample
