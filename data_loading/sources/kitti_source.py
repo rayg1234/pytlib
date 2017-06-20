@@ -58,9 +58,9 @@ class KITTISource(Source):
                 for item in listdir(image_path):
                     if self.__validate_file_name(item):
                         new_frames = KITTILoader.load_labelled_frames(os.path.join(image_path,item),os.path.join(label_path,item+'.txt'))
-                        if len(self.frames) + len(new_frames) > self.max_frames:
+                        if len(self.frames) >= self.max_frames:
                             return
-                        self.frames.extend(new_frames)
+                        self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
 
 
     def next(self):

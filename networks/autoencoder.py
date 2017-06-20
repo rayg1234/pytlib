@@ -1,7 +1,7 @@
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-from networks.conv_stack import ConvolutionStack
+from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 import torch
 
 class AutoEncoder(nn.Module):
@@ -16,12 +16,17 @@ class AutoEncoder(nn.Module):
 
         # get the output width height here
 
-        self.deconvs = ConvolutionStack(32,transposed=True)
-        self.deconvs.append(16,3,2)
-        self.deconvs.append(6,3,1)
-        self.deconvs.append(3,3,2)
+        self.tconvs = TransposedConvolutionStack(32)
+        self.tconvs.append(16,3,2)
+        self.tconvs.append(6,3,1)
+        self.tconvs.append(3,3,2)
 
     def forward(self, x):
+        input_dims = x.size()
         x = self.convs.forward(x)
-        x = self.deconvs.forward(x)
+        # get outputs from conv and pass them back to deconv
+        x = self.tconvs.forward(x)
         return x
+
+    def get_encoding(self):
+        return self.encoding

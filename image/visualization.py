@@ -19,13 +19,14 @@ def visualize_pil_array(images,max_cols=5):
                 axes[i][j].imshow(images[lidx])
             else:
                 axes[i][j].axis('off')
+    plt.show(block=True)
 
-# tensor is the of the form BCHW
+# tensor is the of the form BHWC
 def tensor_to_pil_image_array(py_tensor):
-    bd = 0
+    batch_dimension = 0
     nparray = py_tensor.numpy()
-    # loop over batch dimension
-    splitarr = np.split(nparray,nparray.shape[bd],axis=bd)
+    # loop o1ver batch dimension
+    splitarr = np.split(nparray,nparray.shape[batch_dimension],axis=batch_dimension)
     images = []
     for img in splitarr:
         images.append(cudnn_np_to_PIL(img))

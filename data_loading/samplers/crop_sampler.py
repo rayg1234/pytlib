@@ -28,8 +28,11 @@ class CropSampler(Sampler):
             if(len(crop_objs)>0):
                 self.frame_ids.append(i)
 
+        print 'The source has {0} items'.format(len(self.source))
         if len(self.frame_ids)==0:
             raise NoFramesException('No Valid Frames Found!')
+
+        print '{0} frames found'.format(len(self.frame_ids))
 
     def next(self):
         # just grab the next random frame
