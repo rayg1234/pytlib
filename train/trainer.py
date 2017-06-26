@@ -5,6 +5,7 @@ import argparse
 import imp
 import os
 import time
+from utils.logger import Logger
 from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
 
@@ -21,7 +22,9 @@ class Trainer:
         self.args = args
         self.iteration = 0
 
+        # initialize logging and model saving
         if self.args.output_dir:
+            self.logger = Logger(os.path.join(self.args.output_dir,'train_log.json'))
             if self.args.override:
                 mkdir(self.args.output_dir,wipe=True)
             else:
@@ -44,8 +47,8 @@ class Trainer:
 
         all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[1])) for m in all_models]
         all_models_indexed.sort(key=lambda x: x[1],reverse=True)
-        print 'Loading model from disk: {0}'.format(all_models[0])
-        checkpoint = torch.load(all_models[0])
+        print 'Loading model from disk: {0}'.format(all_models_indexed[0][0])
+        checkpoint = torch.load(all_models_indexed[0][0])
         self.model.load_state_dict(checkpoint['state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.iteration = checkpoint['iteration']
@@ -58,28 +61,22 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
-            # enc = self.model.get_encoding
-            # import ipdb;ipdb.set_trace()
-            # print enc.size()
-
             if self.args.visualize:
                 visualize_pil_array(tensor_to_pil_image_array(outputs.data))
-            # pp(inputs.size(),'input size')
-            # pp(inputs.mean(),'input mean')
-            # pp(outputs.size(),'output size')
-            # pp(outputs.mean(),'output mean')
-            # pp(outputs.min(),'output min')
 
             # this should actually be targets, but after we fix it for the autoencoder to produce correct targets
             loss = self.lossfn(outputs, inputs)
-            pp(loss,'loss')
-            pp(self.iteration,'iteration')
             loss.backward()
             self.optimizer.step()
+
+            self.logger.set('loss',loss.data[0])
+            self.logger.set('iteration',self.iteration)
+            print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
 
             if i%self.args.save_iter==0:
                 self.save()
 
+            self.logger.dump_line()
             self.iteration+=1
 
 
