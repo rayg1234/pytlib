@@ -19,7 +19,7 @@ def visualize_pil_array(images,max_cols=5):
                 axes[i][j].imshow(images[lidx])
             else:
                 axes[i][j].axis('off')
-    plt.show(block=True)
+    plt.show(block=False)
 
 # tensor is the of the form BHWC
 def tensor_to_pil_image_array(py_tensor):

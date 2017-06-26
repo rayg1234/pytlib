@@ -32,6 +32,3 @@ class AutoEncoder(nn.Module):
         # get outputs from conv and pass them back to deconv
         x = self.tconvs.forward(x,output_dims)
         return x
-
-    def get_encoding(self):
-        return self.encoding

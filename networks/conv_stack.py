@@ -34,13 +34,12 @@ class ConvolutionStack(nn.Module):
         return x
 
 class TransposedConvolutionStack(nn.Module):
-    def __init__(self,in_chans,batchnorm=True,final_nonlinearity='sigmoid'):
+    def __init__(self,in_chans,final_nonlinearity='sigmoid'):
         super(TransposedConvolutionStack, self).__init__()
         self.convs = ModuleList()
         self.batchnorms = ModuleList()
         self.in_chans = in_chans
         self.output_dims = []
-        self.batchnorm = batchnorm
         self.final_nonlinearity = final_nonlinearity
 
     def append(self,out_chans,filter_size,stride):
@@ -48,8 +47,7 @@ class TransposedConvolutionStack(nn.Module):
             self.convs.append(nn.ConvTranspose2d(self.in_chans, out_chans, filter_size, stride=stride, padding=1))
         else:
             self.convs.append(nn.ConvTranspose2d(self.convs[-1].out_channels, out_chans, filter_size, stride=stride, padding=1))
-        if self.batchnorm:
-            self.batchnorms.append(nn.BatchNorm2d(out_chans))
+        self.batchnorms.append(nn.BatchNorm2d(out_chans))
 
     def forward(self, x, output_dims=[]):
         # print self.convs

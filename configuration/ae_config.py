@@ -5,9 +5,9 @@ import torch.nn as nn
 from networks.autoencoder import AutoEncoder
 
 # define these things here
-loader = SamplerFactory.GetKITTISampler(max_frames=1)
+loader = SamplerFactory.GetKITTISampler(max_frames=200)
 model = AutoEncoder()
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
 loss = nn.BCELoss()
 
 train_config = TrainConfiguration(loader,optimizer,model,loss)
