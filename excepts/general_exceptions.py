@@ -1,0 +1,2 @@
+class NoFramesException(Exception):
+    pass
