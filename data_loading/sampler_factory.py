@@ -10,6 +10,7 @@
 #### Data Loader factory for kind of dependency injection
 from data_loading.sources.kitti_source import KITTISource
 from data_loading.samplers.crop_sampler import CropSampler
+from data_loading.samplers.autoencoder_sampler import AutoEncoderSampler
 
 class SamplerFactory:
 
@@ -18,3 +19,10 @@ class SamplerFactory:
         source = KITTISource('../Data/KITTI/training',max_frames=max_frames)
         sampler_params = {'crop_size':crop_size,'obj_types':obj_types}
         return CropSampler(source,sampler_params)
+
+    @classmethod
+    def GetAESampler(cls,max_frames=200,obj_types=['Car'],crop_size=[100,100]):
+        source = KITTISource('../Data/KITTI/training',max_frames=max_frames)
+        sampler_params = {'crop_size':crop_size,'obj_types':obj_types}
+        return AutoEncoderSampler(source,sampler_params)
+

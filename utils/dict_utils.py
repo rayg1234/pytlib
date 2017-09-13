@@ -9,15 +9,17 @@ def format_path(path):
 #     path = format_path(path)
 #     return reduce(dict.__getitem__, path, d)
 
-def get_deep(d,path):
+def get_deep(d,path,default=None):
     val = d
     path = format_path(path)
     for key in path:
+        if not isinstance(val,dict):
+            return default
         if(key.isdigit() and isinstance(val,list)):
             val = val[int(key)]
         else:
             val = val.get(key)
-    return val
+    return val if val is not None else default
 
 def set_deep(d, path, value):
     path = format_path(path)
