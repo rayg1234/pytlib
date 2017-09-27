@@ -1,0 +1,16 @@
+cycler==0.10.0
+EasyTkinter==1.1.0
+functools32==3.2.3.post2
+matplotlib==2.0.2
+numpy==1.13.1
+olefile==0.44
+Pillow==4.2.1
+pyparsing==2.2.0
+python-dateutil==2.6.1
+pytz==2017.2
+PyYAML==3.12
+six==1.11.0
+subprocess32==3.2.7
+torch==0.2.0.post3
+torchvision==0.1.9
+ujson==1.35
