@@ -9,6 +9,7 @@ pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.2
 PyYAML==3.12
+scipy==0.19.1
 six==1.11.0
 subprocess32==3.2.7
 torch==0.2.0.post3
