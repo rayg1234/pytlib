@@ -2,7 +2,7 @@
 
 
 
-sudo apt install pip
+sudo apt install python-pip
 sudo apt install python-tk
 sudo pip install virtualenv
 virtualenv pytenv

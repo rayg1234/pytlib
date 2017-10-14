@@ -69,13 +69,14 @@ class Trainer:
             loss.backward()
             self.optimizer.step()
 
-            self.logger.set('loss',loss.data[0])
-            self.logger.set('iteration',self.iteration)
+
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
 
             if i%self.args.save_iter==0:
                 self.save()
 
+            self.logger.set('loss',loss.data[0])
+            self.logger.set('iteration',self.iteration)
             self.logger.dump_line()
             self.iteration+=1
 
@@ -93,4 +94,3 @@ if __name__ == "__main__":
     train_config = imp.load_source('train_config', args.train_config)
     trainer = Trainer(train_config,args)
     trainer.train()
-1
