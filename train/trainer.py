@@ -58,11 +58,14 @@ class Trainer:
             sample = self.loader.next()
             inputs, target = Variable(sample.data), Variable(sample.target)
 
+            if self.args.vinput:
+                visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
+
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
-            if self.args.visualize:
-                visualize_pil_array(tensor_to_pil_image_array(outputs.data))
+            if self.args.voutput:
+                visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
 
             # this should actually be targets, but after we fix it for the autoencoder to produce correct targets
             loss = self.lossfn(outputs, inputs)
@@ -85,7 +88,8 @@ if __name__ == "__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument('-t','--train_config', required=True, type=str, help="the train configuration")
     parser.add_argument('-i','--iterations',required=False, type=int, help="the number of iterations", default=1)
-    parser.add_argument('-v','--visualize',required=False,action='store_true', help="visualize output")
+    parser.add_argument('-v','--vinput',required=False,action='store_true', help="visualize input")
+    parser.add_argument('-z','--voutput',required=False,action='store_true', help="visualize output")
     parser.add_argument('-o','--output_dir',required=False,type=str, help="the directory to output the model params and logs")
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')

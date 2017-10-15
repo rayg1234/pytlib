@@ -4,10 +4,11 @@ from image.image_utils import cudnn_np_to_PIL
 import matplotlib.pyplot as plt
 import math
 
-def visualize_pil_array(images,max_cols=5):
+def visualize_pil_array(images,max_cols=5,title='title',block=True):
     rows = int(math.ceil(float(len(images)) / max_cols))
     cols = max_cols if len(images) > max_cols else len(images)
     fig,axes = plt.subplots(rows,cols,figsize=(15, 8))
+    fig.canvas.set_window_title(title)
     if rows==1:
         axes = [axes]
     lin_idx = 0
@@ -19,7 +20,7 @@ def visualize_pil_array(images,max_cols=5):
                 axes[i][j].imshow(images[lidx])
             else:
                 axes[i][j].axis('off')
-    plt.show(block=False)
+    plt.show(block=block)
 
 # tensor is the of the form BHWC
 def tensor_to_pil_image_array(py_tensor):
