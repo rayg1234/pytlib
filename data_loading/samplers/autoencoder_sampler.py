@@ -18,12 +18,10 @@ class AutoEncoderSampler(Sampler):
 
     def __init__(self,source,params):
         Sampler.__init__(self,source)
-        self.seed = params.get('seed',123)
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
         self.scaling_pert = get_deep(params,'crop_perturbations.scale',1)
         self.translate_pert = get_deep(params,'crop_perturbations.translate',0)
-        random.seed(self.seed)
 
         self.frame_ids = []
 
@@ -46,10 +44,9 @@ class AutoEncoderSampler(Sampler):
 
         # data = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
         # targets = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
-        frame_shape = frame.get_numpy_image().shape
         data,targets = None,None
 
-        frame_image = frame.get_image()
+        frame_image = frame.get_pil_image()
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         print 'Num crop objs in sample: {0}'.format(len(crop_objs))
 
@@ -80,6 +77,5 @@ class AutoEncoderSampler(Sampler):
                 targets = transformed_crop_box.to_single_np_array()
 
         sample = Sample(torch.Tensor(data.astype(float)),torch.Tensor(targets.astype(float)))
-
 
         return sample

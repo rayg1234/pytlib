@@ -14,15 +14,15 @@ from data_loading.samplers.autoencoder_sampler import AutoEncoderSampler
 
 class SamplerFactory:
 
-    @classmethod
-    def GetKITTISampler(cls,max_frames=200,obj_types=['Car'],crop_size=[100,100]):
-        source = KITTISource('../Data/KITTI/training',max_frames=max_frames)
+    @staticmethod
+    def GetKITTISampler(source,max_frames=200,obj_types=['Car'],crop_size=[100,100]):
+        source = KITTISource(source,max_frames=max_frames)
         sampler_params = {'crop_size':crop_size,'obj_types':obj_types}
         return CropSampler(source,sampler_params)
 
-    @classmethod
-    def GetAESampler(cls,max_frames=200,obj_types=['Car'],crop_size=[100,100]):
-        source = KITTISource('../Data/KITTI/training',max_frames=max_frames)
+    @staticmethod
+    def GetAESampler(source,max_frames=200,obj_types=['Car'],crop_size=[100,100]):
+        source = KITTISource(source,max_frames=max_frames)
         sampler_params = {'crop_size':crop_size,'obj_types':obj_types}
         return AutoEncoderSampler(source,sampler_params)
 

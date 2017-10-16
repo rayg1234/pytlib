@@ -5,7 +5,8 @@ import torch.nn as nn
 from networks.autoencoder import AutoEncoder
 
 # define these things here
-loader = SamplerFactory.GetAESampler(max_frames=200)
+random.seed(1234)
+loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200)
 model = AutoEncoder()
 optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
 loss = nn.BCELoss()

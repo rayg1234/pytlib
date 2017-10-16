@@ -8,6 +8,7 @@ import time
 from utils.logger import Logger
 from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
+from train.batcher import Batcher
 
 class Trainer:
 
@@ -23,12 +24,14 @@ class Trainer:
         self.iteration = 0
 
         # initialize logging and model saving
-        if self.args.output_dir:
+        if self.args.output_dir is not None:
             self.logger = Logger(os.path.join(self.args.output_dir,'train_log.json'))
             if self.args.override:
                 mkdir(self.args.output_dir,wipe=True)
             else:
                 self.load()
+        else:
+            self.logger = Logger()
 
     def save(self):
         state = {}
@@ -55,8 +58,15 @@ class Trainer:
 
     def train(self):
         for i in range(self.iteration,self.iteration+self.args.iterations):
-            sample = self.loader.next()
-            inputs, target = Variable(sample.data), Variable(sample.target)
+            # load batch_size number of samples and merge them
+            data_list,target_list = [],[]
+            for i in range(0,args.batch_size):
+                next = self.loader.next()
+                data_list.append(next.data)
+                target_list.append(next.target)
+            samples = Batcher.batch(data_list)
+            targets = Batcher.batch(target_list)
+            inputs, target = Variable(samples), Variable(targets)
 
             if self.args.vinput:
                 visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
@@ -84,13 +94,14 @@ class Trainer:
             self.iteration+=1
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('-t','--train_config', required=True, type=str, help="the train configuration")
-    parser.add_argument('-i','--iterations',required=False, type=int, help="the number of iterations", default=1)
-    parser.add_argument('-v','--vinput',required=False,action='store_true', help="visualize input")
-    parser.add_argument('-z','--voutput',required=False,action='store_true', help="visualize output")
-    parser.add_argument('-o','--output_dir',required=False,type=str, help="the directory to output the model params and logs")
+    parser.add_argument('-t','--train_config',required=True,type=str,help='the train configuration')
+    parser.add_argument('-b','--batch_size',default=8, required=False,type=int,help='the batch_size')
+    parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
+    parser.add_argument('-v','--vinput',required=False,action='store_true', help='visualize input')
+    parser.add_argument('-z','--voutput',required=False,action='store_true', help='visualize output')
+    parser.add_argument('-o','--output_dir',required=False,type=str, help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
     args=parser.parse_args()

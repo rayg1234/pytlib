@@ -14,11 +14,8 @@ class CropSampler(Sampler):
 
     def __init__(self,source,params):
         Sampler.__init__(self,source)
-        self.seed = params.get('seed',123)
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
-        random.seed(self.seed)
-
         self.frame_ids = []
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
@@ -36,32 +33,17 @@ class CropSampler(Sampler):
     def next(self):
         # just grab the next random frame
         frame = self.source[random.choice(self.frame_ids)]
+        frame_image = frame.get_pil_image()
 
-        # data = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
-        # targets = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
-        frame_shape = frame.get_numpy_image().shape
-        data = None
-
-        frame_image = frame.get_image()
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         print 'Num crop objs in sample: {0}'.format(len(crop_objs))
 
-        for crop in crop_objs:
-            # crop and resize
-            crop_image = frame_image.crop(crop.box.to_single_array())
-            resized_image = crop_image.resize(self.crop_size)
+        # randomly grab a crop_obj
+        crop = random.choice(crop_objs)
+        crop_image = frame_image.crop(crop.box.to_single_array())
+        resized_image = crop_image.resize(self.crop_size)
+        np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
 
-            np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
-            # TODO as scale target boxes
-            if data is not None:
-                # stack crop on top of tensor along first aWWxis
-                reshaped_img = np_img.reshape([1]+list(np_img.shape))
-                data = np.concatenate((data,reshaped_img),axis=0)
-            else:
-                # new data
-                data = np_img
-                data = data.reshape([1]+list(data.shape))
-
-        sample = Sample(torch.Tensor(data.astype(float)),torch.Tensor())
-
+        #todo add targets
+        sample = Sample(torch.Tensor(np_img.astype(float)))
         return sample
