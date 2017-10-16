@@ -64,9 +64,7 @@ class Trainer:
                 next = self.loader.next()
                 data_list.append(next.data)
                 target_list.append(next.target)
-            samples = Batcher.batch(data_list)
-            targets = Batcher.batch(target_list)
-            inputs, target = Variable(samples), Variable(targets)
+            inputs, targets = Variable(Batcher.batch(data_list)), Variable(Batcher.batch(target_list))
 
             if self.args.vinput:
                 visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
@@ -78,10 +76,9 @@ class Trainer:
                 visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
 
             # this should actually be targets, but after we fix it for the autoencoder to produce correct targets
-            loss = self.lossfn(outputs, inputs)
+            loss = self.lossfn(outputs, targets)
             loss.backward()
             self.optimizer.step()
-
 
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
 

@@ -3,6 +3,7 @@ from data_loading.sampler_factory import SamplerFactory
 import torch.optim as optim
 import torch.nn as nn
 from networks.autoencoder import AutoEncoder
+import random
 
 # define these things here
 random.seed(1234)
