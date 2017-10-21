@@ -59,7 +59,7 @@ class AutoEncoderSampler(Sampler):
         # print 'crop_box: ' + str(crop.box)
 
         # frame_image.visualize()
-        frame.show_image_with_labels()
+        # frame.show_image_with_labels()
 
         affine = Affine()
         # todo: add scaling function to Box
