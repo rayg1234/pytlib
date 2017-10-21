@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 # and act as a mediator between different types and storage orders
 # here is main use case:
 # 1) Load image using PIL to PIL image format
-# 2) store image as whc numpy array
+# 2) store image as HWC numpy array
 # 3) apply perturbations/affine transforms
 # 3) scale and transpose to chw (cudnn format)
 # 4) convert to pytorch tensor for NN compute
 #
 # to take the network output and convert back
-# 1) unscale and tranpose to whc and convert to numpy
+# 1) unscale and tranpose to HWC and convert to numpy
 # Note on cudnn storage order is BCHW and PIL uses HWC arrays
 #
 # for Numpy 'C' Style row-major arrays, the first dimension is the
@@ -25,14 +25,14 @@ import matplotlib.pyplot as plt
 
 class Ordering:
     CHW = 'CHW'
-    WHC = 'WHC'
+    HWC = 'HWC'
 
 class ValueClass:
     FLOAT01 = {'dtype':'float','range':[0,1]}
     BYTE0255 = {'dtype':'uint8','range':[0,255]}
 
 class PTImage:
-    def __init__(self,data=None,pil_image_path='',ordering=Ordering.WHC,vc=ValueClass.BYTE0255):
+    def __init__(self,data=None,pil_image_path='',ordering=Ordering.HWC,vc=ValueClass.BYTE0255):
         self.image_path = pil_image_path
         self.ordering = ordering
         self.data = data
@@ -55,7 +55,7 @@ class PTImage:
 
     def visualize(self,display=True,block=True,title='Visualization'):
         # TODO if already in the right order, don't both converting
-        display_img = self.to_order_and_class(Ordering.WHC,ValueClass.BYTE0255)
+        display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
         fig,ax = plt.subplots(1,figsize=(15, 8))
         fig.canvas.set_window_title(title)
         ax.imshow(display_img.data, interpolation='nearest', vmin=0, vmax=255)
@@ -70,9 +70,9 @@ class PTImage:
 
         if self.ordering == new_ordering:
             pass
-        elif self.ordering == Ordering.CHW and new_ordering == Ordering.WHC:
+        elif self.ordering == Ordering.CHW and new_ordering == Ordering.HWC:
             new_img.data = np.transpose(new_img.data,axes=(1,2,0))
-        elif self.ordering == Ordering.WHC and new_ordering == Ordering.CHW:
+        elif self.ordering == Ordering.HWC and new_ordering == Ordering.CHW:
             new_img.data = np.transpose(new_img.data,axes=(2,0,1))
         else:
             assert False, 'Dont know how to convert to this ordering'

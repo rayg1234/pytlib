@@ -27,11 +27,10 @@ class Frame:
         return self.objects
 
     def show_raw_image(self):
-        self.image.visualize()
+        self.image.visualize('frame image')
 
     def show_image_with_labels(self):
-        fig,ax = plt.subplots(1,figsize=(15, 8))
-        ax.imshow(self.get_image().to_order_and_class(Ordering.WHC,ValueClass.BYTE0255).data)
+        fig,ax = self.image.visualize(title='frame image with labels',display=False)
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             ax.add_patch(rect)

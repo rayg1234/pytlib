@@ -66,9 +66,9 @@ class Affine:
         output_size = _output_size[::-1]
         if self.store_original:
             self.original_image = image
-        assert image.ordering == Ordering.WHC, 'Ordering must be WHC to apply the affine transform!'
+        assert image.ordering == Ordering.HWC, 'Ordering must be HWC to apply the affine transform!'
         image.get_data()
-        newimage = PTImage(data=np.empty(output_size + [image.data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.WHC,vc=image.vc)
+        newimage = PTImage(data=np.empty(output_size + [image.data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.HWC,vc=image.vc)
         # print self.transform
         # print self.inverse
         # print output_size
