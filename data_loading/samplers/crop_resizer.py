@@ -18,9 +18,7 @@ import numpy as np
 # returns both the new image and the new crop box
 def generate_new_crop(image,
                       crop_box,
-                      crop_params,
-                      random_seed=1234):
-    random.seed(random_seed)
+                      crop_params):
     affine = Affine.from_box(crop_box)
     output_dims = get_deep(crop_params,'output_dims')
     assert output_dims is not None,'output dims not specified'

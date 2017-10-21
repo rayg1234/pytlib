@@ -45,5 +45,5 @@ class CropSampler(Sampler):
         np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
 
         #todo add targets
-        sample = Sample(torch.Tensor(np_img.astype(float)))
+        sample = Sample(torch.Tensor(np_img.astype(float)),None)
         return sample

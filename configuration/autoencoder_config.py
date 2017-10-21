@@ -7,7 +7,7 @@ import random
 
 # define these things here
 random.seed(1234)
-loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200)
+loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
 model = AutoEncoder()
 optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
 loss = nn.BCELoss()

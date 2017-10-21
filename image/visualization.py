@@ -1,15 +1,24 @@
-from PIL import Image
 import numpy as np
 from image.image_utils import cudnn_np_to_PIL
 import matplotlib.pyplot as plt
 import math
+from PIL import Image
+
+
+# image needs to be hwc ordering
+def visualize_np_image(image):
+    plt.imshow(image, interpolation='nearest')
+    plt.show()
 
 def visualize_pil_array(images,max_cols=5,title='title',block=True):
     rows = int(math.ceil(float(len(images)) / max_cols))
     cols = max_cols if len(images) > max_cols else len(images)
     fig,axes = plt.subplots(rows,cols,figsize=(15, 8))
     fig.canvas.set_window_title(title)
-    if rows==1:
+    print rows, cols
+    if rows==1 and cols==1:
+        axes = [[axes]]
+    elif rows==1 and cols>1:
         axes = [axes]
     lin_idx = 0
 

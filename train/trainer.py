@@ -75,7 +75,6 @@ class Trainer:
             if self.args.voutput:
                 visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
 
-            # this should actually be targets, but after we fix it for the autoencoder to produce correct targets
             loss = self.lossfn(outputs, targets)
             loss.backward()
             self.optimizer.step()
@@ -94,7 +93,7 @@ class Trainer:
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('-t','--train_config',required=True,type=str,help='the train configuration')
-    parser.add_argument('-b','--batch_size',default=8, required=False,type=int,help='the batch_size')
+    parser.add_argument('-b','--batch_size',default=1, required=False,type=int,help='the batch_size')
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
     parser.add_argument('-v','--vinput',required=False,action='store_true', help='visualize input')
     parser.add_argument('-z','--voutput',required=False,action='store_true', help='visualize output')

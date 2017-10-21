@@ -11,7 +11,7 @@ import torch
 # to go from the orignal frame to the sample
 # the tensors are in BCHW storage order
 class Sample:
-  def __init__(self,data,target=torch.Tensor(1)):
+  def __init__(self,data,target):
       self.data = data
       self.target = target
 

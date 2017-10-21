@@ -4,9 +4,9 @@ from image.object import Object
 from data_loading.samplers.sampler import Sampler
 from data_loading.sample import Sample
 from image.affine import Affine
-from image.image_utils import PIL_to_cudnn_np, scale_np_img
 from excepts.general_exceptions import NoFramesException
 from utils.dict_utils import get_deep
+from image.ptimage import PTImage,Ordering,ValueClass
 import numpy as np
 import random
 import torch
@@ -42,25 +42,37 @@ class AutoEncoderSampler(Sampler):
         # just grab the next random frame
         frame = self.source[random.choice(self.frame_ids)]
 
-        # data = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
-        # targets = np.array((len(crop_objs),self.crop_size[0],self.crop_size[1],3),dtype=float,order='C')
+        # get the image
+        frame_image = frame.get_image()
+        frame_image.get_data()
 
-        frame_image = frame.get_pil_image()
+        # get a random crop object
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         print 'Num crop objs in sample: {0}'.format(len(crop_objs))
-
         crop = random.choice(crop_objs)
-        # crop and resize
-        crop_image = frame_image.crop(crop.box.to_single_array())
-        resized_image = crop_image.resize(self.crop_size)
+        # apply affine and scaling transform
+
+        # crop and resize around the object using an affine transform
+        # crop_image = frame_image.crop(crop.box.to_single_array())
+        # resized_image = crop_image.resize(self.crop_size)
+
+        # print 'crop_box: ' + str(crop.box)
+
+        # frame_image.visualize()
+        # frame.show_image_with_labels()
 
         affine = Affine()
+        # todo: add scaling function to Box
         scalex = float(self.crop_size[0])/crop.box.edges()[0]
         scaley = float(self.crop_size[1])/crop.box.edges()[1]
+        affine.append(Affine.translation(-crop.box.xy_min()))
         affine.append(Affine.scaling((scalex,scaley)))
-        affine.append(Affine.translation(crop.box.xy_min()))
-        # transformed_crop_box = Box.from_augmented_matrix(affine.apply_to_coords(crop.box.augmented_matrix()))
 
-        np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
-        sample = Sample(torch.Tensor(np_img.astype(float)),torch.Tensor(np_img.astype(float)))
+        transformed_image = affine.apply_to_image(frame_image,self.crop_size) 
+        # transformed_image.visualize(title='transformed image')
+
+        chw_image = transformed_image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
+        # chw_image.visualize(title='chw_image')
+        # np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
+        sample = Sample(torch.Tensor(chw_image.data.astype(float)),torch.Tensor(chw_image.data.astype(float)))
         return sample
