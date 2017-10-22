@@ -48,7 +48,7 @@ class AutoEncoderSampler(Sampler):
 
         # get a random crop object
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
-        print 'Num crop objs in sample: {0}'.format(len(crop_objs))
+        # print 'Num crop objs in sample: {0}'.format(len(crop_objs))
         crop = random.choice(crop_objs)
         # apply affine and scaling transform
 

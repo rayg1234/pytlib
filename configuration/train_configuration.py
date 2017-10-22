@@ -1,6 +1,7 @@
 class TrainConfiguration:
-    def __init__(self,loader,optimizer,model,lossfn):
-        self.loader = loader
-        self.optimizer = optimizer 
+    def __init__(self,loader,optimizer,model,lossfn,cuda=True):
         self.model = model
-        self.lossfn = lossfn
+        self.optimizer = optimizer
+        self.loader = loader
+        self.loss = lossfn
+        self.cuda = cuda

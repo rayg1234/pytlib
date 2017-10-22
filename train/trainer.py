@@ -5,6 +5,7 @@ import argparse
 import imp
 import os
 import time
+from datetime import datetime
 from utils.logger import Logger
 from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
@@ -60,30 +61,38 @@ class Trainer:
         for i in range(self.iteration,self.iteration+self.args.iterations):
             # load batch_size number of samples and merge them
             data_list,target_list = [],[]
-            for i in range(0,args.batch_size):
+            for j in range(0,args.batch_size):
                 next = self.loader.next()
                 data_list.append(next.data)
                 target_list.append(next.target)
-            inputs, targets = Variable(Batcher.batch(data_list)), Variable(Batcher.batch(target_list))
+            batched_data = Batcher.batch(data_list)
+            batched_targets = Batcher.batch(target_list)
+            if self.args.cuda:
+                batched_data = batched_data.cuda()
+                batched_targets = batched_targets.cuda()
 
-            if self.args.vinput:
-                visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
+            # import ipdb;ipdb.set_trace()
+            inputs, targets = Variable(batched_data), Variable(batched_targets)
+
+            # if self.args.vinput:
+            #     visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
 
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
-            if self.args.voutput:
-                visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
+            # if self.args.voutput:
+                # visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
 
             loss = self.lossfn(outputs, targets)
             loss.backward()
             self.optimizer.step()
 
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
-
-            if i%self.args.save_iter==0:
+            if self.iteration%self.args.save_iter==0:
                 self.save()
 
+            self.logger.set('time',time.time())
+            self.logger.set('date',str(datetime.now()))
             self.logger.set('loss',loss.data[0])
             self.logger.set('iteration',self.iteration)
             self.logger.dump_line()
@@ -102,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
     args=parser.parse_args()
 
-    train_config = imp.load_source('train_config', args.train_config)
-    trainer = Trainer(train_config,args)
+    config_file = imp.load_source('train_config', args.train_config)
+    args.cuda = config_file.train_config.cuda
+    trainer = Trainer(config_file.train_config,args)
     trainer.train()
