@@ -88,5 +88,5 @@ class PTImage:
 
     @classmethod
     def from_cwh_torch(cls,torch_img):
-        return cls(data=torch_img.numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
+        return cls(data=torch_img.cpu().numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
