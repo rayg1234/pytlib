@@ -50,11 +50,13 @@ class Affine:
         self.transform = np.dot(matrix,self.transform)
         self.inverse = np.dot(self.inverse,np.linalg.inv(matrix))
 
-    def apply_to_coords(self,input):
-        return np.dot(self.transform,input)
+    def apply_to_box(self,box):
+        transformed_box = np.dot(self.transform,box.augmented_matrix())
+        return Box.from_augmented_matrix(transformed_box)
 
-    def unapply_to_coords(self,input):
-        return np.dot(self.inverse,input)
+    def unapply_to_box(self,box):
+        transformed_box = np.dot(self.inverse,box.augmented_matrix())
+        return Box.from_augmented_matrix(transformed_box)
 
     # optionally store the original images
     # either use scipy here or implement apply/interpolate scheme

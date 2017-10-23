@@ -1,6 +1,7 @@
 import torch
 from torch.autograd import Variable
-from image.visualization import tensor_to_pil_image_array, visualize_pil_array
+from image.visualization import tensor_to_pil_image_array, visualize_ptimage_array
+from image.ptimage import PTImage
 import argparse
 import imp
 import os
@@ -80,8 +81,9 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
-            # if self.args.voutput:
-                # visualize_pil_array(tensor_to_pil_image_array(outputs.data),title='output')
+            if self.args.voutput:
+                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(outputs)]
+                visualize_ptimage_array(images_pt,title='Output Visualization')
 
             loss = self.lossfn(outputs, targets)
             loss.backward()

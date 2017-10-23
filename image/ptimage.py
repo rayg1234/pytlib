@@ -53,15 +53,17 @@ class PTImage:
     def get_pil_image(self):
         return Image.fromarray(self.get_data())
 
-    def visualize(self,display=True,block=True,title='Visualization'):
+    def visualize(self,axes=None,display=True,block=True,title='Visualization'):
         # TODO if already in the right order, don't both converting
         display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
-        fig,ax = plt.subplots(1,figsize=(15, 8))
-        fig.canvas.set_window_title(title)
+        if axes is None:
+            fig,ax = plt.subplots(1,figsize=(15, 8))
+            fig.canvas.set_window_title(title)
+        else:
+            ax = axes
         ax.imshow(display_img.data, interpolation='nearest', vmin=0, vmax=255)
         if display:
             plt.show(block=block)
-        return fig,ax
 
     # makes a copy
     def to_order_and_class(self,new_ordering,new_value_class):
@@ -86,7 +88,5 @@ class PTImage:
 
     @classmethod
     def from_cwh_torch(cls,torch_img):
-        img = cls(data=np.transpose(torch_img.numpy().squeeze(),axes=(1,2,0)),ordering=Ordering.CHW)
-        scale_np_img(img.data,[0,1],[0,255])
-        return img
+        return cls(data=torch_img.numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 

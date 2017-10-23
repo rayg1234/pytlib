@@ -7,6 +7,7 @@ from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
 from utils.dict_utils import get_deep
 from image.ptimage import PTImage,Ordering,ValueClass
+from image.random_perturber import RandomPerturber
 import numpy as np
 import random
 import torch
@@ -50,26 +51,25 @@ class AutoEncoderSampler(Sampler):
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         # print 'Num crop objs in sample: {0}'.format(len(crop_objs))
         crop = random.choice(crop_objs)
-        # apply affine and scaling transform
-
-        # crop and resize around the object using an affine transform
-        # crop_image = frame_image.crop(crop.box.to_single_array())
-        # resized_image = crop_image.resize(self.crop_size)
-
         # print 'crop_box: ' + str(crop.box)
 
-        # frame_image.visualize()
         # frame.show_image_with_labels()
 
+        # 1) Randomly perturb crop box (scale and translation)
+        transformed_box = RandomPerturber.perturb_crop_box({},crop.box)
+
+        # 2) Take crop
         affine = Affine()
-        # todo: add scaling function to Box
-        scalex = float(self.crop_size[0])/crop.box.edges()[0]
-        scaley = float(self.crop_size[1])/crop.box.edges()[1]
-        affine.append(Affine.translation(-crop.box.xy_min()))
+        scalex = float(self.crop_size[0])/transformed_box.edges()[0]
+        scaley = float(self.crop_size[1])/transformed_box.edges()[1]
+        affine.append(Affine.translation(-transformed_box.xy_min()))
         affine.append(Affine.scaling((scalex,scaley)))
 
         transformed_image = affine.apply_to_image(frame_image,self.crop_size) 
         # transformed_image.visualize(title='transformed image')
+
+        # 3) Randomly perturb cropped image (rotation only)
+
 
         chw_image = transformed_image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
         # chw_image.visualize(title='chw_image')

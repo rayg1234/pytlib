@@ -13,5 +13,5 @@ class Batcher:
 	# turns a batched output into an array of outputs
 	@staticmethod
 	def debatch(outputs):
-		return torch.chunk(outputs,outputs.shape(0),0)
+		return torch.chunk(outputs,outputs.size(0),0)
 

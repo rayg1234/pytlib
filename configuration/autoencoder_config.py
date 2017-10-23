@@ -6,7 +6,7 @@ from networks.autoencoder import AutoEncoder
 import random
 
 # define these things here
-use_cuda = True
+use_cuda = False
 random.seed(1234)
 loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
 model = AutoEncoder()
