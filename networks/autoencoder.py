@@ -8,7 +8,6 @@ class AutoEncoder(nn.Module):
     def __init__(self):
         super(AutoEncoder, self).__init__()
         # conv, deconv
-        torch.manual_seed(123)
         self.convs = ConvolutionStack(3)
         self.convs.append(3,3,2)
         self.convs.append(6,3,1)

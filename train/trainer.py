@@ -11,6 +11,7 @@ from utils.logger import Logger
 from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
 from train.batcher import Batcher
+from visualization.graph_visualizer import compute_graph
 
 class Trainer:
 
@@ -59,6 +60,7 @@ class Trainer:
         self.iteration = checkpoint['iteration']
 
     def train(self):
+        first_iteration = True
         for i in range(self.iteration,self.iteration+self.args.iterations):
             # load batch_size number of samples and merge them
             data_list,target_list = [],[]
@@ -81,6 +83,11 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
+            if args.compute_graph and first_iteration:
+                # assume the first the item is the one we want to get the graph for
+                graph_var = outputs[0] if isinstance(outputs,tuple) else outputs
+                compute_graph(graph_var,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
+
             if self.args.voutput:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(outputs)]
                 visualize_ptimage_array(images_pt,title='Output Visualization')
@@ -99,6 +106,7 @@ class Trainer:
             self.logger.set('iteration',self.iteration)
             self.logger.dump_line()
             self.iteration+=1
+            first_iteration = False
 
 
 if __name__ == '__main__':
@@ -111,9 +119,15 @@ if __name__ == '__main__':
     parser.add_argument('-o','--output_dir',required=False,type=str, help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
+    parser.add_argument('-e','--seed',type=int,help='the random seed for torch',default=123)
+    parser.add_argument('-g','--compute_graph',default='cgraph',type=str,help='generate the computational graph on the first iteration and write to this file')
     args=parser.parse_args()
 
     config_file = imp.load_source('train_config', args.train_config)
     args.cuda = config_file.train_config.cuda
+    torch.manual_seed(args.seed)
+    if args.cuda:
+        torch.cuda.manual_seed(args.seed)
     trainer = Trainer(config_file.train_config,args)
+
     trainer.train()
