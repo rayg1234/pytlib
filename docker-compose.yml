@@ -1,0 +1,10 @@
+version: '3'
+services:
+  main:
+    build:
+      context: ./rays_repo
+      dockerfile: 'Dockerfile'
+    ports:
+      - 8080:8080
+    volumes:
+        - ./rays_repo:/rays_repo
