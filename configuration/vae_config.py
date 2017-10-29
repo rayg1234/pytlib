@@ -11,7 +11,7 @@ use_cuda = True
 # todo, replace module based random seed
 random.seed(1234)
 loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=6000,crop_size=[100,100])
-model = VAE(encoding_size=100,training=True)
+model = VAE(encoding_size=512,training=True)
 
 # want to do this before constructing optimizer according to pytroch docs
 if use_cuda:
