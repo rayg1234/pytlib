@@ -6,10 +6,9 @@ from networks.autoencoder import AutoEncoder
 import random
 
 # define these things here
-use_cuda = False
-# todo, replace module based random seed
+use_cuda = True
 random.seed(1234)
-loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
+loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=6000,crop_size=[100,100])
 model = AutoEncoder()
 
 # want to do this before constructing optimizer according to pytroch docs

@@ -7,11 +7,11 @@ from loss_functions.vae_loss import vae_loss
 import random
 
 # define these things here
-use_cuda = False
+use_cuda = True
 # todo, replace module based random seed
 random.seed(1234)
-loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
-model = VAE()
+loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=6000,crop_size=[100,100])
+model = VAE(encoding_size=100,training=True)
 
 # want to do this before constructing optimizer according to pytroch docs
 if use_cuda:

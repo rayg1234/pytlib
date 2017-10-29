@@ -37,9 +37,9 @@ class VAE(nn.Module):
         self.decoder.append(3,3,2)
 
         # linear layer parameters, lazily instantiated because they depend on the input size
-        self.linear_weights_mu = nn.Parameter()
-        self.linear_weights_logvar = nn.Parameter()
-        self.linear_weights_decoder = nn.Parameter()
+        self.linear_mu = nn.Linear(self.outchannel_size,self.encoding_size)
+        self.linear_logvar = nn.Linear(self.outchannel_size,self.encoding_size)
+        self.linear_decode = nn.Linear(self.encoding_size,self.outchannel_size)
 
         # lazily instantiated
         self.pool_size = None
@@ -59,14 +59,16 @@ class VAE(nn.Module):
         # linear op y = x*A_T + b 
         # so here the dims are [b x c] * [c x s], then the weights need to have dims mxc
         # s is the encoding size
-        if self.linear_weights_mu.size()==torch.Size([]):
-            self.linear_weights_mu = nn.Parameter(torch.randn(self.encoding_size,self.outchannel_size))
-        if self.linear_weights_logvar.size()==torch.Size([]):
-            self.linear_weights_logvar = nn.Parameter(torch.randn(self.encoding_size,self.outchannel_size))
+        # if self.linear_weights_mu.size()==torch.Size([]):
+        #     self.linear_weights_mu = nn.Parameter(torch.randn(self.encoding_size,self.outchannel_size))
+        # if self.linear_weights_logvar.size()==torch.Size([]):
+        #     self.linear_weights_logvar = nn.Parameter(torch.randn(self.encoding_size,self.outchannel_size))
 
         # todo, add bias?
-        mu = F.linear(h1.view(-1,self.outchannel_size),self.linear_weights_mu)
-        logvar = F.linear(h1.view(-1,self.outchannel_size),self.linear_weights_logvar)
+        mu = self.linear_mu(h1.view(-1,self.outchannel_size))
+        logvar = self.linear_logvar(h1.view(-1,self.outchannel_size))
+        # mu = F.linear(h1.view(-1,self.outchannel_size),self.linear_weights_mu)
+        # logvar = F.linear(h1.view(-1,self.outchannel_size),self.linear_weights_logvar)
         return mu, logvar
 
     def reparameterize(self, mu, logvar):
@@ -79,9 +81,12 @@ class VAE(nn.Module):
 
     def decode(self, z):
         # first scale up the encodings using a linear layer
-        if self.linear_weights_decoder.size()==torch.Size([]):
-            self.linear_weights_decoder = nn.Parameter(torch.randn(self.outchannel_size,self.encoding_size))
-        h2 = F.linear(z,self.linear_weights_decoder)
+        # if self.linear_weights_decoder.size()==torch.Size([]):
+        #     self.linear_weights_decoder = nn.Parameter(torch.randn(self.outchannel_size,self.encoding_size))
+        #     if self.use_cuda:
+        #         self.linear_weights_decoder.cuda()
+        
+        h2 = self.linear_decode(z)
         # the output dims here should be [b x c] 
 
         assert self.pool_size is not None

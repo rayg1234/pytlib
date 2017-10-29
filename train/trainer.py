@@ -77,19 +77,21 @@ class Trainer:
             # import ipdb;ipdb.set_trace()
             inputs, targets = Variable(batched_data), Variable(batched_targets)
 
-            # if self.args.vinput:
-            #     visualize_pil_array(tensor_to_pil_image_array(inputs.data),title='input')
+            if self.args.vinput_iter>0 and self.iteration%self.args.vinput_iter==0:
+                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(inputs)]
+                visualize_ptimage_array(images_pt,title='Input Visualization')
 
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
 
-            if args.compute_graph and first_iteration:
-                # assume the first the item is the one we want to get the graph for
-                graph_var = outputs[0] if isinstance(outputs,tuple) else outputs
-                compute_graph(graph_var,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
+            # assume the first the item is the one we want to get the graph/plot/visualize for
+            output_data = outputs[0] if isinstance(outputs,tuple) else outputs
 
-            if self.args.voutput:
-                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(outputs)]
+            if args.compute_graph and first_iteration:
+                compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
+
+            if self.args.voutput_iter>0 and self.iteration%self.args.voutput_iter==0:
+                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(output_data)]
                 visualize_ptimage_array(images_pt,title='Output Visualization')
 
             loss = self.lossfn(outputs, targets)
@@ -114,8 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('-t','--train_config',required=True,type=str,help='the train configuration')
     parser.add_argument('-b','--batch_size',default=1, required=False,type=int,help='the batch_size')
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
-    parser.add_argument('-v','--vinput',required=False,action='store_true', help='visualize input')
-    parser.add_argument('-z','--voutput',required=False,action='store_true', help='visualize output')
+    parser.add_argument('-z','--vinput_iter',required=False, default=0,type=int, help='visualize input every this many iterations')
+    parser.add_argument('-v','--voutput_iter',required=False, default=0,type=int, help='visualize output every this many iterations')
     parser.add_argument('-o','--output_dir',required=False,type=str, help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
@@ -123,6 +125,7 @@ if __name__ == '__main__':
     parser.add_argument('-g','--compute_graph',default='cgraph',type=str,help='generate the computational graph on the first iteration and write to this file')
     args=parser.parse_args()
 
+    print "Loading Configuration ..."
     config_file = imp.load_source('train_config', args.train_config)
     args.cuda = config_file.train_config.cuda
     torch.manual_seed(args.seed)
@@ -130,4 +133,5 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
     trainer = Trainer(config_file.train_config,args)
 
+    print "Starting Training ..."
     trainer.train()
