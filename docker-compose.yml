@@ -1,10 +1,10 @@
-version: '3'
+version: '2'
 services:
   main:
     build:
-      context: ./rays_repo
+      context: ./pytlib
       dockerfile: 'Dockerfile'
     ports:
       - 8080:8080
     volumes:
-        - ./rays_repo:/rays_repo
+        - ./pytlib:/pytlib
