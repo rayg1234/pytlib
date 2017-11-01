@@ -5,38 +5,38 @@ from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 import torch
 
 class VAE(nn.Module):
-    def __init__(self,encoding_size=100,training=True):
+    def __init__(self,encoding_size=128,training=True):
         super(VAE, self).__init__()
         self.training = training
         self.encoding_size = encoding_size
-        self.outchannel_size = 512
+        self.outchannel_size = 128
         # encoding conv
         self.encoder = ConvolutionStack(3)
         self.encoder.append(3,3,2)
-        self.encoder.append(16,3,1)
+        self.encoder.append(16,3,2)
         self.encoder.append(32,3,2)
-        self.encoder.append(64,3,1)
-        self.encoder.append(128,3,2)
-        self.encoder.append(256,3,1)
+        self.encoder.append(64,3,2)
         self.encoder.append(self.outchannel_size,3,2)
 
         # decode
         self.decoder = TransposedConvolutionStack(self.outchannel_size)
-        self.decoder.append(256,3,2)
-        self.decoder.append(128,3,1)
         self.decoder.append(64,3,2)
-        self.decoder.append(32,3,1)
+        self.decoder.append(32,3,2)
         self.decoder.append(16,3,2)
-        self.decoder.append(3,3,1)
+        self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
 
         # linear layer parameters, lazily instantiated because they depend on the input size
-        self.linear_mu = nn.Linear(self.outchannel_size,self.encoding_size)
-        self.linear_logvar = nn.Linear(self.outchannel_size,self.encoding_size)
-        self.linear_decode = nn.Linear(self.encoding_size,self.outchannel_size)
+        # self.linear_mu_weights = torch.Parameter()
+        # self.linear_logvar_weights = torch.Parameter()
+        # self.linear_decoder_weights = torch.Parameter()
 
-        # lazily instantiated
-        self.pool_size = None
+        self.linear_mu = nn.Linear(self.outchannel_size*16,self.encoding_size)
+        self.linear_logvar = nn.Linear(self.outchannel_size*16,self.encoding_size)
+        self.linear_decode = nn.Linear(self.encoding_size,self.outchannel_size*16)
+
+        # # lazily instantiated
+        # self.pool_size = None
 
     def encode(self, x):
         input_dims = x.size()
@@ -44,15 +44,20 @@ class VAE(nn.Module):
         self.conv_output_dims = self.encoder.get_output_dims()[:-1][::-1]
         self.conv_output_dims.append(input_dims)
         
-        # assume bchw format [1,64,7,7] for inputs of size 100x100
-        self.pool_size = conv_out.size(2)
-
-        h1 = F.avg_pool2d(conv_out,kernel_size=self.pool_size,stride=self.pool_size)
+        # print conv_out.size()
+        # OPTION A -- AVERAGE POOL -> FC
+        # assume bchw format [1,C,7,7] for inputs of size 100x100
+        # self.pool_size = conv_out.size(2)
+        # h1 = F.avg_pool2d(conv_out,kernel_size=self.pool_size,stride=self.pool_size)
         # assert that h1 has dimensions b x c x 1 x 1 (squeeze to b x c)
 
-        # todo, add bias?
-        mu = self.linear_mu(h1.view(-1,self.outchannel_size))
-        logvar = self.linear_logvar(h1.view(-1,self.outchannel_size))
+        # OPTION B -- DIRECT FC?
+        self.conv_out_spatial = [conv_out.size(2),conv_out.size(3)]
+        linear_size = self.outchannel_size*conv_out.size(2)*conv_out.size(3)
+        # print linear_size
+
+        mu = self.linear_mu(conv_out.view(-1,linear_size))
+        logvar = self.linear_logvar(conv_out.view(-1,linear_size))
         return mu, logvar
 
     def reparameterize(self, mu, logvar):
@@ -67,12 +72,18 @@ class VAE(nn.Module):
         h2 = self.linear_decode(z)
         # the output dims here should be [b x c] 
 
-        assert self.pool_size is not None
+        # assert self.pool_size is not None
         # next upsample here to dimensions of conv_out from the encoder 
         # TODO, whats the correct thing to do here? unpool, unsample, deconv?
-        h3 = F.upsample(h2.view(-1,self.outchannel_size,1,1),scale_factor=self.pool_size) 
+
+        # OPTION A -- upsample
+        # h3 = F.upsample(h2.view(-1,self.outchannel_size,1,1),scale_factor=self.pool_size) 
+
+        # OPTION B -- FC
+        h3 = h2.view(-1,self.outchannel_size,self.conv_out_spatial[0],self.conv_out_spatial[1])
         h4 = self.decoder.forward(h3,self.conv_output_dims)
-        return F.sigmoid(h4)
+        return h4
+        # return F.sigmoid(h4)
 
     def forward(self, x):
         mu, logvar = self.encode(x)

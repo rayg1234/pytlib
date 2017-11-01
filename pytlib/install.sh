@@ -1,7 +1,7 @@
 #!/bin/bash
-brew install python-pip
-brew install python-tk
-brew install graphviz
+apt install python-pip
+apt install python-tk
+apt install graphviz
 sudo pip install virtualenv
 virtualenv pytenv
 pwd > pytenv/lib/python2.7/site-packages/pyenv.pth

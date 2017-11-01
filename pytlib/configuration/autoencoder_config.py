@@ -15,7 +15,7 @@ model = AutoEncoder()
 if use_cuda:
 	model.cuda()
 # optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-optimizer = optim.Adam(model.parameters(),lr=1e-3)
+optimizer = optim.Adam(model.parameters(),lr=1e-2)
 loss = nn.BCELoss()
 
 train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)

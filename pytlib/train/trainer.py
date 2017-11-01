@@ -29,7 +29,7 @@ class Trainer:
         # initialize logging and model saving
         if self.args.output_dir is not None:
             self.logger = Logger(os.path.join(self.args.output_dir,'train_log.json'))
-            if self.args.override:
+            if self.args.override or not os.path.isdir(self.args.output_dir):
                 mkdir(self.args.output_dir,wipe=True)
             else:
                 self.load()
@@ -87,7 +87,7 @@ class Trainer:
             # assume the first the item is the one we want to get the graph/plot/visualize for
             output_data = outputs[0] if isinstance(outputs,tuple) else outputs
 
-            if args.compute_graph and first_iteration:
+            if self.args.compute_graph and first_iteration:
                 compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
             if self.args.voutput_iter>0 and self.iteration%self.args.voutput_iter==0:

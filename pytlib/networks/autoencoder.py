@@ -14,8 +14,6 @@ class AutoEncoder(nn.Module):
         self.convs.append(16,3,1)
         self.convs.append(32,3,2)
 
-        # get the output width height here
-
         self.tconvs = TransposedConvolutionStack(32)
         self.tconvs.append(16,3,2)
         self.tconvs.append(6,3,1)
@@ -25,6 +23,7 @@ class AutoEncoder(nn.Module):
     def forward(self, x):
         input_dims = x.size()
         x = self.convs.forward(x)
+        # TODO: this is a dumb way to get the output dims for the deconv
         output_dims = self.convs.get_output_dims()[:-1][::-1]
         output_dims.append(input_dims)
         # print output_dims
