@@ -64,6 +64,9 @@ class Trainer:
         for i in range(self.iteration,self.iteration+self.args.iterations):
             # load batch_size number of samples and merge them
             data_list,target_list = [],[]
+
+            # TODO, make separate timer class if more complex timings arise
+            t0 = time.time()
             for j in range(0,args.batch_size):
                 next = self.loader.next()
                 data_list.append(next.data)
@@ -74,6 +77,7 @@ class Trainer:
                 batched_data = batched_data.cuda()
                 batched_targets = batched_targets.cuda()
 
+            self.logger.set('timing.input_loading_time',time.time() - t0)
             # import ipdb;ipdb.set_trace()
             inputs, targets = Variable(batched_data), Variable(batched_targets)
 
@@ -82,7 +86,10 @@ class Trainer:
                 visualize_ptimage_array(images_pt,title='Input Visualization')
 
             self.optimizer.zero_grad()
+
+            t1 = time.time()
             outputs = self.model(inputs)
+            self.logger.set('timing.foward_pass_time',time.time() - t1)
 
             # assume the first the item is the one we want to get the graph/plot/visualize for
             output_data = outputs[0] if isinstance(outputs,tuple) else outputs
@@ -94,9 +101,11 @@ class Trainer:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(output_data)]
                 visualize_ptimage_array(images_pt,title='Output Visualization')
 
+            t2 = time.time()
             loss = self.lossfn(outputs, targets)
             loss.backward()
             self.optimizer.step()
+            self.logger.set('timing.loss_backward_update_time',time.time() - t2)
 
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
             if self.iteration%self.args.save_iter==0:

@@ -14,7 +14,7 @@ class AutoEncoder(nn.Module):
         self.convs.append(16,3,1)
         self.convs.append(32,3,2)
 
-        self.tconvs = TransposedConvolutionStack(32)
+        self.tconvs = TransposedConvolutionStack(32,final_relu=False)
         self.tconvs.append(16,3,2)
         self.tconvs.append(6,3,1)
         self.tconvs.append(3,3,1)
@@ -29,4 +29,4 @@ class AutoEncoder(nn.Module):
         # print output_dims
         # get outputs from conv and pass them back to deconv
         x = self.tconvs.forward(x,output_dims)
-        return x
+        return F.sigmoid(x)

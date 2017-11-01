@@ -4,7 +4,7 @@ from graphviz import Digraph
 import torch
 from torch.autograd import Variable
 
-def compute_graph(var, params=None, output_file=None):
+def compute_graph(var, params=None, output_file=None,view=False):
     """ Produces Graphviz representation of PyTorch autograd graph
 
     Blue nodes are the Variables that require grad, orange are Tensors
@@ -54,5 +54,5 @@ def compute_graph(var, params=None, output_file=None):
                     add_nodes(t)
     add_nodes(var.grad_fn)
     if output_file:
-        dot.render(output_file,view=True)
+        dot.render(output_file,view=view)
     return dot

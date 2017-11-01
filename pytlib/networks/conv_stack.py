@@ -5,11 +5,12 @@ from torch.nn import ModuleList
 from utils.debug import pp
 
 class ConvolutionStack(nn.Module):
-    def __init__(self,in_chans):
+    def __init__(self,in_chans,final_relu=True):
         super(ConvolutionStack, self).__init__()
         self.convs = ModuleList()
         self.batchnorms = ModuleList()
         self.in_chans = in_chans
+        self.final_relu = final_relu
 
     def append(self,out_chans,filter_size,stride):
         if len(self.convs)==0:
@@ -29,18 +30,19 @@ class ConvolutionStack(nn.Module):
             # x = lrelu(c(x))
             x = c(x)
             x = self.batchnorms[i](x)
-            x = F.relu(x)
+            if i<len(self.convs)-1 or self.final_relu:
+                x = F.relu(x)
             self.output_dims.append(x.size())
         return x
 
 class TransposedConvolutionStack(nn.Module):
-    def __init__(self,in_chans,final_nonlinearity='sigmoid'):
+    def __init__(self,in_chans,final_relu=True):
         super(TransposedConvolutionStack, self).__init__()
         self.convs = ModuleList()
         self.batchnorms = ModuleList()
         self.in_chans = in_chans
         self.output_dims = []
-        self.final_nonlinearity = final_nonlinearity
+        self.final_relu = final_relu
 
     def append(self,out_chans,filter_size,stride):
         if len(self.convs)==0:
@@ -55,12 +57,7 @@ class TransposedConvolutionStack(nn.Module):
             # pp(x.mean(),'input x: mean with dims {0}'.format(x.size()))
             x = c(x,output_size=output_dims[i])
             x = self.batchnorms[i](x)
-            if(i==len(self.convs)-1):
-                if self.final_nonlinearity=='sigmoid':
-                    x = F.sigmoid(x)
-                else:
-                    x = F.relu(x)
-            else:
+            if i<len(self.convs)-1 or self.final_relu:
                 x = F.relu(x)
             # pp(x.mean(),'output x: mean with dims {0}'.format(x.size()))
         return x

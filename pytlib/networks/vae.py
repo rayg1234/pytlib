@@ -9,19 +9,19 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         self.training = training
         self.encoding_size = encoding_size
-        self.outchannel_size = 128
+        self.outchannel_size = 256
         # encoding conv
         self.encoder = ConvolutionStack(3)
         self.encoder.append(3,3,2)
         self.encoder.append(16,3,2)
-        self.encoder.append(32,3,2)
         self.encoder.append(64,3,2)
+        self.encoder.append(128,3,2)
         self.encoder.append(self.outchannel_size,3,2)
 
         # decode
-        self.decoder = TransposedConvolutionStack(self.outchannel_size)
+        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False)
+        self.decoder.append(128,3,2)
         self.decoder.append(64,3,2)
-        self.decoder.append(32,3,2)
         self.decoder.append(16,3,2)
         self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
@@ -31,6 +31,7 @@ class VAE(nn.Module):
         # self.linear_logvar_weights = torch.Parameter()
         # self.linear_decoder_weights = torch.Parameter()
 
+        # this is hardcoded for 100x100 inputs for now, use functionals 
         self.linear_mu = nn.Linear(self.outchannel_size*16,self.encoding_size)
         self.linear_logvar = nn.Linear(self.outchannel_size*16,self.encoding_size)
         self.linear_decode = nn.Linear(self.encoding_size,self.outchannel_size*16)
@@ -40,7 +41,7 @@ class VAE(nn.Module):
 
     def encode(self, x):
         input_dims = x.size()
-        conv_out = self.encoder.forward(x) 
+        conv_out = self.encoder.forward(x)
         self.conv_output_dims = self.encoder.get_output_dims()[:-1][::-1]
         self.conv_output_dims.append(input_dims)
         
@@ -69,7 +70,7 @@ class VAE(nn.Module):
           return mu
 
     def decode(self, z):
-        h2 = self.linear_decode(z)
+        h2 = F.relu(self.linear_decode(z))
         # the output dims here should be [b x c] 
 
         # assert self.pool_size is not None
@@ -82,8 +83,7 @@ class VAE(nn.Module):
         # OPTION B -- FC
         h3 = h2.view(-1,self.outchannel_size,self.conv_out_spatial[0],self.conv_out_spatial[1])
         h4 = self.decoder.forward(h3,self.conv_output_dims)
-        return h4
-        # return F.sigmoid(h4)
+        return F.sigmoid(h4)
 
     def forward(self, x):
         mu, logvar = self.encode(x)

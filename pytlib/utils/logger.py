@@ -11,6 +11,7 @@ class Logger:
             self.output_file = output_file
             # raise exception here
             self.cur_line = {}
+            self.counter = {}
 
         def dump_line(self):
             line = json.dumps(self.cur_line)
@@ -21,9 +22,17 @@ class Logger:
                 with open(self.output_file,'a') as f:
                     f.write(line)
                     f.write('\n')
+            self.cur_line = {}
+            self.counter = {}
 
         def set(self,key,value):
             set_deep(self.cur_line,key,value)
+
+        def average(self,key,value):
+            cur_value = get_deep(self.cur_line,key,0)
+            cur_count = get_deep(self.counter,key,0)
+            set_deep(self.cur_line,key,(float(cur_value)*cur_count+value)/(cur_count+1))
+            set_deep(self.counter,key,cur_count+1)           
 
     def __init__(self,output_file=None):
         if not Logger.instance:

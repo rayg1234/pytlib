@@ -21,7 +21,7 @@ class RandomPerturber:
         translation_range = np.array([tx,ty])*(-crop_box.edges())
         affine.append(Affine.translation(translation_range))
 
-        scale = get_deep(params,'scaling_range',[0.8,1.2])
+        scale = get_deep(params,'scaling_range',[0.9,1.4])
         sx = random.random()*(scale[1]-scale[0])+scale[0]
         sy = random.random()*(scale[1]-scale[0])+scale[0]
         scaling_range = np.array([sx,sy])
