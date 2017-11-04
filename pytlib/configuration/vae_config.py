@@ -1,5 +1,6 @@
 from configuration.train_configuration import TrainConfiguration
 from data_loading.sampler_factory import SamplerFactory
+from data_loading.multi_sampler import MultiSampler
 import torch.optim as optim
 import torch.nn as nn
 from networks.vae import VAE
@@ -7,10 +8,11 @@ from loss_functions.vae_loss import vae_loss
 import random
 
 # define these things here
-use_cuda = True
+use_cuda = False
 # todo, replace module based random seed
 random.seed(1234)
-loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=6000,crop_size=[100,100])
+# loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
+loader = MultiSampler(SamplerFactory.GetAESampler,dict(source='/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100]))
 model = VAE(encoding_size=128,training=True)
 
 # want to do this before constructing optimizer according to pytroch docs

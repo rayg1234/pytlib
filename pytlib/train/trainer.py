@@ -29,7 +29,7 @@ class Trainer:
         # initialize logging and model saving
         if self.args.output_dir is not None:
             self.logger = Logger(os.path.join(self.args.output_dir,'train_log.json'))
-            if self.args.override or not os.path.isdir(self.args.output_dir):
+            if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
                 mkdir(self.args.output_dir,wipe=True)
             else:
                 self.load()
@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
     parser.add_argument('-z','--vinput_iter',required=False, default=0,type=int, help='visualize input every this many iterations')
     parser.add_argument('-v','--voutput_iter',required=False, default=0,type=int, help='visualize output every this many iterations')
-    parser.add_argument('-o','--output_dir',required=False,type=str, help='the directory to output the model params and logs')
+    parser.add_argument('-o','--output_dir',required=False,type=str,default='tmp',help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
     parser.add_argument('-e','--seed',type=int,help='the random seed for torch',default=123)

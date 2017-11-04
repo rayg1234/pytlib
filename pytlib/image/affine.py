@@ -38,11 +38,9 @@ class Affine:
         affine.append(Affine.translation(mins))
         return affine
 
-    def __init__(self,store_original=False,order=3):
+    def __init__(self,order=3):
         self.transform = self.identity()
         self.inverse = self.identity()
-        self.store_original = store_original
-        self.original_image = None
         self.interp_order = order
 
     # matrix input has to be non-singular
@@ -68,11 +66,11 @@ class Affine:
         inverse_transform = self.inverse.copy()
         inverse_transform[0:2,0:2] = self.inverse[1:None:-1,1:None:-1]
         inverse_transform[0:2,2] = self.inverse[1:None:-1,2]
-        if self.store_original:
-            self.original_image = image
+
         assert image.ordering == Ordering.HWC, 'Ordering must be HWC to apply the affine transform!'
-        image.get_data()
-        newimage = PTImage(data=np.empty(output_size + [image.data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.HWC,vc=image.vc)
+        img_data = image.get_data()
+        newimage = PTImage(data=np.empty(output_size + [img_data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.HWC,vc=image.vc)
+        newimage_data = newimage.get_data()
         # print self.inverse
         # print inverse_transform
         # print output_size
@@ -95,17 +93,13 @@ class Affine:
         inv_points = np.dot(inverse_transform,points_aug.T)
 
         # 3) use map_coordinates to do a interpolation on the input image at the required points
-        for i in range(0,image.data.shape[2]):
-            newimage.data[:,:,i] = map_coordinates(image.data[:,:,i],inv_points[0:2,:],order=self.interp_order).reshape(output_size)
+        for i in range(0,img_data.shape[2]):
+            newimage_data[:,:,i] = map_coordinates(img_data[:,:,i],inv_points[0:2,:],order=self.interp_order).reshape(output_size)
 
         return newimage
 
 
     def unapply_to_image(self,image):
-        # use scipy here
-        if self.store_original and self.original_image is not None:
-            return original_image
-        else:
-            assert False, 'inverse affine to image not allowed here'
+        assert False, 'inverse affine to image not allowed here'
 
 

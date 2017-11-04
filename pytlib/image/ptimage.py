@@ -32,23 +32,28 @@ class ValueClass:
     BYTE0255 = {'dtype':'uint8','range':[0,255]}
 
 class PTImage:
-    def __init__(self,data=None,pil_image_path='',ordering=Ordering.HWC,vc=ValueClass.BYTE0255):
+    def __init__(self,data=None,pil_image_path='',ordering=Ordering.HWC,vc=ValueClass.BYTE0255,persist=True):
         self.image_path = pil_image_path
         self.ordering = ordering
-        self.data = data
         self.vc = vc
+        self.persist = persist
+        self.__data = data # numpy array
 
     def copy(self):
         copy = PTImage(pil_image_path=self.image_path,ordering=self.ordering,vc=self.vc)
-        if self.data is not None:
-            copy.data = np.copy(self.data)
+        if self.__data is not None:
+            copy.__data = np.copy(self.__data)
         return copy
 
     def get_data(self):
-        if self.data is None:
+        if self.__data is None:
             assert os.path.isfile(self.image_path), "cant open file: %s" % self.image_path
-            self.data = np.asarray(Image.open(self.image_path, 'r'))
-        return self.data
+            tmp_data = np.asarray(Image.open(self.image_path, 'r'))
+            if self.persist:
+                self.__data = tmp_data
+            return tmp_data
+        else:
+            return self.__data
 
     def get_pil_image(self):
         return Image.fromarray(self.get_data())
@@ -56,34 +61,34 @@ class PTImage:
     def visualize(self,axes=None,display=True,block=True,title='Visualization'):
         # TODO if already in the right order, don't both converting
         display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
+        cur_ax = None
         if axes is None:
-            fig,ax = plt.subplots(1,figsize=(15, 8))
+            fig,cur_ax = plt.subplots(1,figsize=(15, 8))
             fig.canvas.set_window_title(title)
         else:
-            ax = axes
-        ax.imshow(display_img.data, interpolation='nearest', vmin=0, vmax=255)
+            cur_ax = axes
+        cur_ax.imshow(display_img.get_data(), interpolation='nearest', vmin=0, vmax=255)
         if display:
             plt.show(block=block)
-
+        return cur_ax
+        
     # makes a copy
     def to_order_and_class(self,new_ordering,new_value_class):
-        self.get_data()
-        new_img = self.copy()
+        new_data = None
 
         if self.ordering == new_ordering:
-            pass
+            new_data = self.get_data()
         elif self.ordering == Ordering.CHW and new_ordering == Ordering.HWC:
-            new_img.data = np.transpose(new_img.data,axes=(1,2,0))
+            new_data = np.transpose(self.get_data(),axes=(1,2,0))
         elif self.ordering == Ordering.HWC and new_ordering == Ordering.CHW:
-            new_img.data = np.transpose(new_img.data,axes=(2,0,1))
+            new_data = np.transpose(self.get_data(),axes=(2,0,1))
         else:
             assert False, 'Dont know how to convert to this ordering'
-        new_img.ordering = new_ordering
 
         if self.vc != new_value_class:
-            new_img.data = scale_np_img(new_img.data,self.vc['range'],new_value_class['range'],new_value_class['dtype'])
-        new_img.vc = new_value_class
+            new_data = scale_np_img(new_data,self.vc['range'],new_value_class['range'],new_value_class['dtype'])
 
+        new_img = PTImage(data=new_data,ordering=new_ordering,vc=new_value_class)
         return new_img     
 
     @classmethod

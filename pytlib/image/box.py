@@ -44,7 +44,7 @@ class Box:
         return (float)(self.xmax-self.xmin)*(self.ymax-self.ymin)
 
     def to_single_array(self):
-        return np.array[self.xmin,self.ymin,self.xmax,self.ymax]
+        return np.array([self.xmin,self.ymin,self.xmax,self.ymax])
 
     def to_single_np_array(self):
         return np.array(self.to_single_array())

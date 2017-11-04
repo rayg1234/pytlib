@@ -15,13 +15,7 @@ class Frame:
     def __init__(self,image_path='',objects=[]):
         self.image_path = image_path
         self.objects = objects
-        # lazy instantiation
-        self.image = None
-
-    def get_image(self):
-        if self.image is None:
-            self.image = PTImage(pil_image_path=self.image_path)
-        return self.image
+        self.image = PTImage(pil_image_path=self.image_path,persist=False)
 
     def get_objects(self):
         return self.objects
@@ -30,7 +24,7 @@ class Frame:
         self.image.visualize('frame image')
 
     def show_image_with_labels(self):
-        fig,ax = self.image.visualize(title='frame image with labels',display=False)
+        ax = self.image.visualize(title='frame image with labels',display=False)
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             ax.add_patch(rect)

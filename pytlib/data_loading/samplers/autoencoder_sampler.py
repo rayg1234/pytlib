@@ -21,8 +21,6 @@ class AutoEncoderSampler(Sampler):
         Sampler.__init__(self,source)
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
-        self.scaling_pert = get_deep(params,'crop_perturbations.scale',1)
-        self.translate_pert = get_deep(params,'crop_perturbations.translate',0)
 
         self.frame_ids = []
 
@@ -43,10 +41,6 @@ class AutoEncoderSampler(Sampler):
         # just grab the next random frame
         frame = self.source[random.choice(self.frame_ids)]
 
-        # get the image
-        frame_image = frame.get_image()
-        frame_image.get_data()
-
         # get a random crop object
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         # print 'Num crop objs in sample: {0}'.format(len(crop_objs))
@@ -65,14 +59,13 @@ class AutoEncoderSampler(Sampler):
         affine.append(Affine.translation(-transformed_box.xy_min()))
         affine.append(Affine.scaling((scalex,scaley)))
 
-        transformed_image = affine.apply_to_image(frame_image,self.crop_size) 
+        transformed_image = affine.apply_to_image(frame.image,self.crop_size) 
         # transformed_image.visualize(title='transformed image')
 
         # 3) Randomly perturb cropped image (rotation only)
 
-
         chw_image = transformed_image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
         # chw_image.visualize(title='chw_image')
         # np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
-        sample = Sample(torch.Tensor(chw_image.data.astype(float)),torch.Tensor(chw_image.data.astype(float)))
+        sample = Sample(torch.Tensor(chw_image.get_data().astype(float)),torch.Tensor(chw_image.get_data().astype(float)))
         return sample

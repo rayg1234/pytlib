@@ -1,14 +1,16 @@
 from configuration.train_configuration import TrainConfiguration
 from data_loading.sampler_factory import SamplerFactory
+from data_loading.multi_sampler import MultiSampler
 import torch.optim as optim
 import torch.nn as nn
 from networks.autoencoder import AutoEncoder
 import random
 
 # define these things here
-use_cuda = True
-random.seed(1234)
-loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=6000,crop_size=[100,100])
+use_cuda = False
+random.seed(12346)
+# loader = SamplerFactory.GetAESampler('/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
+loader = MultiSampler(SamplerFactory.GetAESampler,dict(source='/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100]))
 model = AutoEncoder()
 
 # want to do this before constructing optimizer according to pytroch docs
