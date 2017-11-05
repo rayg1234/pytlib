@@ -1,6 +1,9 @@
 # Running Locally for Ubuntu16.04
+
 Install: `sudo bash pytlib/install.sh`
+
 Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
+
 Run the trainer: `python train/trainer.py ...`
 
 # Running with Docker
@@ -13,4 +16,4 @@ Now to attach a shell script to the container run `docker exec -it <name_of_dock
 Export your python path by running `export PYTHONPATH="${PYTHONPATH}:/pytlib"`
 Activate your virtualenv with `source pytenv/bin/activate`
 
-Note: CUDA support not tested yet.
+Note: CUDA support in docker not tested yet.
