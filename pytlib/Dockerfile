@@ -12,7 +12,7 @@ RUN source pytenv/bin/activate
 RUN pip install http://download.pytorch.org/whl/cu80/torch-0.2.0.post3-cp27-cp27mu-manylinux1_x86_64.whl
 ADD requirements.txt /
 RUN pip install -r requirements.txt
-RUN export PYTHONPATH="${PYTHONPATH}:/rays_repo"
+RUN echo 'export PYTHONPATH="${PYTHONPATH}:/rays_repo"' >> ~/.bashrc 
 
 CMD exec /bin/bash -c "trap : TERM INT; sleep infinity & wait"
 
