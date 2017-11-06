@@ -108,8 +108,6 @@ class Trainer:
                 for i,img in enumerate(images_pt):
                     self.visualizer.set_image(img,'Output {}'.format(i))
 
-            import ipdb;ipdb.set_trace()
-
             t2 = time.time()
             loss = self.lossfn(outputs, targets)
             loss.backward()

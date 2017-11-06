@@ -18,7 +18,7 @@ class ImageVisualizer:
             rows = int(math.ceil(float(len(self.cur_images)) / self.max_cols))
             cols = self.max_cols if len(self.cur_images) > self.max_cols else len(self.cur_images)
             fig,axes = plt.subplots(rows,cols)
-            fig.subplots_adjust(hspace=0.4, wspace=0.4)
+            # fig.subplots_adjust(hspace=0.5, wspace=1.0)
             fig.canvas.set_window_title('Visualizations')
             # print rows, cols
             if rows==1 and cols==1:

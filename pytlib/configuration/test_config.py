@@ -7,7 +7,7 @@ from networks.autoencoder import AutoEncoder
 
 # define these things here
 use_cuda = False
-loader = MultiSampler(SamplerFactory.GetAESampler,dict(source='/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100]),num_procs=1)
+loader = SamplerFactory.GetAESampler(source='/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
 model = AutoEncoder()
 
 # want to do this before constructing optimizer according to pytroch docs
