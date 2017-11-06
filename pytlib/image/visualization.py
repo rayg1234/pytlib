@@ -25,14 +25,3 @@ def visualize_ptimage_array(images,max_cols=5,title='title',block=True):
             else:
                 axes[i][j].axis('off')
     plt.show(block=block)
-
-# tensor is the of the form BHWC
-def tensor_to_pil_image_array(py_tensor):
-    batch_dimension = 0
-    nparray = py_tensor.numpy()
-    # loop o1ver batch dimension
-    splitarr = np.split(nparray,nparray.shape[batch_dimension],axis=batch_dimension)
-    images = []
-    for img in splitarr:
-        images.append(cudnn_np_to_PIL(img))
-    return images

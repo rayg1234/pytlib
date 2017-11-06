@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import Variable
-from image.visualization import tensor_to_pil_image_array, visualize_ptimage_array
+from image.visualization import visualize_ptimage_array
 from image.ptimage import PTImage
 import argparse
 import imp
@@ -12,6 +12,7 @@ from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
 from train.batcher import Batcher
 from visualization.graph_visualizer import compute_graph
+from visualization.image_visualizer import ImageVisualizer
 
 class Trainer:
 
@@ -25,16 +26,21 @@ class Trainer:
         self.optimizer = self.model_config.optimizer
         self.args = args
         self.iteration = 0
+        self.first_iteration = True
+
+        if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
+            mkdir(self.args.output_dir,wipe=True)
+        else:
+            self.load()        
 
         # initialize logging and model saving
         if self.args.output_dir is not None:
             self.logger = Logger(os.path.join(self.args.output_dir,'train_log.json'))
-            if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
-                mkdir(self.args.output_dir,wipe=True)
-            else:
-                self.load()
         else:
             self.logger = Logger()
+
+        if self.args.visualize_iter>0:
+            self.visualizer = ImageVisualizer(os.path.join(self.args.output_dir,'visualizations.png'))
 
     def save(self):
         state = {}
@@ -60,7 +66,6 @@ class Trainer:
         self.iteration = checkpoint['iteration']
 
     def train(self):
-        first_iteration = True
         for i in range(self.iteration,self.iteration+self.args.iterations):
             # load batch_size number of samples and merge them
             data_list,target_list = [],[]
@@ -81,9 +86,10 @@ class Trainer:
             # import ipdb;ipdb.set_trace()
             inputs, targets = Variable(batched_data), Variable(batched_targets)
 
-            if self.args.vinput_iter>0 and self.iteration%self.args.vinput_iter==0:
+            if self.args.visualize_iter>0:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(inputs)]
-                visualize_ptimage_array(images_pt,title='Input Visualization')
+                for i,img in enumerate(images_pt):
+                    self.visualizer.set_image(img,'Input {}'.format(i))
 
             self.optimizer.zero_grad()
 
@@ -94,12 +100,15 @@ class Trainer:
             # assume the first the item is the one we want to get the graph/plot/visualize for
             output_data = outputs[0] if isinstance(outputs,tuple) else outputs
 
-            if self.args.compute_graph and first_iteration:
+            if self.args.compute_graph and self.first_iteration:
                 compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
-            if self.args.voutput_iter>0 and self.iteration%self.args.voutput_iter==0:
+            if self.args.visualize_iter>0:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(output_data)]
-                visualize_ptimage_array(images_pt,title='Output Visualization')
+                for i,img in enumerate(images_pt):
+                    self.visualizer.set_image(img,'Output {}'.format(i))
+
+            import ipdb;ipdb.set_trace()
 
             t2 = time.time()
             loss = self.lossfn(outputs, targets)
@@ -117,7 +126,11 @@ class Trainer:
             self.logger.set('iteration',self.iteration)
             self.logger.dump_line()
             self.iteration+=1
-            first_iteration = False
+
+            if self.iteration%self.args.visualize_iter==0:
+                self.visualizer.dump_image()
+
+            self.first_iteration = False
 
 
 if __name__ == '__main__':
@@ -125,8 +138,7 @@ if __name__ == '__main__':
     parser.add_argument('-t','--train_config',required=True,type=str,help='the train configuration')
     parser.add_argument('-b','--batch_size',default=1, required=False,type=int,help='the batch_size')
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
-    parser.add_argument('-z','--vinput_iter',required=False, default=0,type=int, help='visualize input every this many iterations')
-    parser.add_argument('-v','--voutput_iter',required=False, default=0,type=int, help='visualize output every this many iterations')
+    parser.add_argument('-v','--visualize_iter',required=False, default=100,type=int, help='save visualizations every this many iterations')
     parser.add_argument('-o','--output_dir',required=False,type=str,default='tmp',help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')

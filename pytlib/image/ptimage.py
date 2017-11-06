@@ -58,7 +58,7 @@ class PTImage:
     def get_pil_image(self):
         return Image.fromarray(self.get_data())
 
-    def visualize(self,axes=None,display=True,block=True,title='Visualization'):
+    def visualize(self,axes=None,display=False,block=True,title='PTImage Visualization'):
         # TODO if already in the right order, don't both converting
         display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
         cur_ax = None
