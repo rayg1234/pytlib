@@ -39,9 +39,6 @@ class Trainer:
         else:
             self.logger = Logger()
 
-        if self.args.visualize_iter>0:
-            self.visualizer = ImageVisualizer(os.path.join(self.args.output_dir,'visualizations.png'))
-
     def save(self):
         state = {}
         state['iteration']=self.iteration+1
@@ -89,7 +86,7 @@ class Trainer:
             if self.args.visualize_iter>0:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(inputs)]
                 for i,img in enumerate(images_pt):
-                    self.visualizer.set_image(img,'Input {}'.format(i))
+                    ImageVisualizer().set_image(img,'Input {}'.format(i))
 
             self.optimizer.zero_grad()
 
@@ -106,7 +103,7 @@ class Trainer:
             if self.args.visualize_iter>0:
                 images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(output_data)]
                 for i,img in enumerate(images_pt):
-                    self.visualizer.set_image(img,'Output {}'.format(i))
+                    ImageVisualizer().set_image(img,'Output {}'.format(i))
 
             t2 = time.time()
             loss = self.lossfn(outputs, targets)
@@ -126,7 +123,7 @@ class Trainer:
             self.iteration+=1
 
             if self.iteration%self.args.visualize_iter==0:
-                self.visualizer.dump_image()
+                ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.png'.format(self.iteration)))
 
             self.first_iteration = False
 
