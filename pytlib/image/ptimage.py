@@ -58,10 +58,10 @@ class PTImage:
     def get_pil_image(self):
         return Image.fromarray(self.get_data())
 
-    def visualize(self,axes=None,display=False,block=True,title='PTImage Visualization'):
+    def visualize(self,axes=None,display=False,title='PTImage Visualization'):
         # TODO if already in the right order, don't both converting
         display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
-        cur_ax = None
+        fig,cur_ax = None,None
         if axes is None:
             fig,cur_ax = plt.subplots(1,figsize=(15, 8))
             fig.canvas.set_window_title(title)
@@ -69,7 +69,8 @@ class PTImage:
             cur_ax = axes
         cur_ax.imshow(display_img.get_data(), interpolation='nearest', vmin=0, vmax=255)
         if display:
-            plt.show(block=block)
+            plt.show(block=True)
+            fig.close()
         return cur_ax
         
     # makes a copy

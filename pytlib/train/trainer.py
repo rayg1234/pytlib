@@ -1,3 +1,7 @@
+# this is needed to make matplotlib work without explicitly connect to X
+import matplotlib 
+matplotlib.use('svg')
+
 import torch
 from torch.autograd import Variable
 from image.visualization import visualize_ptimage_array
@@ -123,7 +127,7 @@ class Trainer:
             self.iteration+=1
 
             if self.iteration%self.args.visualize_iter==0:
-                ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.png'.format(self.iteration)))
+                ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
 
             self.first_iteration = False
 
