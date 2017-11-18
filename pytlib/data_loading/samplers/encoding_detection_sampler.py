@@ -11,7 +11,14 @@ import random
 import torch
 from interface import implements
 
-class DetectionSampler(implements(Sampler)):
+# the Encoding Detection Sampler is used for a proof of concept for a joint encoding + detection model
+# the data contains two elements, an array of crops, and the full detection frame
+# the targets contain two elements, the same array of crops, and an array of bounding boxes
+# eg:
+# Sample
+#    data: [a single crop, Full frame]
+#    target: [a single crop, a bounding box]
+class EncodingDetectionSample(implements(Sampler)):
 
     def __init__(self,source,params):
         self.source = source
@@ -32,4 +39,14 @@ class DetectionSampler(implements(Sampler)):
         print '{0} frames found'.format(len(self.frame_ids))
 
     def next(self):
+        # 1) pick a random frame:
+
+        # 2) randomly perturb the frame
+        
+        # 3) produce a crop target (assume there is only one)
+
+        # 4) encode the bounding box
+
+        
+
         return None

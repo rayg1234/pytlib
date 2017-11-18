@@ -1,3 +1,4 @@
+# derived from https://stackoverflow.com/questions/938733/total-memory-used-by-python-process
 import os
 class Memory:
 

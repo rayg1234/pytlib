@@ -3,7 +3,8 @@ from interface import Interface, implements
 from visualization.image_visualizer import ImageVisualizer
 from image.ptimage import PTImage
 
-# A sample represents a single training example
+# A sample represents a single training example, it can be different for different 
+# types of models. 
 # It must contain the data in pytorch tensor format to feed as input to some network
 # The input data, target and output must all be lists and can have arbitrary length
 # The only restraint is that the target and output must have the same length and
@@ -39,7 +40,7 @@ class AutoEncoderSample(implements(Sample)):
         ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
 
     def set_output(self,output):
-        assert len(output)==1
+        assert len(output)==1 and output[0].size() == self.target[0].size()
         self.output = output
 
     def get_data(self):
@@ -49,10 +50,10 @@ class AutoEncoderSample(implements(Sample)):
         return self.target
 
 # this is a sample for a complete detection and feature encoding problem
-# data: [Array of crops, Full frame]
-# target: [Array of crops, Array of bounding boxes]
-# output: [Array of crops, Array of bounding boxes]
-class DetectionSample(implements(Sample)):
+# data: [a crop, the Full frame]
+# target: [a crop, a bounding box]
+# output: [a crop, a bounding box]
+class EncodingDetectionSample(implements(Sample)):
     def __init__(self,data,target):
         self.data = data
         self.target = target

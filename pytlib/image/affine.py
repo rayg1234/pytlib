@@ -9,8 +9,6 @@ import math
 # if several affines are chained
 # ie: x.append(t1); x.append(t2),
 # then t1 is applied first followed by t2
-
-# TODO, rename to ImageTransform, add intensity transform as well
 class Affine:
 
     @classmethod
@@ -81,8 +79,9 @@ class Affine:
         #                                             offset=-self.transform[0:2,2],
         #                                             output_shape=output_size).astype(image.vc['dtype'])
         
-        # scipy's affine_transform sucks, it only accepts 2x2 affine matrices and you have tos specify the offset from the input
-        # using my own affine
+        # scipy's affine_transform sucks, it only accepts 2x2 affine matrices and 
+        # you have to specify the offset from the input using my own affine
+        # Going to use map_coordinates apply the affine and interpolation separately
 
         # 1) first create an augmented matrix of 3 x (m*n) output points 
         px,py = np.mgrid[0:output_size[0]:1,0:output_size[1]:1]
@@ -97,7 +96,6 @@ class Affine:
             newimage_data[:,:,i] = map_coordinates(img_data[:,:,i],inv_points[0:2,:],order=self.interp_order).reshape(output_size)
 
         return newimage
-
 
     def unapply_to_image(self,image):
         assert False, 'inverse affine to image not allowed here'

@@ -16,7 +16,7 @@ class Batcher:
 	@staticmethod
 	def debatch(outputs):
 		assert isinstance(outputs,list)
-		return [torch.chunk(x.data,x.size(0),0) for x in outputs]
+		return [map(torch.squeeze,torch.chunk(x.data,x.size(0),0)) for x in outputs]
 
 	# turns an array of samples into a batch of inputs and targets
     # for each s0 in sample_array -> [s0,s1,...,sn] 
