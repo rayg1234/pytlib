@@ -1,6 +1,6 @@
 from configuration.train_configuration import TrainConfiguration
 from data_loading.sampler_factory import SamplerFactory
-from data_loading.multi_sampler import MultiSampler
+from data_loading.samplers.multi_sampler import MultiSampler
 import torch.optim as optim
 import torch.nn as nn
 from networks.vae import VAE

@@ -1,8 +1,9 @@
-class Sampler:
+from interface import Interface, implements
 
-    def __init__(self,source):
-        self.source = source
+class Sampler(Interface):
+    def __init__(self,source,params):
+    	pass
 
     # returns a sample object
     def next(self):
-        raise NotImplementedError
+        pass

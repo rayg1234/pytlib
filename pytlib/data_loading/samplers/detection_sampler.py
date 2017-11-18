@@ -9,11 +9,12 @@ from excepts.general_exceptions import NoFramesException
 import numpy as np
 import random
 import torch
+from interface import implements
 
-class CropSampler(Sampler):
+class DetectionSampler(implements(Sampler)):
 
     def __init__(self,source,params):
-        Sampler.__init__(self,source)
+        self.source = source
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
         self.frame_ids = []
@@ -31,19 +32,4 @@ class CropSampler(Sampler):
         print '{0} frames found'.format(len(self.frame_ids))
 
     def next(self):
-        # just grab the next random frame
-        frame = self.source[random.choice(self.frame_ids)]
-        frame_image = frame.get_pil_image()
-
-        crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
-        print 'Num crop objs in sample: {0}'.format(len(crop_objs))
-
-        # randomly grab a crop_obj
-        crop = random.choice(crop_objs)
-        crop_image = frame_image.crop(crop.box.to_single_array())
-        resized_image = crop_image.resize(self.crop_size)
-        np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
-
-        #todo add targets
-        sample = Sample(torch.Tensor(np_img.astype(float)),None)
-        return sample
+        return None

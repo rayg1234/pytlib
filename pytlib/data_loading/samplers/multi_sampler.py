@@ -1,6 +1,7 @@
 from threading import Thread
 import Queue
 from data_loading.samplers.sampler import Sampler
+from interface import Interface, implements
 import time
 
 def worker_function(worker,queue):
@@ -10,17 +11,19 @@ def worker_function(worker,queue):
         queue.put(next_sample)
     return
 
-class MultiSampler(Sampler):
-    def __init__(self,loader,loader_args,max_queue_size=50,num_procs=16):
-        Sampler.__init__(self,None)
-        self.max_queue_size = max_queue_size
-        self.result_queue = Queue.Queue(max_queue_size)
+class MultiSampler(implements(Sampler)):
+    def __init__(self,source,params):
+        self.loader = params.get('loader')
+        self.loader_args = params.get('loader_args')
+        self.num_procs = params.get('num_procs',10)
+        self.max_queue_size = params.get('max_queue_size',50)
+        self.result_queue = Queue.Queue(self.max_queue_size)
         self.workers = []
         self.threads = []
 
-        for i in range(0,num_procs):
-            # todo, add random seed here
-            self.workers.append(loader(**loader_args))
+        for i in range(0,self.num_procs):
+            # todo, add random seed here and make the loader creation process parallel
+            self.workers.append(self.loader(**self.loader_args))
             p = Thread(target=worker_function,args=((self.workers[-1],self.result_queue)))
             self.threads.append(p)
             p.start()
@@ -30,6 +33,9 @@ class MultiSampler(Sampler):
         #     print 'Waiting for queue to fill'
             # time.sleep(0.001)
         return self.result_queue.get()
+
+    def create_sample(self,output,target):
+        return loader.create_sample(output,target)
         
     def queue_size(self):
         return self.result_queue.qsize()

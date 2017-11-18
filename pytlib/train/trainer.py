@@ -3,7 +3,6 @@ import matplotlib
 matplotlib.use('svg')
 
 import torch
-from torch.autograd import Variable
 from image.visualization import visualize_ptimage_array
 from image.ptimage import PTImage
 import argparse
@@ -14,6 +13,7 @@ from datetime import datetime
 from utils.logger import Logger
 from utils.debug import pp
 from utils.directory_tools import mkdir, list_files
+from utils.random_utils import random_str
 from train.batcher import Batcher
 from visualization.graph_visualizer import compute_graph
 from visualization.image_visualizer import ImageVisualizer
@@ -66,56 +66,50 @@ class Trainer:
         self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.iteration = checkpoint['iteration']
 
+    # a wrapper for model.forward to feed inputs as list and get outputs as a list
+    def evaluate_model(self,inputs):
+        output = self.model(*inputs)
+        return output if isinstance(output,list) else [output] 
+
     def train(self):
         for i in range(self.iteration,self.iteration+self.args.iterations):
-            # load batch_size number of samples and merge them
-            data_list,target_list = [],[]
-
+            #################### LOAD INPUTS ############################
             # TODO, make separate timer class if more complex timings arise
             t0 = time.time()
-            for j in range(0,args.batch_size):
-                next = self.loader.next()
-                data_list.append(next.data)
-                target_list.append(next.target)
-            batched_data = Batcher.batch(data_list)
-            batched_targets = Batcher.batch(target_list)
+            sample_array = [self.loader.next() for i in range(0,args.batch_size)]
+            batched_data, batched_targets = Batcher.batch_samples(sample_array)
             if self.args.cuda:
-                batched_data = batched_data.cuda()
-                batched_targets = batched_targets.cuda()
-
+                batched_data = map(x.cuda() for x in batched_data)
+                batched_targets = map(x.cuda() for x in batched_targets)
             self.logger.set('timing.input_loading_time',time.time() - t0)
-            # import ipdb;ipdb.set_trace()
-            inputs, targets = Variable(batched_data), Variable(batched_targets)
+            #############################################################
 
-            if self.args.visualize_iter>0:
-                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(inputs)]
-                for i,img in enumerate(images_pt):
-                    ImageVisualizer().set_image(img,'Input {}'.format(i))
-
-            self.optimizer.zero_grad()
-
+            #################### FORWARD ################################
             t1 = time.time()
-            outputs = self.model(inputs)
+            outputs = self.evaluate_model(batched_data)
             self.logger.set('timing.foward_pass_time',time.time() - t1)
+            #############################################################
 
-            # assume the first the item is the one we want to get the graph/plot/visualize for
-            output_data = outputs[0] if isinstance(outputs,tuple) else outputs
-
-            if self.args.compute_graph and self.first_iteration:
-                compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
-
-            if self.args.visualize_iter>0:
-                images_pt = [PTImage.from_cwh_torch(x.data) for x in Batcher.debatch(output_data)]
-                for i,img in enumerate(images_pt):
-                    ImageVisualizer().set_image(img,'Output {}'.format(i))
-
+            #################### BACKWARD AND SGD  #####################
             t2 = time.time()
-            loss = self.lossfn(outputs, targets)
+            loss = self.lossfn(*(outputs + batched_targets))
+            self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
             self.logger.set('timing.loss_backward_update_time',time.time() - t2)
+            #############################################################
 
+            #################### LOGGING, VIZ and SAVE ###################
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
+
+            # TODO Move this to a function in the model, ie the model should know how to draw its own graph
+            # if self.args.compute_graph and self.first_iteration:
+            #     compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
+
+            if self.args.visualize_iter>0:
+                Batcher.debatch_outputs(sample_array,outputs)
+                map(lambda x:x.visualize({'title':random_str(5)}),sample_array)
+
             if self.iteration%self.args.save_iter==0:
                 self.save()
 
@@ -130,6 +124,7 @@ class Trainer:
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
 
             self.first_iteration = False
+            #############################################################
 
 
 if __name__ == '__main__':
