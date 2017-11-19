@@ -1,3 +1,5 @@
+# A pytorch library for building neurals for visual recognition, encoding, and detection tasks
+
 # Running Locally for Ubuntu16.04
 
 Install: `sudo bash pytlib/install.sh`
