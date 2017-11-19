@@ -1,4 +1,6 @@
-# A pytorch library for building neurals for visual recognition, encoding, and detection tasks
+# A pytorch library for building neurals networks for visual recognition, encoding, and detection tasks
+
+# Detailed description coming...
 
 # Running Locally for Ubuntu16.04
 
