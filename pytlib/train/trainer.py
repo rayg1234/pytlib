@@ -58,7 +58,7 @@ class Trainer:
             print 'No previous checkpoints found!'
             return
 
-        all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[1])) for m in all_models]
+        all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[-1])) for m in all_models]
         all_models_indexed.sort(key=lambda x: x[1],reverse=True)
         print 'Loading model from disk: {0}'.format(all_models_indexed[0][0])
         checkpoint = torch.load(all_models_indexed[0][0])

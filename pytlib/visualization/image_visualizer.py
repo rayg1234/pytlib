@@ -42,10 +42,10 @@ class ImageVisualizer:
 
             if display:
                 plt.show(block=True)
-                fig.close()
+            fig.close()
 
             self.cur_images.clear()
-            
+
 
         def set_image(self,pt_image,key):
             self.cur_images[key]=pt_image
