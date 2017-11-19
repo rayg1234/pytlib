@@ -7,9 +7,8 @@ import scipy.io
 import os
 
 class StanfordCarsSource(implements(Source)):
-    def __init__(self,cars_dir,labels_mat,max_frames=float("inf")):
+    def __init__(self,cars_dir,labels_mat):
         self.frames = []
-        self.max_frames = max_frames
         self.__load_frames(cars_dir,labels_mat)
         self.cur = 0
 

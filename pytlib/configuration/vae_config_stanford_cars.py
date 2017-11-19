@@ -13,8 +13,7 @@ use_cuda = True
 
 def getSampler():
 	source = StanfordCarsSource(cars_dir='/home/ray/Data/StanfordCars/cars_train',
-								labels_mat='/home/ray/Data/StanfordCars/devkit/cars_train_annos.mat',
-								max_frames=200)
+								labels_mat='/home/ray/Data/StanfordCars/devkit/cars_train_annos.mat')
 	return AutoEncoderSampler(source,{'crop_size':[100,100],'obj_types':'car'})
 
 # todo, replace module based random seed
