@@ -42,7 +42,7 @@ class ImageVisualizer:
 
             if display:
                 plt.show(block=True)
-            fig.close()
+            plt.close("all")
 
             self.cur_images.clear()
 
