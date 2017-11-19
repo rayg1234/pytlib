@@ -28,6 +28,7 @@ class Batcher:
 		return Batcher.batch(map(list,zip(*data_list))), Batcher.batch(map(list,zip(*target_list)))
 
 	# store the batched outputs in the corresponding sample array
+	# batched outputs have the form [out0*batch_size,out1*batch_size,out2*batch_size...]
 	@staticmethod
 	def debatch_outputs(sample_array,batched_outputs):
 		output_array = Batcher.debatch(batched_outputs)

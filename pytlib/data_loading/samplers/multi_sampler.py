@@ -12,11 +12,11 @@ def worker_function(worker,queue):
     return
 
 class MultiSampler(implements(Sampler)):
-    def __init__(self,source,params):
-        self.loader = params.get('loader')
-        self.loader_args = params.get('loader_args')
-        self.num_procs = params.get('num_procs',10)
-        self.max_queue_size = params.get('max_queue_size',50)
+    def __init__(self,loader,loader_args,num_procs=10,max_queue_size=50):
+        self.loader = loader
+        self.loader_args = loader_args
+        self.num_procs = num_procs
+        self.max_queue_size = max_queue_size
         self.result_queue = Queue.Queue(self.max_queue_size)
         self.workers = []
         self.threads = []

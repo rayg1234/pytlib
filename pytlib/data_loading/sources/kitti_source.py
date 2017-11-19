@@ -6,6 +6,7 @@ from os import listdir
 from os.path import isfile, join, basename, splitext
 from data_loading.sources.source import Source
 from collections import defaultdict
+from interface import Interface, implements
 
 class KITTILabel:
     @classmethod
@@ -44,7 +45,7 @@ class KITTILoader:
             frames.append(Frame(join(frame_dir,f),objects))
         return frames
 
-class KITTISource(Source):
+class KITTISource(implements(Source)):
 
     def __init__(self,dir_path,max_frames=float("inf")):
         self.dir_path = dir_path

@@ -17,4 +17,3 @@ class SamplerFactory:
         source = KITTISource(source,max_frames=max_frames)
         sampler_params = {'crop_size':crop_size,'obj_types':obj_types}
         return AutoEncoderSampler(source,sampler_params)
-

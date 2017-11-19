@@ -67,6 +67,11 @@ class Affine:
 
         assert image.ordering == Ordering.HWC, 'Ordering must be HWC to apply the affine transform!'
         img_data = image.get_data()
+        # check if image only has 1 channel, duplicate the channels
+        if len(img_data.shape)==2:
+            img_data = np.stack((img_data,)*3,axis=2)
+        assert len(img_data.shape)==3, 'Input image must have 3 channels! found {}'.format(image_data.shape)
+
         newimage = PTImage(data=np.empty(output_size + [img_data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.HWC,vc=image.vc)
         newimage_data = newimage.get_data()
         # print self.inverse

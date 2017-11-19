@@ -28,7 +28,6 @@ class Sample(Interface):
 # This is a sample where the image and the target are both images
 class AutoEncoderSample(implements(Sample)):
     def __init__(self,data,target):
-        assert len(data)==1 and len(target)==1
         self.data = data
         self.target = target
         self.output = None
@@ -40,7 +39,7 @@ class AutoEncoderSample(implements(Sample)):
         ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
 
     def set_output(self,output):
-        assert len(output)==1 and output[0].size() == self.target[0].size()
+        assert output[0].size() == self.target[0].size()
         self.output = output
 
     def get_data(self):

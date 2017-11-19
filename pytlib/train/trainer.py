@@ -69,7 +69,7 @@ class Trainer:
     # a wrapper for model.forward to feed inputs as list and get outputs as a list
     def evaluate_model(self,inputs):
         output = self.model(*inputs)
-        return output if isinstance(output,list) else [output] 
+        return list(output) if isinstance(output,tuple) else [output] 
 
     def train(self):
         for i in range(self.iteration,self.iteration+self.args.iterations):
@@ -79,8 +79,8 @@ class Trainer:
             sample_array = [self.loader.next() for i in range(0,args.batch_size)]
             batched_data, batched_targets = Batcher.batch_samples(sample_array)
             if self.args.cuda:
-                batched_data = map(x.cuda() for x in batched_data)
-                batched_targets = map(x.cuda() for x in batched_targets)
+                batched_data = map(lambda x: x.cuda(), batched_data)
+                batched_targets = map(lambda x: x.cuda(), batched_targets)
             self.logger.set('timing.input_loading_time',time.time() - t0)
             #############################################################
 
@@ -106,10 +106,6 @@ class Trainer:
             # if self.args.compute_graph and self.first_iteration:
             #     compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
-            if self.args.visualize_iter>0:
-                Batcher.debatch_outputs(sample_array,outputs)
-                map(lambda x:x.visualize({'title':random_str(5)}),sample_array)
-
             if self.iteration%self.args.save_iter==0:
                 self.save()
 
@@ -120,7 +116,9 @@ class Trainer:
             self.logger.dump_line()
             self.iteration+=1
 
-            if self.iteration%self.args.visualize_iter==0:
+            if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
+                Batcher.debatch_outputs(sample_array,outputs)
+                map(lambda x:x.visualize({'title':random_str(5)}),sample_array)
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
 
             self.first_iteration = False
