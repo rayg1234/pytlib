@@ -26,6 +26,7 @@ class MultiSampler(implements(Sampler)):
             self.workers.append(self.loader(**self.loader_args))
             p = Thread(target=worker_function,args=((self.workers[-1],self.result_queue)))
             self.threads.append(p)
+            p.daemon = True
             p.start()
 
     def next(self):
@@ -39,4 +40,3 @@ class MultiSampler(implements(Sampler)):
         
     def queue_size(self):
         return self.result_queue.qsize()
-
