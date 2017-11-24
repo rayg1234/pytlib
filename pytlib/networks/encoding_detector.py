@@ -19,13 +19,8 @@ class EncodingDetector(nn.Module):
         crop = x[0]
         frame = x[1]
         recon,mu,logvar = self.vae.forward(crop)
+        crop_feature_map = self.vae.get_encoding_feature_map()
         frame_feature_map = self.vae.get_encoder().forward(frame)
 
-
-        # TODO: this is a dumb way to get the output dims for the deconv
-        output_dims = self.convs.get_output_dims()[:-1][::-1]
-        output_dims.append(input_dims)
-        # print output_dims
-        # get outputs from conv and pass them back to deconv
-        x = self.tconvs.forward(x,output_dims)
-        return F.sigmoid(x)
+        # now compute the convolution of the frame_feature_map against the crop_feature map
+        return recon,mu,logvar

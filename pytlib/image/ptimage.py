@@ -70,7 +70,7 @@ class PTImage:
         cur_ax.imshow(display_img.get_data(), interpolation='nearest', vmin=0, vmax=255)
         if display:
             plt.show(block=True)
-            fig.close()
+            plt.close()
         return cur_ax
         
     # makes a copy
@@ -99,7 +99,7 @@ class PTImage:
         if self.ordering == Ordering.CHW:
             return np.array(self.get_data().shape[1:])
         else:
-            return np.array(self.get_data().shape[0:1])
+            return np.array(self.get_data().shape[0:2])
 
     @classmethod
     def from_cwh_torch(cls,torch_img):

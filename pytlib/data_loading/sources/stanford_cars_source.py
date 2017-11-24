@@ -6,6 +6,7 @@ from data_loading.sources.source import Source
 import scipy.io
 import os
 
+# images can be downloaded here: http://imagenet.stanford.edu/internal/car196/cars_train.tgz
 class StanfordCarsSource(implements(Source)):
     def __init__(self,cars_dir,labels_mat):
         self.frames = []

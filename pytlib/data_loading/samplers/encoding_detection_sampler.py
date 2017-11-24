@@ -11,6 +11,7 @@ import numpy as np
 import random
 import torch
 from interface import implements
+from image.ptimage import Ordering,ValueClass
 
 # the Encoding Detection Sampler is used for a proof of concept for a joint encoding + detection model
 # the data contains two elements, an array of crops, and the full detection frame
@@ -19,7 +20,7 @@ from interface import implements
 # Sample
 #    data: [a single crop, Full frame]
 #    target: [a single crop, a bounding box]
-class EncodingDetectionSample(implements(Sampler)):
+class EncodingDetectionSampler(implements(Sampler)):
 
     def __init__(self,source,params):
         self.source = source
@@ -44,7 +45,7 @@ class EncodingDetectionSample(implements(Sampler)):
         frame = self.source[random.choice(self.frame_ids)]
 
         # only deal with frames a single sample for now
-        assert frame.objects==1, "Frame has no objects!"
+        assert len(frame.objects)==1, "Frame has no objects!"
 
         # 2) randomly perturb the frame
         perturbed_frame = RandomPerturber.perturb_frame(frame,{})
@@ -57,6 +58,7 @@ class EncodingDetectionSample(implements(Sampler)):
         affine.append(Affine.translation(-box.xy_min()))
         affine.append(Affine.scaling((scalex,scaley)))
         crop_image = affine.apply_to_image(perturbed_frame.image,self.crop_size)
+        # crop_image.visualize(display=True)
 
         # 4) encode the bounding box
         chw_crop = crop_image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)

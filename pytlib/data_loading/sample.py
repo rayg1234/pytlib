@@ -7,8 +7,6 @@ from image.ptimage import PTImage
 # types of models. 
 # It must contain the data in pytorch tensor format to feed as input to some network
 # The input data, target and output must all be lists and can have arbitrary length
-# The only restraint is that the target and output must have the same length and
-# their tensors should have the same shapes
 class Sample(Interface):
     def __init__(self,data,target):
         pass
@@ -38,6 +36,7 @@ class AutoEncoderSample(implements(Sample)):
         ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
         ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
 
+    # specific to the AE sample, the first element of the output has the same shape as the target
     def set_output(self,output):
         assert output[0].size() == self.target[0].size()
         self.output = output
