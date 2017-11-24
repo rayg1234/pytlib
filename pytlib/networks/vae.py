@@ -26,11 +26,6 @@ class VAE(nn.Module):
         self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
 
-        # linear layer parameters, lazily instantiated because they depend on the input size
-        # self.linear_mu_weights = torch.Parameter()
-        # self.linear_logvar_weights = torch.Parameter()
-        # self.linear_decoder_weights = torch.Parameter()
-
         # this is hardcoded for 100x100 inputs for now, use functionals 
         self.linear_mu = nn.Linear(self.outchannel_size*16,self.encoding_size)
         self.linear_logvar = nn.Linear(self.outchannel_size*16,self.encoding_size)
@@ -42,6 +37,7 @@ class VAE(nn.Module):
     def encode(self, x):
         input_dims = x.size()
         conv_out = self.encoder.forward(x)
+        self.encoding_feature_map = conv_out
         self.conv_output_dims = self.encoder.get_output_dims()[:-1][::-1]
         self.conv_output_dims.append(input_dims)
         
@@ -89,3 +85,9 @@ class VAE(nn.Module):
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         return self.decode(z), mu, logvar
+
+    def get_encoder(self):
+        return self.encoder
+
+    def get_encoding_feature_map(self):
+        return self.encoding_feature_map

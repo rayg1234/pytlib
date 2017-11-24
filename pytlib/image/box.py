@@ -46,9 +46,6 @@ class Box:
     def to_single_array(self):
         return np.array([self.xmin,self.ymin,self.xmax,self.ymax])
 
-    def to_single_np_array(self):
-        return np.array(self.to_single_array())
-
     def to_2x2_np_array(self):
         return np.array([[self.xmin,self.xmax],[self.ymin,self.ymax]])
 

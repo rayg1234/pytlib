@@ -3,22 +3,22 @@ from image.affine import Affine
 from image.box import Box
 import random
 import numpy as np
+import copy
 
 # class for generating random affine transformations on boxes and images
 class RandomPerturber:
 
-    # scale and translation
     @staticmethod
-    def perturb_crop_box(params,crop_box):
+    def generate_random_affine(center,edges,params):
         affine = Affine()
 
         # translate to center coordinates
-        affine.append(Affine.translation(-crop_box.center()))
+        affine.append(Affine.translation(-center))
 
         translate = get_deep(params,'translation_range',[-0.1,0.1])
         tx = random.random()*(translate[1]-translate[0])+translate[0]
         ty = random.random()*(translate[1]-translate[0])+translate[0]
-        translation_range = np.array([tx,ty])*(-crop_box.edges())
+        translation_range = np.array([tx,ty])*(-edges)
         affine.append(Affine.translation(translation_range))
 
         scale = get_deep(params,'scaling_range',[0.9,1.4])
@@ -28,12 +28,23 @@ class RandomPerturber:
         affine.append(Affine.scaling(scaling_range))
 
         # translate back 
-        affine.append(Affine.translation(crop_box.center()))
+        affine.append(Affine.translation(center))
+        return affine
 
-        transformed_box = affine.apply_to_box(crop_box)
+    # scale and translation
+    @staticmethod
+    def perturb_crop_box(crop_box,params):
+        rand_affine = RandomPerturber.generate_random_affine(crop_box.center(),crop_box.edges(),params)
+        transformed_box = rand_affine.apply_to_box(crop_box)
         return transformed_box
 
-    # scale, translation, and rotation
+    # scale, translation, (and rotation, TODO)
+    # returns a new frame
     @staticmethod
-    def perturb_image(params,image,boxes=[]):
-        pass
+    def perturb_frame(frame,params):
+        dims = frame.image.get_spatial_dims()
+        rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
+        perturbed_frame = copy.copy(frame)
+        perturbed_frame.image = rand_affine.apply_to_image(perturbed_frame.image,dims)
+        return perturbed_frame
+

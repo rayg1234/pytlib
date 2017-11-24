@@ -90,7 +90,16 @@ class PTImage:
             new_data = scale_np_img(new_data,self.vc['range'],new_value_class['range'],new_value_class['dtype'])
 
         new_img = PTImage(data=new_data,ordering=new_ordering,vc=new_value_class)
-        return new_img     
+        return new_img
+
+    def get_dims(self):
+        return np.array(self.get_data().shape)
+
+    def get_spatial_dims(self):
+        if self.ordering == Ordering.CHW:
+            return np.array(self.get_data().shape[1:])
+        else:
+            return np.array(self.get_data().shape[0:1])
 
     @classmethod
     def from_cwh_torch(cls,torch_img):

@@ -51,7 +51,7 @@ class AutoEncoderSampler(implements(Sampler)):
         # frame.show_image_with_labels()
 
         # 1) Randomly perturb crop box (scale and translation)
-        transformed_box = RandomPerturber.perturb_crop_box({},crop.box)
+        transformed_box = RandomPerturber.perturb_crop_box(crop.box,{})
 
         # 2) Take crop
         affine = Affine()
