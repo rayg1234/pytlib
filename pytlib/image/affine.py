@@ -60,7 +60,7 @@ class Affine:
     # Note for applying affine to HWC numpy arrays
     # we need have x and y interchanged from coordinate space
     def apply_to_image(self,image,_output_size):
-        output_size = _output_size
+        output_size = [int(_output_size[0]),int(_output_size[1])]
         inverse_transform = self.inverse.copy()
         inverse_transform[0:2,0:2] = self.inverse[1:None:-1,1:None:-1]
         inverse_transform[0:2,2] = self.inverse[1:None:-1,2]
@@ -71,7 +71,6 @@ class Affine:
         if len(img_data.shape)==2:
             img_data = np.stack((img_data,)*3,axis=2)
         assert len(img_data.shape)==3, 'Input image must have 3 channels! found {}'.format(image_data.shape)
-
         newimage = PTImage(data=np.empty([output_size[0],output_size[1],img_data.shape[2]],dtype=image.vc['dtype']),ordering=Ordering.HWC,vc=image.vc)
         newimage_data = newimage.get_data()
         # print self.inverse

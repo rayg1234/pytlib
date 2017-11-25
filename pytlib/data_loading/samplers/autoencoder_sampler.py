@@ -53,7 +53,7 @@ class AutoEncoderSampler(implements(Sampler)):
         # 1) Randomly perturb crop box (scale and translation)
         transformed_box = RandomPerturber.perturb_crop_box(crop.box,{})
 
-        # 2) Take crop
+        # 2) Take crop, todo, change to using center crop to preserve aspect ratio
         affine = Affine()
         scalex = float(self.crop_size[0])/transformed_box.edges()[0]
         scaley = float(self.crop_size[1])/transformed_box.edges()[1]

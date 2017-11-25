@@ -11,14 +11,14 @@ import random
 # define these things here
 use_cuda = True
 
-def getSampler():
+def get_sampler():
 	source = StanfordCarsSource(cars_dir='/home/ray/Data/StanfordCars/cars_train',
 								labels_mat='/home/ray/Data/StanfordCars/devkit/cars_train_annos.mat')
 	return AutoEncoderSampler(source,{'crop_size':[100,100],'obj_types':'car'})
 
 # todo, replace module based random seed
 # loader = getSampler()
-loader = MultiSampler(getSampler,dict(),num_procs=10)
+loader = MultiSampler(get_sampler,dict(),num_procs=10)
 model = VAE(encoding_size=128,training=True)
 
 # want to do this before constructing optimizer according to pytroch docs

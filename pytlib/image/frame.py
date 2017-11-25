@@ -22,8 +22,8 @@ class Frame:
     def show_raw_image(self):
         self.image.visualize('frame image')
 
-    def show_image_with_labels(self):
-        ax = self.image.visualize(title='frame image with labels',display=False)
+    def show_image_with_labels(self,title='frame image with labels'):
+        ax = self.image.visualize(title=title,display=False)
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             ax.add_patch(rect)

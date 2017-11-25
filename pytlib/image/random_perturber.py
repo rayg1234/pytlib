@@ -41,7 +41,7 @@ class RandomPerturber:
     # returns a new frame
     @staticmethod
     def perturb_frame(frame,params):
-        dims = frame.image.get_spatial_dims()
+        dims = frame.image.get_hw()
         rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
         perturbed_frame = copy.copy(frame)
         perturbed_frame.image = rand_affine.apply_to_image(perturbed_frame.image,dims)

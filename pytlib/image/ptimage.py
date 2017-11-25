@@ -95,11 +95,21 @@ class PTImage:
     def get_dims(self):
         return np.array(self.get_data().shape)
 
-    def get_spatial_dims(self):
+    # get height and width, in that order
+    def get_wh(self):
+        shape = self.get_data().shape
         if self.ordering == Ordering.CHW:
-            return np.array(self.get_data().shape[1:])
+            return np.array([shape[2],shape[1]])
         else:
-            return np.array(self.get_data().shape[0:2])
+            return np.array([shape[1],shape[0]])
+
+    # get height and width, in that order
+    def get_hw(self):
+        shape = self.get_data().shape
+        if self.ordering == Ordering.CHW:
+            return np.array([shape[1],shape[2]])
+        else:
+            return np.array([shape[0],shape[1]])
 
     @classmethod
     def from_cwh_torch(cls,torch_img):
