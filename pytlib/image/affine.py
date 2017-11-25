@@ -60,7 +60,7 @@ class Affine:
     # Note for applying affine to HWC numpy arrays
     # we need have x and y interchanged from coordinate space
     def apply_to_image(self,image,_output_size):
-        output_size = _output_size[::-1]
+        output_size = _output_size
         inverse_transform = self.inverse.copy()
         inverse_transform[0:2,0:2] = self.inverse[1:None:-1,1:None:-1]
         inverse_transform[0:2,2] = self.inverse[1:None:-1,2]

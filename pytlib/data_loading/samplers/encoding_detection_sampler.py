@@ -43,12 +43,12 @@ class EncodingDetectionSampler(implements(Sampler)):
     def next(self):
         # 1) pick a random frame and a random crop
         frame = self.source[random.choice(self.frame_ids)]
-
+        # frame.show_image_with_labels()
         # only deal with frames a single sample for now
         assert len(frame.objects)==1, "Frame has no objects!"
 
         # 2) randomly perturb the frame
-        perturbed_frame = RandomPerturber.perturb_frame(frame,{})
+        perturbed_frame = RandomPerturber.perturb_frame(frame,{'translation_range':[-0.2,0.2],'scaling_range':[0.9,1.1]})
 
         # 3) produce a crop target (assume there is only one)
         box = perturbed_frame.objects[0].box

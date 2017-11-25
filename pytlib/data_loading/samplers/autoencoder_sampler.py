@@ -41,7 +41,7 @@ class AutoEncoderSampler(implements(Sampler)):
     def next(self):
         # just grab the next random frame
         frame = self.source[random.choice(self.frame_ids)]
-
+        # frame.show_image_with_labels()
         # get a random crop object
         crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
         # print 'Num crop objs in sample: {0}'.format(len(crop_objs))

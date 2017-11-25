@@ -22,9 +22,8 @@ class RandomPerturber:
         affine.append(Affine.translation(translation_range))
 
         scale = get_deep(params,'scaling_range',[0.9,1.4])
-        sx = random.random()*(scale[1]-scale[0])+scale[0]
-        sy = random.random()*(scale[1]-scale[0])+scale[0]
-        scaling_range = np.array([sx,sy])
+        scale = random.random()*(scale[1]-scale[0])+scale[0]
+        scaling_range = np.array([scale,scale])
         affine.append(Affine.scaling(scaling_range))
 
         # translate back 
@@ -46,5 +45,7 @@ class RandomPerturber:
         rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
         perturbed_frame = copy.copy(frame)
         perturbed_frame.image = rand_affine.apply_to_image(perturbed_frame.image,dims)
+        for obj in perturbed_frame.objects:
+            obj.box = rand_affine.apply_to_box(obj.box)
         return perturbed_frame
 

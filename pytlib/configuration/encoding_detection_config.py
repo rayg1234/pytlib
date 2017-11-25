@@ -9,7 +9,7 @@ from loss_functions.vae_loss import vae_loss
 import random
 
 # define these things here
-use_cuda = True
+use_cuda = False
 
 def get_sampler():
 	source = StanfordCarsSource(cars_dir='/home/ray/Data/StanfordCars/cars_train',

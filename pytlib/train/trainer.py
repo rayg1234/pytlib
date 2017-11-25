@@ -9,6 +9,7 @@ import argparse
 import imp
 import os
 import time
+import random
 from datetime import datetime
 from utils.logger import Logger
 from utils.debug import pp
@@ -141,6 +142,7 @@ if __name__ == '__main__':
     print "Loading Configuration ..."
     config_file = imp.load_source('train_config', args.train_config)
     args.cuda = config_file.train_config.cuda
+    random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
