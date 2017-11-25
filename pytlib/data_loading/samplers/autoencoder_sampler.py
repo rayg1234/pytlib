@@ -67,7 +67,6 @@ class AutoEncoderSampler(implements(Sampler)):
 
         chw_image = transformed_image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
         # chw_image.visualize(title='chw_image')
-        # np_img = scale_np_img(PIL_to_cudnn_np(resized_image),[0,255],[0,1])
         sample = AutoEncoderSample([torch.Tensor(chw_image.get_data().astype(float))],
                                    [torch.Tensor(chw_image.get_data().astype(float))])
         return sample

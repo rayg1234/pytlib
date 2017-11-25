@@ -4,7 +4,6 @@ from image.object import Object
 from data_loading.samplers.sampler import Sampler
 from data_loading.sample import Sample, EncodingDetectionSample
 from image.affine import Affine
-from image.image_utils import PIL_to_cudnn_np, scale_np_img
 from excepts.general_exceptions import NoFramesException
 from image.random_perturber import RandomPerturber
 import numpy as np
@@ -25,6 +24,7 @@ class EncodingDetectionSampler(implements(Sampler)):
     def __init__(self,source,params):
         self.source = source
         self.crop_size = params['crop_size']
+        self.frame_size = params['frame_size']
         self.obj_types = params['obj_types']
         self.frame_ids = []
         #index all the frames that have at least one item we want

@@ -1,5 +1,4 @@
 import numpy as np
-from image.image_utils import cudnn_np_to_PIL
 import matplotlib.pyplot as plt
 import math
 from PIL import Image

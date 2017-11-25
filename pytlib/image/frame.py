@@ -4,7 +4,6 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import matplotlib.patches as patches
-from image.image_utils import cudnn_np_to_PIL, PIL_to_cudnn_np
 from image.ptimage import PTImage,Ordering,ValueClass
 
 # stores a numpy representation of an image along with all the objects in that image

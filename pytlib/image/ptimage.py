@@ -3,7 +3,7 @@ import copy
 import os
 import numpy as np
 from PIL import Image
-from image.image_utils import PIL_to_cudnn_np, scale_np_img
+from image.image_utils import scale_np_img
 import matplotlib.pyplot as plt
 # This is a general representation of images
 # and act as a mediator between different types and storage orders
