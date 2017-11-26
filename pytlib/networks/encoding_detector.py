@@ -19,4 +19,6 @@ class EncodingDetector(nn.Module):
         frame_feature_map = self.vae.get_encoder().forward(frame)
 
         # now compute the convolution of the frame_feature_map against the crop_feature map
-        return recon,mu,logvar
+        out = F.conv2d(frame_feature_map,crop_feature_map)
+
+        return recon,mu,logvar,out
