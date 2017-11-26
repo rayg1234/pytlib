@@ -5,7 +5,7 @@ from data_loading.samplers.encoding_detection_sampler import EncodingDetectionSa
 import torch.optim as optim
 import torch.nn as nn
 from networks.encoding_detector import EncodingDetector
-from loss_functions.vae_loss import vae_loss
+from loss_functions.encoding_detection_loss import encoding_detection_loss
 import random
 
 # define these things here
@@ -17,8 +17,8 @@ def get_sampler():
 	return EncodingDetectionSampler(source,{'crop_size':[100,100],'frame_size':[250,250],'obj_types':'car'})
 
 # todo, replace module based random seed
-loader = get_sampler()
-# loader = MultiSampler(getSampler,dict(),num_procs=10)
+# loader = get_sampler()
+loader = MultiSampler(get_sampler,dict(),num_procs=8)
 model = EncodingDetector()
 
 # want to do this before constructing optimizer according to pytroch docs
@@ -26,6 +26,6 @@ if use_cuda:
 	model.cuda()
 # optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
 optimizer = optim.Adam(model.parameters(),lr=1e-3)
-loss = vae_loss
+loss = encoding_detection_loss
 
 train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)

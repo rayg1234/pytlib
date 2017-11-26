@@ -5,7 +5,7 @@ import torch
 from utils.logger import Logger
 
 # adapted from https://github.com/pytorch/examples/blob/master/vae/main.py
-def vae_loss(reconstruction,mu,logvar,targets,*kwargs):
+def vae_loss(reconstruction,mu,logvar,targets):
     BCE = F.binary_cross_entropy(reconstruction, targets)
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
