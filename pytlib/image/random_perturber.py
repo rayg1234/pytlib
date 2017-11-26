@@ -1,6 +1,7 @@
 from utils.dict_utils import get_deep
 from image.affine import Affine
 from image.box import Box
+from image.frame import Frame
 import random
 import numpy as np
 import copy
@@ -43,9 +44,9 @@ class RandomPerturber:
     def perturb_frame(frame,params):
         dims = frame.image.get_hw()
         rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
-        perturbed_frame = copy.copy(frame)
-        perturbed_frame.image = rand_affine.apply_to_image(perturbed_frame.image,dims)
-        for obj in perturbed_frame.objects:
-            obj.box = rand_affine.apply_to_box(obj.box)
+        perturbed_frame = Frame(frame.image_path,copy.deepcopy(frame.objects))
+        perturbed_frame.image = rand_affine.apply_to_image(frame.image,dims)
+        for i,obj in enumerate(frame.objects):
+            perturbed_frame.objects[i].box = rand_affine.apply_to_box(obj.box)
         return perturbed_frame
 

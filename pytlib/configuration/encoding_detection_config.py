@@ -9,7 +9,7 @@ from loss_functions.encoding_detection_loss import encoding_detection_loss
 import random
 
 # define these things here
-use_cuda = False
+use_cuda = True
 
 def get_sampler():
 	source = StanfordCarsSource(cars_dir='/home/ray/Data/StanfordCars/cars_train',

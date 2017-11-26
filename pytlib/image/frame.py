@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 import matplotlib.patches as patches
+import copy
 from image.ptimage import PTImage,Ordering,ValueClass
 
 # stores a numpy representation of an image along with all the objects in that image

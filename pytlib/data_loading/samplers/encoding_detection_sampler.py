@@ -10,9 +10,10 @@ from image.affine_transforms import crop_image_resize,resize_image_center_crop
 import numpy as np
 import random
 import torch
-import copy
 from interface import implements
 from image.ptimage import Ordering,ValueClass
+from image.frame import Frame
+import copy
 
 # the Encoding Detection Sampler is used for a proof of concept for a joint encoding + detection model
 # the data contains two elements, an array of crops, and the full detection frame
@@ -51,15 +52,16 @@ class EncodingDetectionSampler(implements(Sampler)):
 
         # 2) resize frame
         affine_resized_frame = resize_image_center_crop(frame.image,self.frame_size)
-        resized_frame = copy.copy(frame)
+        resized_frame = Frame(frame.image_path,copy.deepcopy(frame.objects))
         resized_frame.image = affine_resized_frame.apply_to_image(resized_frame.image,self.frame_size)
         resized_frame.objects[0].box = affine_resized_frame.apply_to_box(resized_frame.objects[0].box)
         # resized_frame.show_image_with_labels('resized_frame')
 
         # 3) randomly perturb the frame
-        # perturbed_frame = RandomPerturber.perturb_frame(frame,{'translation_range':[-0.0,0.0],'scaling_range':[1.0,1.0]})
-        perturbed_frame = RandomPerturber.perturb_frame(resized_frame,{'translation_range':[-0.2,0.2],'scaling_range':[0.9,1.1]})
-        
+        # perturbed_frame = RandomPerturber.perturb_frame(resized_frame,{'translation_range':[-0.0,0.0],'scaling_range':[1.0,1.0]})
+        perturbed_frame = RandomPerturber.perturb_frame(resized_frame,{'translation_range':[-0.1,0.1],'scaling_range':[0.9,1.1]})
+        # perturbed_frame.show_image_with_labels('perturbed_frame')
+
         # 4) produce a center crop of the target (assume there is only one)
         box = perturbed_frame.objects[0].box
 
