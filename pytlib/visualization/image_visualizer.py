@@ -11,13 +11,12 @@ class ImageVisualizer:
         def __init__(self):
             # raise exception here
             self.cur_images = dict()
-            self.max_cols = 4
 
-        def dump_image(self,output_file,display=False,save=True):
-            rows = int(math.ceil(float(len(self.cur_images)) / self.max_cols))
-            cols = self.max_cols if len(self.cur_images) > self.max_cols else len(self.cur_images)
-            fig,axes = plt.subplots(rows,cols,figsize=(16,9))
-            fig.subplots_adjust(hspace=0.5, wspace=0.5)
+        def dump_image(self,output_file,display=False,save=True,max_cols=4):
+            rows = int(math.ceil(float(len(self.cur_images)) / max_cols))
+            cols = max_cols if len(self.cur_images) > max_cols else len(self.cur_images)
+            fig,axes = plt.subplots(rows,cols,figsize=(cols*3,rows*3))
+            # fig.subplots_adjust(hspace=0.5, wspace=0.5)
             fig.canvas.set_window_title('Visualizations')
             # print rows, cols
             if rows==1 and cols==1:
@@ -32,10 +31,11 @@ class ImageVisualizer:
             for i,(key,image) in enumerate(sorted(self.cur_images.iteritems())):
                 (r,c) = np.unravel_index(i, (rows,cols))
                 ax = axes[r][c]
-                ax.set_title(key,fontsize=8)
+                ax.set_title(key,fontsize=16)
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])                
                 image.visualize(axes=ax,display=False)
+            plt.tight_layout()
 
             if save:
                 fig.savefig(output_file)
