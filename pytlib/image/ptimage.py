@@ -115,3 +115,12 @@ class PTImage:
     def from_cwh_torch(cls,torch_img):
         return cls(data=torch_img.cpu().numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
+    @classmethod
+    def from_2d_cwh_torch(cls,img2d):
+        # assumes img2d has 2 dimensions
+        map2d = img2d.cpu().numpy().squeeze()
+        assert len(map2d.shape)==2, 'img2d must have only 2 dimenions, found {}'.format(map2d.shape)
+        map3d = np.expand_dims(map2d, axis=0)
+        map3d = np.repeat(map3d,3,axis=0)
+        # import ipdb;ipdb.set_trace()
+        return cls(data=map3d,ordering=Ordering.CHW,vc=ValueClass.FLOAT01)

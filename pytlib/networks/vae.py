@@ -27,30 +27,35 @@ class VAE(nn.Module):
         self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
 
-        self.linear_mu_weights = nn.Parameter()
-        self.linear_logvar_weights = nn.Parameter()
-        self.linear_decode_weights = nn.Parameter()
+        self.linear_mu_weights = None
+        self.linear_logvar_weights = None
+        self.linear_decode_weights = None
 
         # # lazily instantiated
         # self.pool_size = None
 
-    def initialize_linear_params(self,cuda):
+    def initialize_linear_params(self,use_cuda):
         # linear op y = x*A_T + b 
         # so here the dims are [b x c] * [c x s], then the weights need to have dims (s x c)
         # where s is the encoding size and b is the batch size
 
-        self.linear_mu_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
-        stdv = 1. / math.sqrt(self.linear_mu_weights.size(1))
-        self.linear_mu_weights.data.uniform_(-stdv, stdv)
+        linear_mu_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
+        stdv = 1. / math.sqrt(linear_mu_weights.size(1))
+        linear_mu_weights.data.uniform_(-stdv, stdv)
 
-        self.linear_logvar_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
-        self.linear_logvar_weights.data.uniform_(-stdv, stdv)
-        self.linear_decode_weights = nn.Parameter(torch.Tensor(self.linear_size,self.encoding_size)) 
-        self.linear_decode_weights.data.uniform_(-stdv, stdv)
-        if cuda:
-            self.linear_mu_weights.cuda()
-            self.linear_logvar_weights.cuda()
-            self.linear_decode_weights.cuda() 
+        linear_logvar_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
+        linear_logvar_weights.data.uniform_(-stdv, stdv)
+        linear_decode_weights = nn.Parameter(torch.Tensor(self.linear_size,self.encoding_size)) 
+        linear_decode_weights.data.uniform_(-stdv, stdv)
+
+        if use_cuda:
+            self.linear_mu_weights = linear_mu_weights.cuda()
+            self.linear_logvar_weights = linear_logvar_weights.cuda()
+            self.linear_decode_weights = linear_decode_weights.cuda() 
+        else:
+            self.linear_mu_weights = linear_mu_weights
+            self.linear_logvar_weights = linear_logvar_weights
+            self.linear_decode_weights = linear_decode_weights 
 
     def encode(self, x):
         input_dims = x.size()
@@ -67,10 +72,11 @@ class VAE(nn.Module):
         # assert that h1 has dimensions b x c x 1 x 1 (squeeze to b x c)
 
         # OPTION B -- DIRECT FC
+
         self.conv_out_spatial = [conv_out.size(2),conv_out.size(3)]
         self.linear_size = self.outchannel_size*conv_out.size(2)*conv_out.size(3)
 
-        if self.linear_mu_weights.size()==torch.Size([]):
+        if self.linear_mu_weights is None:
             self.initialize_linear_params(x.data.is_cuda)
 
         mu = F.linear(conv_out.view(-1,self.linear_size),self.linear_mu_weights)
@@ -98,7 +104,7 @@ class VAE(nn.Module):
 
         # h3 = F.upsample(h2.view(-1,self.outchannel_size,1,1),scale_factor=self.pool_size) 
         # OPTION B -- Direct FC
-        if self.linear_decode_weights.size()==torch.Size([]):
+        if self.linear_decode_weights is None:
             self.initialize_linear_params(z.data.is_cuda)
 
         h2 = F.relu(F.linear(z,self.linear_decode_weights))

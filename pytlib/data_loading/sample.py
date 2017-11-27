@@ -58,12 +58,15 @@ class EncodingDetectionSample(implements(Sample)):
         self.output = None
 
     def visualize(self,parameters={}):
+        frame = PTImage.from_cwh_torch(self.data[1])
         image_target = PTImage.from_cwh_torch(self.target[0])
         image_output = PTImage.from_cwh_torch(self.output[0])
         # todo add a coversion from 2d to 3d for visuals
-        # image_ccmap = PTImage.from_cwh_torch()
+        image_ccmap = PTImage.from_2d_cwh_torch(self.output[3])
         ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
-        ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')        
+        ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
+        ImageVisualizer().set_image(image_ccmap,parameters.get('title','') + ' : CMap')
+        ImageVisualizer().set_image(frame,parameters.get('title','') + ' : Frame')          
 
     def set_output(self,output):
         self.output = output

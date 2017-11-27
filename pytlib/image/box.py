@@ -52,6 +52,14 @@ class Box:
     def augmented_matrix(self):
         return np.array([[self.xmin,self.xmax],[self.ymin,self.ymax],[1,1]])
 
+    # rescale x and y separately
+    def scale(self,scale):
+        assert len(scale)==2, 'must provide 2d scale for x and y'
+        self.xmin *= scale[0]
+        self.xmax *= scale[0]
+        self.ymin *= scale[1]
+        self.ymax *= scale[1]
+
     # generate bounded box bound by a second box2,
     # ie: the current box must lie entirely within the second box
     def bound(self,box2):

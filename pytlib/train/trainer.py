@@ -3,7 +3,6 @@ import matplotlib
 matplotlib.use('svg')
 
 import torch
-from image.visualization import visualize_ptimage_array
 from image.ptimage import PTImage
 import argparse
 import imp

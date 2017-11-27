@@ -11,7 +11,7 @@ class ImageVisualizer:
         def __init__(self):
             # raise exception here
             self.cur_images = dict()
-            self.max_cols = 8
+            self.max_cols = 4
 
         def dump_image(self,output_file,display=False,save=True):
             rows = int(math.ceil(float(len(self.cur_images)) / self.max_cols))

@@ -74,7 +74,11 @@ class EncodingDetectionSampler(implements(Sampler)):
         chw_frame_img = perturbed_frame.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)    
         data = [torch.Tensor(chw_crop.get_data().astype(float)),
                 torch.Tensor(chw_frame_img.get_data().astype(float))]
-        target = [torch.Tensor(chw_crop.get_data().astype(float)),
-                  torch.Tensor(box.to_single_array().astype(float))]
 
+        # normalize box coord to between 0 and 1
+        box.scale(1/np.array(self.frame_size,dtype=float))
+        box_array = box.to_single_array().astype(float)
+        target = [torch.Tensor(chw_crop.get_data().astype(float)),
+                  torch.Tensor(box_array)]
+        
         return EncodingDetectionSample(data,target)
