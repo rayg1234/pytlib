@@ -5,8 +5,8 @@ class BoxCoordinatesInvalidException(Exception):
 
 class Box:
     def __init__(self,xmin,ymin,xmax,ymax):
-        if not (xmax>xmin and ymax>ymin):
-            raise BoxCoordinatesInvalidException("BoxCoords invalid! [{0},{1}], [{2},{3}]".format(xmin,ymin,xmax,ymax))
+        # if not (xmax>xmin and ymax>ymin):
+        #     raise BoxCoordinatesInvalidException("BoxCoords invalid! [{0},{1}], [{2},{3}]".format(xmin,ymin,xmax,ymax))
         self.xmin=xmin
         self.xmax=xmax
         self.ymin=ymin
@@ -55,10 +55,10 @@ class Box:
     # rescale x and y separately
     def scale(self,scale):
         assert len(scale)==2, 'must provide 2d scale for x and y'
-        self.xmin *= scale[0]
-        self.xmax *= scale[0]
-        self.ymin *= scale[1]
-        self.ymax *= scale[1]
+        return Box(self.xmin * scale[0],
+                   self.ymin * scale[1],
+                   self.xmax * scale[0],
+                   self.ymax * scale[1])
 
     # generate bounded box bound by a second box2,
     # ie: the current box must lie entirely within the second box

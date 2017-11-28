@@ -2,11 +2,12 @@ from image.frame import Frame
 from image.box import Box
 from image.object import Object
 from data_loading.samplers.sampler import Sampler
-from data_loading.sample import Sample, EncodingDetectionSample
+from data_loading.sample import EncodingDetectionSample
 from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
 from image.random_perturber import RandomPerturber
 from image.affine_transforms import crop_image_resize,resize_image_center_crop
+from image.image_utils import box_to_tensor
 import numpy as np
 import random
 import torch
@@ -55,7 +56,7 @@ class EncodingDetectionSampler(implements(Sampler)):
         resized_frame = Frame(frame.image_path,copy.deepcopy(frame.objects))
         resized_frame.image = affine_resized_frame.apply_to_image(resized_frame.image,self.frame_size)
         resized_frame.objects[0].box = affine_resized_frame.apply_to_box(resized_frame.objects[0].box)
-        # resized_frame.show_image_with_labels('resized_frame')
+        # resized_frame.visualize(title='resized_frame')
 
         # 3) randomly perturb the frame
         # perturbed_frame = RandomPerturber.perturb_frame(resized_frame,{'translation_range':[-0.0,0.0],'scaling_range':[1.0,1.0]})
@@ -75,10 +76,8 @@ class EncodingDetectionSampler(implements(Sampler)):
         data = [torch.Tensor(chw_crop.get_data().astype(float)),
                 torch.Tensor(chw_frame_img.get_data().astype(float))]
 
-        # normalize box coord to between 0 and 1
-        box.scale(1/np.array(self.frame_size,dtype=float))
-        box_array = box.to_single_array().astype(float)
+
         target = [torch.Tensor(chw_crop.get_data().astype(float)),
-                  torch.Tensor(box_array)]
+                  box_to_tensor(box,self.frame_size)]
         
         return EncodingDetectionSample(data,target)

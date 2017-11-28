@@ -2,7 +2,9 @@ import torch
 from interface import Interface, implements
 from visualization.image_visualizer import ImageVisualizer
 from image.ptimage import PTImage
-
+from image.frame import Frame
+from image.image_utils import tensor_to_box
+from image.object import Object
 # A sample represents a single training example, it can be different for different 
 # types of models. 
 # It must contain the data in pytorch tensor format to feed as input to some network
@@ -47,6 +49,7 @@ class AutoEncoderSample(implements(Sample)):
     def get_target(self):
         return self.target
 
+# TODO move to the network definition because this tied to it?
 # this is a sample for a complete detection and feature encoding problem
 # data: [a crop, the Full frame]
 # target: [a crop, a bounding box]
@@ -58,11 +61,15 @@ class EncodingDetectionSample(implements(Sample)):
         self.output = None
 
     def visualize(self,parameters={}):
-        frame = PTImage.from_cwh_torch(self.data[1])
+        image_frame = PTImage.from_cwh_torch(self.data[1])
         image_target = PTImage.from_cwh_torch(self.target[0])
         image_output = PTImage.from_cwh_torch(self.output[0])
         # todo add a coversion from 2d to 3d for visuals
         image_ccmap = PTImage.from_2d_cwh_torch(self.output[3])
+        target_box = tensor_to_box(self.target[1].cpu(),image_frame.get_wh())
+        output_box = tensor_to_box(self.output[1].cpu(),image_frame.get_wh())
+        objs = [Object(target_box,0),Object(output_box,1)]
+        frame = Frame.from_image_and_objects(image_frame,objs)
         ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
         ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
         ImageVisualizer().set_image(image_ccmap,parameters.get('title','') + ' : CMap')
