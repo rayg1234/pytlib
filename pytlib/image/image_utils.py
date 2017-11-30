@@ -14,4 +14,5 @@ def box_to_tensor(box,frame_size):
     return torch.Tensor(box_array)
 
 def tensor_to_box(tensor,frame_size):
+    assert tensor.size()==torch.Size([4]), 'tensor must of size 4 got {}'.format(tensor.size())
     return Box.from_single_array(tensor.numpy()).scale(frame_size)

@@ -35,7 +35,7 @@ class ImageVisualizer:
                 ax.set_xticklabels([])
                 ax.set_yticklabels([])                
                 image.visualize(axes=ax,display=False)
-            plt.tight_layout()
+            # plt.tight_layout()
 
             if save:
                 fig.savefig(output_file)

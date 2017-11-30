@@ -67,8 +67,8 @@ class EncodingDetectionSample(implements(Sample)):
         # todo add a coversion from 2d to 3d for visuals
         image_ccmap = PTImage.from_2d_cwh_torch(self.output[3])
         target_box = tensor_to_box(self.target[1].cpu(),image_frame.get_wh())
-        output_box = tensor_to_box(self.output[1].cpu(),image_frame.get_wh())
-        objs = [Object(target_box,0),Object(output_box,1)]
+        output_box = tensor_to_box(self.output[4].cpu(),image_frame.get_wh())
+        objs = [Object(target_box,0,obj_type='T'),Object(output_box,1,obj_type='O')]
         frame = Frame.from_image_and_objects(image_frame,objs)
         ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
         ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')

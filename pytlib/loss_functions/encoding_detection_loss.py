@@ -6,7 +6,7 @@ from utils.logger import Logger
 from loss_functions.vae_loss import vae_loss
 
 def box_loss(output_box,target_box):
-	return F.l1_loss(output_box,target_box)
+	return F.smooth_l1_loss(output_box,target_box)
 
 def encoding_detection_loss(reconstruction,mu,logvar,rmap,out_coords,target_recon,target_coord):
     # compute both the vae loss and the detection loss

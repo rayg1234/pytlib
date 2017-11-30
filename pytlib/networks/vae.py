@@ -15,15 +15,15 @@ class VAE(nn.Module):
         self.encoder = ConvolutionStack(3)
         self.encoder.append(3,3,2)
         self.encoder.append(16,3,2)
-        self.encoder.append(64,3,2)
+        self.encoder.append(64,3,1)
         self.encoder.append(128,3,2)
-        self.encoder.append(self.outchannel_size,3,2)
+        self.encoder.append(self.outchannel_size,3,1)
 
         # decode
         self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False)
-        self.decoder.append(128,3,2)
+        self.decoder.append(128,3,1)
         self.decoder.append(64,3,2)
-        self.decoder.append(16,3,2)
+        self.decoder.append(16,3,1)
         self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
 
