@@ -18,7 +18,12 @@ class StanfordCarsSource(implements(Source)):
         labels = scipy.io.loadmat(labels_mat)['annotations'][0]
         # load frames with labels
         for label in labels:
-            xmin, ymin, xmax, ymax, _, path = label
+            if len(label)==5:
+                xmin, ymin, xmax, ymax, path = label
+            elif len(label)==6:
+                xmin, ymin, xmax, ymax, _, path = label
+            else:
+                assert False, 'unable to parse label!'
             box = Box(float(xmin[0][0]),float(ymin[0][0]),float(xmax[0][0]),float(ymax[0][0]))
             obj = Object(box,obj_type='car')
             image_path = os.path.join(cars_dir,path[0])

@@ -7,7 +7,6 @@ from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
 from image.random_perturber import RandomPerturber
 from image.affine_transforms import crop_image_resize,resize_image_center_crop
-from image.image_utils import box_to_tensor
 import numpy as np
 import random
 import torch
@@ -78,6 +77,6 @@ class EncodingDetectionSampler(implements(Sampler)):
 
 
         target = [torch.Tensor(chw_crop.get_data().astype(float)),
-                  box_to_tensor(box,self.frame_size)]
+                  Box.box_to_tensor(box,self.frame_size)]
         
         return EncodingDetectionSample(data,target)

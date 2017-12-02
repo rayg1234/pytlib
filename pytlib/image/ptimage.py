@@ -117,7 +117,7 @@ class PTImage:
         return cls(data=torch_img.cpu().numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
     @classmethod
-    def from_2d_cwh_torch(cls,img2d):
+    def from_2d_wh_torch(cls,img2d):
         # assumes img2d has 2 dimensions
         map2d = img2d.cpu().numpy().squeeze()
         assert len(map2d.shape)==2, 'img2d must have only 2 dimenions, found {}'.format(map2d.shape)

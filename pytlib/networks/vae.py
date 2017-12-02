@@ -12,7 +12,7 @@ class VAE(nn.Module):
         self.encoding_size = encoding_size
         self.outchannel_size = 256
         # encoding conv
-        self.encoder = ConvolutionStack(3)
+        self.encoder = ConvolutionStack(3,final_relu=False)
         self.encoder.append(3,3,2)
         self.encoder.append(16,3,2)
         self.encoder.append(64,3,1)

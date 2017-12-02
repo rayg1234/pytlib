@@ -50,6 +50,9 @@ class ImageVisualizer:
         def set_image(self,pt_image,key):
             self.cur_images[key]=pt_image
 
+        def clear(self):
+            self.cur_images.clear()
+
     def __init__(self):
         if not ImageVisualizer.instance:
             ImageVisualizer.instance = ImageVisualizer.__ImageVisualizer()

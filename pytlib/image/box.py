@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 
 class BoxCoordinatesInvalidException(Exception):
@@ -69,6 +70,17 @@ class Box:
         coords[2] = self.xmax if self.xmax>box2.xmax else box2.xmax
         coords[3] = self.ymax if self.ymax>box2.ymax else box2.ymax
         return Box.from_single_array(coords)
+
+    @staticmethod
+    def box_to_tensor(box,frame_size):
+        # normalize box coord to between 0 and 1
+        box_array = box.scale(1/np.array(frame_size,dtype=float)).to_single_array().astype(float)
+        return torch.Tensor(box_array)
+
+    @staticmethod
+    def tensor_to_box(tensor,frame_size):
+        assert tensor.size()==torch.Size([4]), 'tensor must of size 4 got {}'.format(tensor.size())
+        return Box.from_single_array(tensor.numpy()).scale(frame_size)
 
     def __str__(self):
         return 'Box [[x0,y0],[x1,y1]]:' + str([[self.xmin,self.ymin],[self.xmax,self.ymax]])
