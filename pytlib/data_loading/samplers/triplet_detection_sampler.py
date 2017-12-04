@@ -16,6 +16,7 @@ from image.ptimage import Ordering,ValueClass,PTImage
 from image.frame import Frame
 from data_loading.sample import Sample
 import copy
+import torch.nn.functional as F
 
 # Sample
 #    data: [Frame, anchor crop, pos crop, neg crop]
@@ -28,14 +29,20 @@ class TripletDetectionSample(implements(Sample)):
 
     def visualize(self,parameters={}):
         # image_frame = PTImage.from_cwh_torch(self.data[0])
-        image_anchor = PTImage.from_cwh_torch(self.data[0])
-        image_pos = PTImage.from_cwh_torch(self.data[1])
-        image_neg = PTImage.from_cwh_torch(self.data[2])
+        if parameters.get('mode','train')=='train':
+            image_anchor = PTImage.from_cwh_torch(self.data[0])
+            image_pos = PTImage.from_cwh_torch(self.data[1])
+            image_neg = PTImage.from_cwh_torch(self.data[2])
 
-        # ImageVisualizer().set_image(image_frame,parameters.get('title','') + ' : Frame')  
-        ImageVisualizer().set_image(image_anchor,parameters.get('title','') + ' : Anchor')
-        ImageVisualizer().set_image(image_pos,parameters.get('title','') + ' : Pos')
-        ImageVisualizer().set_image(image_neg,parameters.get('title','') + ' : Neg')
+            # ImageVisualizer().set_image(image_frame,parameters.get('title','') + ' : Frame')  
+            ImageVisualizer().set_image(image_anchor,parameters.get('title','') + ' : Anchor')
+            ImageVisualizer().set_image(image_pos,parameters.get('title','') + ' : Pos')
+            ImageVisualizer().set_image(image_neg,parameters.get('title','') + ' : Neg')
+        else:
+            img_frame = PTImage.from_cwh_torch(self.data[0])
+            img_frame_xcor = PTImage.from_2d_wh_torch(self.output[0])
+            ImageVisualizer().set_image(img_frame,parameters.get('title','') + ' : Frame')
+            ImageVisualizer().set_image(img_frame_xcor,parameters.get('title','') + ' : Frame xcor')
 
     def set_output(self,output):
         self.output = output
@@ -53,6 +60,7 @@ class TripletDetectionSampler(implements(Sampler)):
         self.obj_types = params['obj_types']
         self.frame_ids = []
         self.perturbations = {'translation_range':[-0.1,0.1],'scaling_range':[0.9,1.1]}
+        self.mode = params.get('mode','train')
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
         for i,frame in enumerate(self.source):
@@ -122,12 +130,12 @@ class TripletDetectionSampler(implements(Sampler)):
         pos = torch.Tensor(pos_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
         neg = torch.Tensor(neg_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
 
-        data = [anchor,pos,neg]
-        # data = [torch.Tensor(frame1.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float)),
-        #         torch.Tensor(anchor_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float)),
-        #         torch.Tensor(pos_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float)),
-        #         torch.Tensor(neg_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))]
-        target = [torch.Tensor(1)]
+        data, target = [],[torch.Tensor(1)]
+        if self.mode=='train':
+            data = [anchor,pos,neg]
+        else:
+            frame_t = torch.Tensor(frame1.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
+            data = [frame_t,pos]
         return TripletDetectionSample(data,target)
 
  

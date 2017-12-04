@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 # TODO, alot of these ops could be inplaced to reduce memory use and improve compute
-def pearson_correlation(x1,x2,eps=1e-6):
+def pearson_correlation_loss(x1,x2,eps=1e-6):
     assert len(x1.size()) == 1 and len(x2.size()) ==1 , 'Sizes must be the same and one-dimensional' 
     m1 = torch.mean(x1,0,keepdim=True)
     m2 = torch.mean(x2,0,keepdim=True)
@@ -20,8 +20,8 @@ def triplet_correlation_loss(anchor,pos,neg,dummy_target,margin=1.0,eps=1e-6):
     pcps,pcns = [],[]
     ne = anchor.nelement()/batch_size
     for i in range(0,batch_size):
-        pcps.append(pearson_correlation(anchor[i,:].view(ne),pos[i,:].view(ne)))
-        pcns.append(pearson_correlation(anchor[i,:].view(ne),neg[i,:].view(ne)))
+        pcps.append(pearson_correlation_loss(anchor[i,:].view(ne),pos[i,:].view(ne)))
+        pcns.append(pearson_correlation_loss(anchor[i,:].view(ne),neg[i,:].view(ne)))
     pcp = torch.stack(pcps,0)
     pcn = torch.stack(pcns,0)
     dist_hinge = torch.clamp(margin + pcn - pcp, min=0.0)

@@ -1,5 +1,3 @@
-import torch
-import torch.nn.functional as F
 from interface import Interface, implements
 
 # A sample represents a single training example, it can be different for different 

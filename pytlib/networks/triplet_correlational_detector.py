@@ -20,7 +20,7 @@ class TripletCorrelationalDetector(nn.Module):
 
     # now compute the xcorrelation of these feature maps
     # need to compute these unbatched because we are not using the same filter map for each conv
-    def cross_correlation(self,x1,x2,bn):
+    def cross_correlation(self,x1,x2,bn=None):
         batch_size = x1.size(0)
         response_maps = []
         for i in range(0,batch_size):
@@ -42,3 +42,8 @@ class TripletCorrelationalDetector(nn.Module):
         # frame_feature_map = self.encoder.forward(frame)
         # frame_pos_xcor = self.cross_correlation(frame_feature_map,pos_feature_map,self.crosscor_batchnorm)
         return anchor_feature_map,pos_feature_map,neg_feature_map
+
+    def infer(self,frame,crop):
+        crop_features = self.encoder.forward(crop)
+        frame_features = self.encoder.forward(frame)
+        return self.cross_correlation(frame_features,crop_features)
