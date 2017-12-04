@@ -30,7 +30,7 @@ class Frame:
         self.image.visualize('frame image')
 
     def visualize(self,axes=None,display=False,title='Frame Visualization'):
-        self.image.visualize(axes=axes,title=title,display=False)
+        axes = self.image.visualize(axes=axes,title=title,display=False)
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             axes.add_patch(rect)

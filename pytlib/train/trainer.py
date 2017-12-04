@@ -76,7 +76,11 @@ class Trainer:
             #################### LOAD INPUTS ############################
             # TODO, make separate timer class if more complex timings arise
             t0 = time.time()
-            sample_array = [self.loader.next() for i in range(0,args.batch_size)]
+            sample_array = []
+            while len(sample_array)<args.batch_size:
+                s = self.loader.next()
+                if s is not None:
+                    sample_array.append(s)
             batched_data, batched_targets = Batcher.batch_samples(sample_array)
             if self.args.cuda:
                 batched_data = map(lambda x: x.cuda(), batched_data)
@@ -102,9 +106,8 @@ class Trainer:
             #################### LOGGING, VIZ and SAVE ###################
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
 
-            # TODO Move this to a function in the model, ie the model should know how to draw its own graph
-            # if self.args.compute_graph and self.first_iteration:
-            #     compute_graph(output_data,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
+            if self.args.compute_graph and self.first_iteration:
+                compute_graph(loss,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
             if self.iteration%self.args.save_iter==0:
                 self.save()

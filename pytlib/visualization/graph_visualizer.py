@@ -37,9 +37,10 @@ def compute_graph(var, params=None, output_file=None,view=False):
                 dot.node(str(id(var)), size_to_str(var.size()), fillcolor='orange')
             elif hasattr(var, 'variable'):
                 u = var.variable
-                name = param_map[id(u)] if params is not None else ''
-                node_name = '%s\n %s' % (name, size_to_str(u.size()))
-                dot.node(str(id(var)), node_name, fillcolor='lightblue')
+                if u is not None:
+                    name = param_map[id(u)] if params is not None else ''
+                    node_name = '%s\n %s' % (name, size_to_str(u.size()))
+                    dot.node(str(id(var)), node_name, fillcolor='lightblue')
             else:
                 dot.node(str(id(var)), str(type(var).__name__))
             seen.add(var)

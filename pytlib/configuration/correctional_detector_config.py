@@ -26,6 +26,7 @@ if use_cuda:
 	model.cuda()
 # optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
 optimizer = optim.Adam(model.parameters(),lr=1e-3)
+# todo the loss function doesnt match with the samplers args right now
 loss = response_map_loss
 
 train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)

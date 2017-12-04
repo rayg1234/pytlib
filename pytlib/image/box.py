@@ -72,6 +72,16 @@ class Box:
         return Box.from_single_array(coords)
 
     @staticmethod
+    def intersection(b1,b2):
+        xmin,ymin = max(b1.xmin,b2.xmin),max(b1.ymin,b2.ymin)
+        xmax,ymax = min(b1.xmax,b2.xmax),min(b1.ymax,b2.ymax)
+        new_box = Box(xmin,ymin,xmax,ymax)
+        if new_box.xmin < new_box.xmax and new_box.ymin < new_box.ymax:
+            return new_box
+        else:
+            return None
+
+    @staticmethod
     def box_to_tensor(box,frame_size):
         # normalize box coord to between 0 and 1
         box_array = box.scale(1/np.array(frame_size,dtype=float)).to_single_array().astype(float)

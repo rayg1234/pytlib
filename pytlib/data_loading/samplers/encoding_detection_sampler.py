@@ -1,11 +1,12 @@
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
+from data_loading.sample import Sample
 from data_loading.samplers.sampler import Sampler
-from data_loading.sample import EncodingDetectionSample
 from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
 from image.random_perturber import RandomPerturber
+from visualization.image_visualizer import ImageVisualizer
 from image.affine_transforms import crop_image_resize,resize_image_center_crop
 import numpy as np
 import random
@@ -14,6 +15,41 @@ from interface import implements
 from image.ptimage import Ordering,ValueClass
 from image.frame import Frame
 import copy
+
+# TODO move to the network definition because this tied to it?
+# this is a sample for a complete detection and feature encoding problem
+# data: [a crop, the Full frame]
+# target: [a crop, a bounding box]
+# output: [a crop, a bounding box]
+class EncodingDetectionSample(implements(Sample)):
+    def __init__(self,data,target):
+        self.data = data
+        self.target = target
+        self.output = None
+
+    def visualize(self,parameters={}):
+        image_frame = PTImage.from_cwh_torch(self.data[1])
+        image_target = PTImage.from_cwh_torch(self.target[0])
+        image_output = PTImage.from_cwh_torch(self.output[0])
+        # todo add a coversion from 2d to 3d for visuals
+        target_box = Box.tensor_to_box(self.target[1].cpu(),image_frame.get_wh())
+        objs = [Object(target_box,0,obj_type='T')]
+        frame = Frame.from_image_and_objects(image_frame,objs)
+
+        image_rmap = PTImage.from_2d_wh_torch(F.sigmoid(self.output[3]).data)
+        ImageVisualizer().set_image(image_rmap,parameters.get('title','') + ' : RMap')
+        ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
+        ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
+        ImageVisualizer().set_image(frame,parameters.get('title','') + ' : Frame')          
+
+    def set_output(self,output):
+        self.output = output
+
+    def get_data(self):
+        return self.data
+
+    def get_target(self):
+        return self.target
 
 # the Encoding Detection Sampler is used for a proof of concept for a joint encoding + detection model
 # the data contains two elements, an array of crops, and the full detection frame
@@ -47,8 +83,7 @@ class EncodingDetectionSampler(implements(Sampler)):
         # 1) pick a random frame and a random crop
         frame = self.source[random.choice(self.frame_ids)]
         # frame.show_image_with_labels('original_frame')
-        # only deal with frames a single sample for now
-        assert len(frame.objects)==1, "Frame has no objects!"
+        # just work with the first object for now and assume frame only has 1
 
         # 2) resize frame
         affine_resized_frame = resize_image_center_crop(frame.image,self.frame_size)

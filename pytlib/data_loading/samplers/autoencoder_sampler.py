@@ -2,7 +2,7 @@ from image.frame import Frame
 from image.box import Box
 from image.object import Object
 from data_loading.samplers.sampler import Sampler
-from data_loading.sample import AutoEncoderSample
+from data_loading.sample import Sample
 from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
 from utils.dict_utils import get_deep
@@ -12,6 +12,30 @@ import numpy as np
 import random
 import torch
 from interface import implements
+
+# This is a sample where the image and the target are both images
+class AutoEncoderSample(implements(Sample)):
+    def __init__(self,data,target):
+        self.data = data
+        self.target = target
+        self.output = None
+
+    def visualize(self,parameters={}):
+        image_target = PTImage.from_cwh_torch(self.target[0])
+        image_output = PTImage.from_cwh_torch(self.output[0])
+        ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
+        ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
+
+    # specific to the AE sample, the first element of the output has the same shape as the target
+    def set_output(self,output):
+        assert output[0].size() == self.target[0].size()
+        self.output = output
+
+    def get_data(self):
+        return self.data
+
+    def get_target(self):
+        return self.target
 
 # This sampler provides images that contains a single item of something
 # we want to encode, the target tensor includes both the crop itself and the coordinates
