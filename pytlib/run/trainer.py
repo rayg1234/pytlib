@@ -30,12 +30,9 @@ class Trainer:
         self.optimizer = self.model_config.optimizer
         self.args = args
         self.iteration = 0
-        self.first_iteration = True
 
         if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
-            mkdir(self.args.output_dir,wipe=True)
-        else:
-            self.load()        
+            mkdir(self.args.output_dir,wipe=True)     
 
         # initialize logging and model saving
         if self.args.output_dir is not None:
@@ -71,20 +68,29 @@ class Trainer:
         output = self.model(*inputs)
         return list(output) if isinstance(output,tuple) else [output] 
 
+    def load_samples(self):
+        sample_array = []
+        while len(sample_array)<args.batch_size:
+            s = self.loader.next()
+            if s is not None:
+                sample_array.append(s)
+        batched_data, batched_targets = Batcher.batch_samples(sample_array)
+        if self.args.cuda:
+            batched_data = map(lambda x: x.cuda(), batched_data)
+            batched_targets = map(lambda x: x.cuda(), batched_targets)
+        return batched_data,batched_targets,sample_array
+
     def train(self):
+        # load after a forward call for dynamic models
+        batched_data,_,_ = self.load_samples()
+        self.evaluate_model(batched_data)
+        self.load()
+
         for i in range(self.iteration,self.iteration+self.args.iterations):
             #################### LOAD INPUTS ############################
             # TODO, make separate timer class if more complex timings arise
             t0 = time.time()
-            sample_array = []
-            while len(sample_array)<args.batch_size:
-                s = self.loader.next()
-                if s is not None:
-                    sample_array.append(s)
-            batched_data, batched_targets = Batcher.batch_samples(sample_array)
-            if self.args.cuda:
-                batched_data = map(lambda x: x.cuda(), batched_data)
-                batched_targets = map(lambda x: x.cuda(), batched_targets)
+            batched_data,batched_targets,sample_array = self.load_samples()
             self.logger.set('timing.input_loading_time',time.time() - t0)
             #############################################################
 
@@ -106,7 +112,7 @@ class Trainer:
             #################### LOGGING, VIZ and SAVE ###################
             print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
 
-            if self.args.compute_graph and self.first_iteration:
+            if self.args.compute_graph and i==self.iteration:
                 compute_graph(loss,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
             if self.iteration%self.args.save_iter==0:
@@ -123,8 +129,6 @@ class Trainer:
                 Batcher.debatch_outputs(sample_array,outputs)
                 map(lambda x:x.visualize({'title':random_str(5)}),sample_array)
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
-
-            self.first_iteration = False
             #############################################################
 
 
@@ -133,7 +137,7 @@ if __name__ == '__main__':
     parser.add_argument('-t','--train_config',required=True,type=str,help='the train configuration')
     parser.add_argument('-b','--batch_size',default=1, required=False,type=int,help='the batch_size')
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
-    parser.add_argument('-v','--visualize_iter',required=False, default=100,type=int, help='save visualizations every this many iterations')
+    parser.add_argument('-v','--visualize_iter',required=False, default=1000,type=int, help='save visualizations every this many iterations')
     parser.add_argument('-o','--output_dir',required=False,type=str,default='tmp',help='the directory to output the model params and logs')
     parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')

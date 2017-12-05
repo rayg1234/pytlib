@@ -26,32 +26,25 @@ class Tester:
         self.model = self.model_config.model
         self.args = args
         self.iteration = 0
-        self.first_iteration = True
-
-        if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
-            mkdir(self.args.output_dir,wipe=True)
-        else:
-            self.load()        
-
+        
         # initialize logging and model saving
-        if self.args.output_dir is not None:
-            self.logger = Logger(os.path.join(self.args.output_dir,'infer_log.json'))
+        if self.args.model_dir is not None:
+            self.logger = Logger(os.path.join(self.args.model_dir,'infer_log.json'))
         else:
             self.logger = Logger()
 
     def load(self):
         # list model files and find the latest_model
-        all_models = list_files(self.args.output_dir,ext_filter='.mdl')
+        all_models = list_files(self.args.model_dir,ext_filter='.mdl')
         if not all_models:
             print 'No previous checkpoints found!'
             return
-
+            
         all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[-1])) for m in all_models]
         all_models_indexed.sort(key=lambda x: x[1],reverse=True)
         print 'Loading model from disk: {0}'.format(all_models_indexed[0][0])
         checkpoint = torch.load(all_models_indexed[0][0])
         self.model.load_state_dict(checkpoint['state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer'])
         self.iteration = checkpoint['iteration']
 
     # a wrapper for model.forward to feed inputs as list and get outputs as a list
@@ -59,20 +52,28 @@ class Tester:
         output = self.model.infer(*inputs)
         return list(output) if isinstance(output,tuple) else [output] 
 
+    def load_samples(self):
+        sample_array = []
+        while len(sample_array)<args.batch_size:
+            s = self.loader.next()
+            if s is not None:
+                sample_array.append(s)
+        batched_data, batched_targets = Batcher.batch_samples(sample_array)
+        if self.args.cuda:
+            batched_data = map(lambda x: x.cuda(), batched_data)
+            batched_targets = map(lambda x: x.cuda(), batched_targets)
+        return batched_data,batched_targets,sample_array
+
     def test(self):
+        # load after a forward call for dynamic models
+        batched_data,_,_ = self.load_samples()
+        self.evaluate_model(batched_data)
+        self.load()
+
         for i in range(self.iteration,self.iteration+self.args.iterations):
             #################### LOAD INPUTS ############################
-            # TODO, make separate timer class if more complex timings arise
             t0 = time.time()
-            sample_array = []
-            while len(sample_array)<args.batch_size:
-                s = self.loader.next()
-                if s is not None:
-                    sample_array.append(s)
-            batched_data, batched_targets = Batcher.batch_samples(sample_array)
-            if self.args.cuda:
-                batched_data = map(lambda x: x.cuda(), batched_data)
-                batched_targets = map(lambda x: x.cuda(), batched_targets)
+            batched_data,batched_targets,sample_array = self.load_samples()
             self.logger.set('timing.input_loading_time',time.time() - t0)
             #############################################################
 
@@ -94,9 +95,8 @@ class Tester:
             if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
                 Batcher.debatch_outputs(sample_array,outputs)
                 map(lambda x:x.visualize({'title':random_str(5),'mode':'test'}),sample_array)
-                ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
+                ImageVisualizer().dump_image(os.path.join(self.args.model_dir,'testviz_{0:08d}.svg'.format(self.iteration)))
 
-            self.first_iteration = False
             #############################################################
 
 
@@ -106,8 +106,7 @@ if __name__ == '__main__':
     parser.add_argument('-b','--batch_size',default=1, required=False,type=int,help='the batch_size')
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
     parser.add_argument('-v','--visualize_iter',required=False, default=1,type=int, help='save visualizations every this many iterations')
-    parser.add_argument('-o','--output_dir',required=False,type=str,default='tmp',help='the directory to output the model params and logs')
-    parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
+    parser.add_argument('-m','--model_dir',required=False,type=str,default='tmp',help='the directory where the model weights are')
     parser.add_argument('-e','--seed',type=int,help='the random seed for torch',default=123)
     args=parser.parse_args()
 

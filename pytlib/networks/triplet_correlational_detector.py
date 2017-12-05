@@ -13,10 +13,11 @@ class TripletCorrelationalDetector(nn.Module):
         self.encoder = ConvolutionStack(3,final_relu=False)
         self.encoder.append(3,3,2)
         self.encoder.append(16,3,2)
-        self.encoder.append(32,3,2)
+        self.encoder.append(32,3,1)
         self.encoder.append(64,3,2)
-        self.encoder.append(96,3,2)
+        self.encoder.append(96,3,1)
         self.crosscor_batchnorm = nn.BatchNorm2d(1)
+        self.register_parameter('feature_crop', None)
 
     # now compute the xcorrelation of these feature maps
     # need to compute these unbatched because we are not using the same filter map for each conv
@@ -31,19 +32,26 @@ class TripletCorrelationalDetector(nn.Module):
             rmap = bn(rmap)
         return rmap
 
-    # assert the input has two elements, first is the crop, second the full frame
-    def forward(self, anchor, pos, neg):
-        # recon,mu,logvar = None,None,None
-        anchor_feature_map = self.encoder.forward(anchor)
+    def forward(self, pos, neg):
         pos_feature_map = self.encoder.forward(pos)
         neg_feature_map = self.encoder.forward(neg)
-        # anchor_pos_xcor = self.cross_correlation(anchor_feature_map,pos_feature_map,self.crosscor_batchnorm1)
-        # anchor_neg_xcor = self.cross_correlation(anchor_feature_map,neg_feature_map,self.crosscor_batchnorm2)
-        # frame_feature_map = self.encoder.forward(frame)
-        # frame_pos_xcor = self.cross_correlation(frame_feature_map,pos_feature_map,self.crosscor_batchnorm)
+        # initialize feature_encoding if None
+        batch_size = pos.size(0)
+        if self.feature_crop is None:
+            self.feature_crop = nn.Parameter(torch.Tensor(pos.size()[1:]))
+            stdv = 1. / math.sqrt(self.feature_crop.nelement())
+            self.feature_crop.data.uniform_(-stdv, stdv)
+
+        crop = self.feature_crop.cuda() if pos.is_cuda else self.feature_crop
+        anchor_feature_map = self.encoder.forward(crop.expand(batch_size,*self.feature_crop.size()))
         return anchor_feature_map,pos_feature_map,neg_feature_map
 
-    def infer(self,frame,crop):
-        crop_features = self.encoder.forward(crop)
+    def infer(self,frame,pos):
+        batch_size = frame.size(0)
+        if self.feature_crop is None:
+            self.feature_crop = nn.Parameter(torch.Tensor(pos.size()[1:]))
+        crop = self.feature_crop.cuda() if pos.is_cuda else self.feature_crop
+        crop_features = self.encoder.forward(crop.expand(batch_size,*self.feature_crop.size()))
         frame_features = self.encoder.forward(frame)
+        pos_features = self.encoder.forward(pos)
         return self.cross_correlation(frame_features,crop_features)
