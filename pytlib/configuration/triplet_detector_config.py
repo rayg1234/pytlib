@@ -13,7 +13,7 @@ import random
 use_cuda = True
 def get_sampler(mode='train'):
     source = KITTISource('/home/ray/Data/KITTI/training',max_frames=6000)
-    sampler_params = {'crop_size':[100,100],'obj_types':['Car'],'mode':mode}
+    sampler_params = {'crop_size':[255,255],'obj_types':['Car'],'mode':mode}
     return TripletDetectionSampler(source,sampler_params)
 
 # loader_train = get_sampler('train')

@@ -12,7 +12,7 @@ class ImageVisualizer:
             # raise exception here
             self.cur_images = dict()
 
-        def dump_image(self,output_file,display=False,save=True,max_cols=4):
+        def dump_image(self,output_file,display=False,save=True,max_cols=5):
             rows = int(math.ceil(float(len(self.cur_images)) / max_cols))
             cols = max_cols if len(self.cur_images) > max_cols else len(self.cur_images)
             fig,axes = plt.subplots(rows,cols,figsize=(cols*3,rows*3))

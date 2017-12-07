@@ -3,7 +3,6 @@ import copy
 import os
 import numpy as np
 from PIL import Image
-from image.image_utils import scale_np_img
 import matplotlib.pyplot as plt
 # This is a general representation of images
 # and act as a mediator between different types and storage orders
@@ -58,6 +57,13 @@ class PTImage:
     def get_pil_image(self):
         return Image.fromarray(self.get_data())
 
+    @staticmethod
+    def scale_np_img(image,input_range,output_range,output_type=float):
+        assert len(input_range)==2 and len(output_range)==2
+        scale = float(output_range[1] - output_range[0])/(input_range[1] - input_range[0])
+        offset = output_range[0] - input_range[0]*scale;
+        return (image*scale+offset).astype(output_type);
+
     def visualize(self,axes=None,display=False,title='PTImage Visualization'):
         # TODO if already in the right order, don't both converting
         display_img = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
@@ -88,7 +94,7 @@ class PTImage:
             assert False, 'Dont know how to convert to this ordering'
 
         if self.vc != new_value_class:
-            new_data = scale_np_img(new_data,self.vc['range'],new_value_class['range'],new_value_class['dtype'])
+            new_data = PTImage.scale_np_img(new_data,self.vc['range'],new_value_class['range'],new_value_class['dtype'])
 
         new_img = PTImage(data=new_data,ordering=new_ordering,vc=new_value_class)
         return new_img

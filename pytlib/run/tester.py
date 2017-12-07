@@ -39,7 +39,7 @@ class Tester:
         if not all_models:
             print 'No previous checkpoints found!'
             return
-            
+
         all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[-1])) for m in all_models]
         all_models_indexed.sort(key=lambda x: x[1],reverse=True)
         print 'Loading model from disk: {0}'.format(all_models_indexed[0][0])
@@ -53,11 +53,7 @@ class Tester:
         return list(output) if isinstance(output,tuple) else [output] 
 
     def load_samples(self):
-        sample_array = []
-        while len(sample_array)<args.batch_size:
-            s = self.loader.next()
-            if s is not None:
-                sample_array.append(s)
+        sample_array = [self.loader.next() for i in range(0,args.batch_size)]
         batched_data, batched_targets = Batcher.batch_samples(sample_array)
         if self.args.cuda:
             batched_data = map(lambda x: x.cuda(), batched_data)

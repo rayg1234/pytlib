@@ -69,11 +69,7 @@ class Trainer:
         return list(output) if isinstance(output,tuple) else [output] 
 
     def load_samples(self):
-        sample_array = []
-        while len(sample_array)<args.batch_size:
-            s = self.loader.next()
-            if s is not None:
-                sample_array.append(s)
+        sample_array = [self.loader.next() for i in range(0,args.batch_size)]
         batched_data, batched_targets = Batcher.batch_samples(sample_array)
         if self.args.cuda:
             batched_data = map(lambda x: x.cuda(), batched_data)
