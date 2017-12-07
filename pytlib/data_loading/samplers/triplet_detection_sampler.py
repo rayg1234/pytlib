@@ -102,10 +102,9 @@ class TripletDetectionSampler(implements(Sampler)):
 
     # pick a frame to generate positive and negative crop
     def next(self):
-        negative_found = False
         neg_box = None
         # TODO, this should probably break if never find anything for a while
-        while not negative_found:
+        while neg_box is None:
             frame1 = self.source[random.choice(self.frame_ids)]
             frame1_objs = filter(lambda x: x.obj_type in self.obj_types,frame1.get_objects())
             # get random pos boxes
@@ -113,16 +112,16 @@ class TripletDetectionSampler(implements(Sampler)):
 
             # find random neg crop
             neg_box = self.find_negative_crop(frame1,frame1_objs)
-            if neg_box is not None:
-                negative_found = True
 
         perturbed_pos_box = RandomPerturber.perturb_crop_box(pos_box,self.perturbations)
         affine_crop = crop_image_resize(frame1.image,perturbed_pos_box,self.crop_size)
         pos_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
+        # now find all the boxes that intersect with the perturbed_pos_box
+
         box_crop = affine_crop.apply_to_box(pos_box)        
 
         # test display
-        disp_frame = Frame.from_image_and_objects(pos_crop,[Object(box_crop)])
+        # disp_frame = Frame.from_image_and_objects(pos_crop,[Object(box_crop)])
         # disp_frame.visualize(display=True,title='pos frame')
 
         affine_crop = crop_image_resize(frame1.image,neg_box,self.crop_size)

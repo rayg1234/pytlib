@@ -32,8 +32,7 @@ class TripletCorrelationalDetector(nn.Module):
             response = F.conv2d(x1[i,:].unsqueeze(0),x2[i,:].unsqueeze(0),padding=padding)
             response_maps.append(response.squeeze(0))
         rmap = torch.stack(response_maps,0)
-        if bn is not None:
-            rmap = bn(rmap)
+        rmap = bn(rmap) if bn is not None else rmap
         return rmap
 
     def forward(self, pos, neg):

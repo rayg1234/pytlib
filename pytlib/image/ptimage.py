@@ -73,8 +73,8 @@ class PTImage:
             fig.canvas.set_window_title(title)
         else:
             cur_ax = axes
-        cur_ax.imshow(display_img.get_data())
-        # cur_ax.imshow(display_img.get_data(), interpolation='nearest', vmin=0, vmax=255)
+        # cur_ax.imshow(display_img.get_data())
+        cur_ax.imshow(display_img.get_data(), interpolation='nearest', vmin=0, vmax=255)
         if display:
             plt.show(block=True)
             plt.close()

@@ -5,7 +5,7 @@ from data_loading.samplers.encoding_detection_sampler import EncodingDetectionSa
 import torch.optim as optim
 import torch.nn as nn
 from networks.correlational_detector import CorrelationalDetector
-from loss_functions.encoding_detection_loss import response_map_loss
+from loss_functions.response_map_loss import response_map_loss
 import random
 
 # define these things here
