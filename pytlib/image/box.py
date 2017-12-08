@@ -88,6 +88,14 @@ class Box:
         return torch.Tensor(box_array)
 
     @staticmethod
+    def boxes_to_tensor(boxes,frame_size):
+        # normalize box coord to between 0 and 1
+        box_array = []
+        for box in boxes:
+            box_array.append(box.scale(1/np.array(frame_size,dtype=float)).to_single_array().astype(float))
+        return torch.Tensor(np.stack(box_array))
+
+    @staticmethod
     def tensor_to_box(tensor,frame_size):
         assert tensor.size()==torch.Size([4]), 'tensor must of size 4 got {}'.format(tensor.size())
         return Box.from_single_array(tensor.numpy()).scale(frame_size)

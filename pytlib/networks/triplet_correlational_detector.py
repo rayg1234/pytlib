@@ -35,17 +35,21 @@ class TripletCorrelationalDetector(nn.Module):
         rmap = bn(rmap) if bn is not None else rmap
         return rmap
 
+    def init_anchor(self,is_cuda):
+        if self.anchor_crop is None:
+            self.anchor_crop = nn.Parameter(torch.Tensor(self.anchor_size))
+            stdv = 1. / math.sqrt(self.anchor_crop.nelement())
+            self.anchor_crop.data.uniform_(-stdv, stdv)
+            if is_cuda:
+                self.cuda()        
+
     def forward(self, pos, neg):
         pos_feature_map = self.encoder.forward(pos)
         neg_feature_map = self.encoder.forward(neg)
         # initialize feature_encoding if None
         batch_size = pos.size(0)
-        if self.anchor_crop is None:
-            self.anchor_crop = nn.Parameter(torch.Tensor(self.anchor_size))
-            stdv = 1. / math.sqrt(self.anchor_crop.nelement())
-            self.anchor_crop.data.uniform_(-stdv, stdv)
-        anchor = self.anchor_crop.cuda() if pos.is_cuda else self.anchor_crop
-        anchor = anchor.expand(batch_size,*self.anchor_crop.size())
+        self.init_anchor(pos.is_cuda)
+        anchor = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         anchor_feature_map = self.encoder.forward(anchor)
 
         cxp = self.cross_correlation(pos_feature_map,anchor_feature_map,self.crosscor_batchnorm0)
@@ -54,9 +58,7 @@ class TripletCorrelationalDetector(nn.Module):
 
     def infer(self,frame):
         batch_size = frame.size(0)
-        if self.anchor_crop is None:
-            self.anchor_crop = nn.Parameter(torch.Tensor(self.anchor_size))
-        crop = self.anchor_crop.cuda() if frame.is_cuda else self.anchor_crop
+        self.init_anchor(pos.is_cuda)
         batched_crop = crop.expand(batch_size,*self.anchor_crop.size())
         crop_features = self.encoder.forward(batched_crop)
         frame_features = self.encoder.forward(frame)

@@ -10,6 +10,7 @@ import numpy as np
 from image.ptimage import PTImage
 
 def response_map_loss(rmap,target_box=None):
+    assert len(rmap.size()==3), 'rmap needs to be 3-dimensional! batch x height x width'
     # first turn the box into a binary response map
     binarized_target_map = np.zeros(rmap.size())
     x_size = rmap.data.size(1)
