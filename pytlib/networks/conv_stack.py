@@ -5,18 +5,19 @@ from torch.nn import ModuleList
 from utils.debug import pp
 
 class ConvolutionStack(nn.Module):
-    def __init__(self,in_chans,final_relu=True):
+    def __init__(self,in_chans,final_relu=True,padding=1):
         super(ConvolutionStack, self).__init__()
         self.convs = ModuleList()
         self.batchnorms = ModuleList()
         self.in_chans = in_chans
         self.final_relu = final_relu
+        self.padding = padding
 
     def append(self,out_chans,filter_size,stride):
         if len(self.convs)==0:
-            self.convs.append(nn.Conv2d(self.in_chans, out_chans, filter_size, stride=stride, padding=1))
+            self.convs.append(nn.Conv2d(self.in_chans, out_chans, filter_size, stride=stride, padding=self.padding))
         else:
-            self.convs.append(nn.Conv2d(self.convs[-1].out_channels, out_chans, filter_size, stride=stride, padding=1))
+            self.convs.append(nn.Conv2d(self.convs[-1].out_channels, out_chans, filter_size, stride=stride, padding=self.padding))
         self.batchnorms.append(nn.BatchNorm2d(out_chans))
 
     def get_output_dims(self):
@@ -36,19 +37,20 @@ class ConvolutionStack(nn.Module):
         return x
 
 class TransposedConvolutionStack(nn.Module):
-    def __init__(self,in_chans,final_relu=True):
+    def __init__(self,in_chans,final_relu=True,padding=1):
         super(TransposedConvolutionStack, self).__init__()
         self.convs = ModuleList()
         self.batchnorms = ModuleList()
         self.in_chans = in_chans
         self.output_dims = []
         self.final_relu = final_relu
+        self.padding = padding
 
     def append(self,out_chans,filter_size,stride):
         if len(self.convs)==0:
-            self.convs.append(nn.ConvTranspose2d(self.in_chans, out_chans, filter_size, stride=stride, padding=1))
+            self.convs.append(nn.ConvTranspose2d(self.in_chans, out_chans, filter_size, stride=stride, padding=self.padding))
         else:
-            self.convs.append(nn.ConvTranspose2d(self.convs[-1].out_channels, out_chans, filter_size, stride=stride, padding=1))
+            self.convs.append(nn.ConvTranspose2d(self.convs[-1].out_channels, out_chans, filter_size, stride=stride, padding=self.padding))
         self.batchnorms.append(nn.BatchNorm2d(out_chans))
 
     def forward(self, x, output_dims=[]):

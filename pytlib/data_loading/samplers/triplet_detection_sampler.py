@@ -49,11 +49,13 @@ class TripletDetectionSample(implements(Sample)):
             ImageVisualizer().set_image(image_neg_map,parameters.get('title','') + ' : neg_res')
         else:
             img_frame = PTImage.from_cwh_torch(self.data[0])
+            # img_pos = PTImage.from_cwh_torch(self.data[1])
             img_frame_xcor = PTImage.from_2d_wh_torch(F.sigmoid(self.output[0]).data)
-            # img_anchor = PTImage.from_cwh_torch(self.output[1])
-            # ImageVisualizer().set_image(img_anchor,parameters.get('title','') + ' : Anchor')
+            # image_pos_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[1]).data)
             ImageVisualizer().set_image(img_frame,parameters.get('title','') + ' : Frame')
+            # ImageVisualizer().set_image(img_pos,parameters.get('title','') + ' : pos')
             ImageVisualizer().set_image(img_frame_xcor,parameters.get('title','') + ' : Frame xcor')
+            # ImageVisualizer().set_image(image_pos_map,parameters.get('title','') + ' : pos xcor')
 
     def set_output(self,output):
         self.output = output
@@ -70,7 +72,7 @@ class TripletDetectionSampler(implements(Sampler)):
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
         self.frame_ids = []
-        self.perturbations = {'translation_range':[-0.2,0.2],'scaling_range':[2.0,2.0]}
+        self.perturbations = {'translation_range':[-0.0,0.0],'scaling_range':[2.0,2.0]}
         self.mode = params.get('mode','train')
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module

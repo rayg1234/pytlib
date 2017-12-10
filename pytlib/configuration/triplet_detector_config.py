@@ -25,7 +25,7 @@ model = TripletCorrelationalDetector()
 if use_cuda:
 	model.cuda()
 # optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-optimizer = optim.Adam(model.parameters(),lr=1e-4)
+optimizer = optim.Adam(model.parameters(),lr=1e-3)
 loss = triplet_correlation_loss2
 
 train_config = TrainConfiguration(loader_train,optimizer,model,loss,use_cuda)

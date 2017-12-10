@@ -10,14 +10,13 @@ from data_loading.sample import Sample
 class TripletCorrelationalDetector(nn.Module):
     def __init__(self,anchor_size=(3,127,127)):
         super(TripletCorrelationalDetector, self).__init__()
-        self.encoder = ConvolutionStack(3,final_relu=False)
+        self.encoder = ConvolutionStack(3,final_relu=False,padding=0)
         self.encoder.append(3,3,2)
         self.encoder.append(16,3,2)
         self.encoder.append(32,3,1)
         self.encoder.append(64,3,2)
-        self.encoder.append(96,3,1)
+        self.encoder.append(128,3,1)
         self.crosscor_batchnorm0 = nn.BatchNorm2d(1)
-        self.crosscor_batchnorm1 = nn.BatchNorm2d(1)
         # this used to dynamically initialized to deal with runtime cropsizes
         # I will keep it this way incase I want to revisit        
         self.register_parameter('anchor_crop', None)
@@ -52,14 +51,15 @@ class TripletCorrelationalDetector(nn.Module):
         anchor = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         anchor_feature_map = self.encoder.forward(anchor)
 
-        cxp = self.cross_correlation(pos_feature_map,anchor_feature_map,self.crosscor_batchnorm0)
-        cxn = self.cross_correlation(neg_feature_map,anchor_feature_map,self.crosscor_batchnorm1)
+        cxp = self.cross_correlation(pos_feature_map,anchor_feature_map)
+        cxn = self.cross_correlation(neg_feature_map,anchor_feature_map)
         return anchor,cxp,cxn
 
     def infer(self,frame):
         batch_size = frame.size(0)
-        self.init_anchor(pos.is_cuda)
-        batched_crop = crop.expand(batch_size,*self.anchor_crop.size())
+        self.init_anchor(frame.is_cuda)
+        batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         crop_features = self.encoder.forward(batched_crop)
         frame_features = self.encoder.forward(frame)
-        return self.cross_correlation(frame_features,crop_features,self.crosscor_batchnorm0)
+        return self.cross_correlation(frame_features,crop_features)
+
