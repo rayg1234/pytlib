@@ -5,22 +5,19 @@ from networks.conv_stack import ConvolutionStack
 import torch
 import math
 from data_loading.sample import Sample
+from networks.vae import VAE
 
 # both encodes the image and performs detection on a target box(s)
 class TripletCorrelationalDetector(nn.Module):
-    def __init__(self,anchor_size=(3,127,127)):
+    def __init__(self,anchor_size=(127,127)):
         super(TripletCorrelationalDetector, self).__init__()
-        self.encoder = ConvolutionStack(3,final_relu=False,padding=0)
-        self.encoder.append(3,3,2)
-        self.encoder.append(16,3,2)
-        self.encoder.append(32,3,1)
-        self.encoder.append(64,3,2)
-        self.encoder.append(128,3,1)
+        self.vae = VAE()
+        self.encoder = self.vae.get_encoder()
         self.crosscor_batchnorm0 = nn.BatchNorm2d(1)
         # this used to dynamically initialized to deal with runtime cropsizes
         # I will keep it this way incase I want to revisit        
         self.register_parameter('anchor_crop', None)
-        self.anchor_size = torch.Size(anchor_size)
+        self.anchor_size = torch.Size((3,anchor_size[0],anchor_size[1]))
 
     # now compute the xcorrelation of these feature maps
     # need to compute these unbatched because we are not using the same filter map for each conv
@@ -42,7 +39,8 @@ class TripletCorrelationalDetector(nn.Module):
             if is_cuda:
                 self.cuda()        
 
-    def forward(self, pos, neg):
+    def forward(self, pos, neg, pos_crop):
+        recon,mu,logvar = self.vae.forward(pos_crop)
         pos_feature_map = self.encoder.forward(pos)
         neg_feature_map = self.encoder.forward(neg)
         # initialize feature_encoding if None
@@ -53,13 +51,14 @@ class TripletCorrelationalDetector(nn.Module):
 
         cxp = self.cross_correlation(pos_feature_map,anchor_feature_map)
         cxn = self.cross_correlation(neg_feature_map,anchor_feature_map)
-        return anchor,cxp,cxn
+        return anchor,cxp,cxn,recon,mu,logvar
 
-    def infer(self,frame):
+    def infer(self,frame,pos,neg):
         batch_size = frame.size(0)
         self.init_anchor(frame.is_cuda)
         batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         crop_features = self.encoder.forward(batched_crop)
         frame_features = self.encoder.forward(frame)
-        return self.cross_correlation(frame_features,crop_features)
+        posf,negf = self.encoder.forward(pos),self.encoder.forward(neg)
+        return self.cross_correlation(frame_features,crop_features),self.cross_correlation(posf,crop_features),self.cross_correlation(negf,crop_features)
 

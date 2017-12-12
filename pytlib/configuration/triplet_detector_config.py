@@ -10,23 +10,15 @@ from loss_functions.triplet_correlation_loss import triplet_correlation_loss,tri
 import random
 
 # define these things here
-use_cuda = True
-def get_sampler(mode='train'):
-    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=6000)
-    sampler_params = {'crop_size':[255,255],'obj_types':['Car'],'mode':mode}
+def get_sampler(mode):
+    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10)
+    sampler_params = {'crop_size':[255,255],'anchor_size':[127,127],'obj_types':['Car'],'mode':mode}
     return TripletDetectionSampler(source,sampler_params)
 
-# loader_train = get_sampler('train')
-loader_test = get_sampler('test')
-loader_train = MultiSampler(get_sampler,dict(),num_procs=10)
-model = TripletCorrelationalDetector()
-
-# want to do this before constructing optimizer according to pytroch docs
-if use_cuda:
-	model.cuda()
-# optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-optimizer = optim.Adam(model.parameters(),lr=1e-3)
+loader_test = (MultiSampler,dict(loader=get_sampler,loader_args=dict(mode='test'),num_procs=1))
+loader_train = (MultiSampler,dict(loader=get_sampler,loader_args=dict(mode='train'),num_procs=10))
+model = (TripletCorrelationalDetector,dict(anchor_size=(127,127)))
+optimizer = (optim.Adam,dict(lr=1e-3))
 loss = triplet_correlation_loss2
-
-train_config = TrainConfiguration(loader_train,optimizer,model,loss,use_cuda)
-test_config = TestConfiguration(loader_test,model,loss,use_cuda)
+train_config = TrainConfiguration(loader_train,optimizer,model,loss,cuda=True)
+test_config = TestConfiguration(loader_test,model,loss,cuda=True)

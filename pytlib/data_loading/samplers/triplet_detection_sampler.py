@@ -49,13 +49,23 @@ class TripletDetectionSample(implements(Sample)):
             ImageVisualizer().set_image(image_neg_map,parameters.get('title','') + ' : neg_res')
         else:
             img_frame = PTImage.from_cwh_torch(self.data[0])
-            # img_pos = PTImage.from_cwh_torch(self.data[1])
             img_frame_xcor = PTImage.from_2d_wh_torch(F.sigmoid(self.output[0]).data)
-            # image_pos_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[1]).data)
+
+            img_pos = PTImage.from_cwh_torch(self.data[1])
+            img_neg = PTImage.from_cwh_torch(self.data[2])
+            image_pos_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[1]).data)
+            image_neg_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[2]).data)
+
+            image_pos_map.visualize(display=True,title='pos_map')
+            image_neg_map.visualize(display=True,title='neg_map')
+            img_frame_xcor.visualize(display=True,title='frame')
+
             ImageVisualizer().set_image(img_frame,parameters.get('title','') + ' : Frame')
-            # ImageVisualizer().set_image(img_pos,parameters.get('title','') + ' : pos')
             ImageVisualizer().set_image(img_frame_xcor,parameters.get('title','') + ' : Frame xcor')
-            # ImageVisualizer().set_image(image_pos_map,parameters.get('title','') + ' : pos xcor')
+            ImageVisualizer().set_image(img_pos,parameters.get('title','') + ' : pos')
+            ImageVisualizer().set_image(image_pos_map,parameters.get('title','') + ' : pos xcor')
+            ImageVisualizer().set_image(img_neg,parameters.get('title','') + ' : neg')
+            ImageVisualizer().set_image(image_neg_map,parameters.get('title','') + ' : neg xcor')
 
     def set_output(self,output):
         self.output = output
@@ -71,6 +81,7 @@ class TripletDetectionSampler(implements(Sampler)):
         self.source = source
         self.crop_size = params['crop_size']
         self.obj_types = params['obj_types']
+        self.anchor_size = params['anchor_size']
         self.frame_ids = []
         self.perturbations = {'translation_range':[-0.0,0.0],'scaling_range':[2.0,2.0]}
         self.mode = params.get('mode','train')
@@ -121,6 +132,14 @@ class TripletDetectionSampler(implements(Sampler)):
         perturbed_pos_box = RandomPerturber.perturb_crop_box(pos_box,self.perturbations)
         affine_crop = crop_image_resize(frame1.image,perturbed_pos_box,self.crop_size)
         pos_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
+
+        affine_crop = crop_image_resize(frame1.image,pos_box,self.crop_size)
+        anchor_crop = affine_crop.apply_to_image(frame1.image,self.anchor_size)
+
+        affine_crop = crop_image_resize(frame1.image,neg_box,self.crop_size)
+        neg_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
+        # neg_crop.visualize(display=True,title='neg')
+
         # now find all the boxes that intersect with the perturbed_pos_box
         intersected_boxes = []
         for obj in filter(lambda x: x.obj_type in self.obj_types,frame1.get_objects()):
@@ -133,12 +152,9 @@ class TripletDetectionSampler(implements(Sampler)):
         # disp_frame.visualize(display=True,title='pos frame')
         # pos_crop.visualize(display=True,title='pos crop')
 
-        affine_crop = crop_image_resize(frame1.image,neg_box,self.crop_size)
-        neg_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
-        # neg_crop.visualize(display=True,title='neg')
-
         pos = torch.Tensor(pos_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
         neg = torch.Tensor(neg_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
+        anchor = torch.Tensor(anchor_crop.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
 
         # pos_map = generate_response_map_from_boxes(pos_crop.get_hw(),intersected_boxes)
         # PTImage.from_2d_numpy(pos_map).visualize(display=True,title='pos frame')      
@@ -147,11 +163,11 @@ class TripletDetectionSampler(implements(Sampler)):
 
         data, target = [],[]
         if self.mode=='train':
-            data = [pos,neg]
-            target = [pos_map,neg_map]
+            data = [pos,neg,anchor]
+            target = [pos_map,neg_map,anchor]
         else:
             frame_t = torch.Tensor(frame1.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
-            data = [frame_t]
+            data = [frame_t,pos,neg]
             target = [torch.Tensor(1)]
         return TripletDetectionSample(data,target)
 

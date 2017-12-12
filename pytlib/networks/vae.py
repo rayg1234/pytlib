@@ -12,19 +12,19 @@ class VAE(nn.Module):
         self.encoding_size = encoding_size
         self.outchannel_size = 256
         # encoding conv
-        self.encoder = ConvolutionStack(3,final_relu=False)
-        self.encoder.append(3,3,2)
+        self.encoder = ConvolutionStack(3,final_relu=False,padding=0)
         self.encoder.append(16,3,2)
-        self.encoder.append(64,3,1)
+        self.encoder.append(32,3,1)
+        self.encoder.append(64,3,2)
         self.encoder.append(128,3,2)
         self.encoder.append(self.outchannel_size,3,1)
 
         # decode
-        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False)
+        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False,padding=0)
         self.decoder.append(128,3,1)
         self.decoder.append(64,3,2)
+        self.decoder.append(32,3,2)
         self.decoder.append(16,3,1)
-        self.decoder.append(3,3,2)
         self.decoder.append(3,3,2)
 
         self.register_parameter('linear_mu_weights', None)

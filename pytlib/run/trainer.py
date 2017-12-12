@@ -11,23 +11,15 @@ import time
 import random
 from datetime import datetime
 from utils.logger import Logger
-from utils.debug import pp
-from utils.directory_tools import mkdir, list_files
 from utils.random_utils import random_str
-from utils.batcher import Batcher
 from visualization.graph_visualizer import compute_graph
 from visualization.image_visualizer import ImageVisualizer
+from utils.batcher import Batcher
+from run_utils import load,save,load_samples
 
 class Trainer:
-
-    def __init__(self,model_config,args):
-        self.model_config = model_config
-
-        # should use strings, namespace or functions here?
-        self.loader = self.model_config.loader
-        self.model = self.model_config.model
-        self.lossfn = self.model_config.loss
-        self.optimizer = self.model_config.optimizer
+    def __init__(self,model,args):
+        self.model = model
         self.args = args
         self.iteration = 0
 
@@ -40,53 +32,22 @@ class Trainer:
         else:
             self.logger = Logger()
 
-    def save(self):
-        state = {}
-        state['iteration']=self.iteration+1
-        state['state_dict']=self.model.state_dict()
-        state['optimizer']=self.optimizer.state_dict()
-        with open(os.path.join(self.args.output_dir,'model_{0:08d}.mdl'.format(self.iteration)),'wb') as f:
-            torch.save(state,f)
-
-    def load(self):
-        # list model files and find the latest_model
-        all_models = list_files(self.args.output_dir,ext_filter='.mdl')
-        if not all_models:
-            print 'No previous checkpoints found!'
-            return
-
-        all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[-1])) for m in all_models]
-        all_models_indexed.sort(key=lambda x: x[1],reverse=True)
-        print 'Loading model from disk: {0}'.format(all_models_indexed[0][0])
-        checkpoint = torch.load(all_models_indexed[0][0])
-        self.model.load_state_dict(checkpoint['state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer'])
-        self.iteration = checkpoint['iteration']
-
     # a wrapper for model.forward to feed inputs as list and get outputs as a list
     def evaluate_model(self,inputs):
-        output = self.model(*inputs)
+        output = self.model.get_model().forward(*inputs)
         return list(output) if isinstance(output,tuple) else [output] 
-
-    def load_samples(self):
-        sample_array = [self.loader.next() for i in range(0,args.batch_size)]
-        batched_data, batched_targets = Batcher.batch_samples(sample_array)
-        if self.args.cuda:
-            batched_data = map(lambda x: x.cuda(), batched_data)
-            batched_targets = map(lambda x: x.cuda(), batched_targets)
-        return batched_data,batched_targets,sample_array
 
     def train(self):
         # load after a forward call for dynamic models
-        batched_data,_,_ = self.load_samples()
+        batched_data,_,_ = load_samples(self.model.get_loader(),self.model.cuda,self.args.batch_size)
         self.evaluate_model(batched_data)
-        self.load()
+        self.iteration = load(self.args.output_dir,self.model.get_model(),self.model.get_optimizer())
 
         for i in range(self.iteration,self.iteration+self.args.iterations):
             #################### LOAD INPUTS ############################
             # TODO, make separate timer class if more complex timings arise
             t0 = time.time()
-            batched_data,batched_targets,sample_array = self.load_samples()
+            batched_data,batched_targets,sample_array = load_samples(self.model.get_loader(),self.model.cuda,self.args.batch_size)
             self.logger.set('timing.input_loading_time',time.time() - t0)
             #############################################################
 
@@ -98,10 +59,10 @@ class Trainer:
 
             #################### BACKWARD AND SGD  #####################
             t2 = time.time()
-            loss = self.lossfn(*(outputs + batched_targets))
-            self.optimizer.zero_grad()
+            loss = self.model.get_lossfn()(*(outputs + batched_targets))
+            self.model.get_optimizer().zero_grad()
             loss.backward()
-            self.optimizer.step()
+            self.model.get_optimizer().step()
             self.logger.set('timing.loss_backward_update_time',time.time() - t2)
             #############################################################
 
@@ -112,7 +73,7 @@ class Trainer:
                 compute_graph(loss,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
 
             if self.iteration%self.args.save_iter==0:
-                self.save()
+                save(self.model.get_model(),self.model.get_optimizer(),self.iteration,self.args.output_dir)
 
             self.logger.set('time',time.time())
             self.logger.set('date',str(datetime.now()))
