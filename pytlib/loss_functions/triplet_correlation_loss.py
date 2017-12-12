@@ -39,13 +39,12 @@ def triplet_correlation_loss2(anchor,pcp,pcn,recon_output,mu,logvar,pos_map,neg_
     # take the ratio of the spatial extends
 
     # vloss = vae_loss(recon_output,mu,logvar,recon_target)
-
-    pool_kernel = (np.array(pos_map.squeeze().size())/np.array(pcp.squeeze().size()))[1:]
+    pool_kernel = np.array(pos_map.size()[1:])/np.array(pcp.size()[-2:])
     pos_map_resized = torch.round(F.avg_pool2d(pos_map,pool_kernel))
     neg_map_resized = torch.round(F.avg_pool2d(neg_map,pool_kernel))
 
-    nloss = F.binary_cross_entropy_with_logits(pcn.squeeze(),neg_map_resized)
-    ploss = F.binary_cross_entropy_with_logits(pcp.squeeze(),pos_map_resized)
+    nloss = F.binary_cross_entropy_with_logits(pcn.squeeze(),neg_map_resized.squeeze())
+    ploss = F.binary_cross_entropy_with_logits(pcp.squeeze(),pos_map_resized.squeeze())
     # nloss = response_map_loss(pcn.squeeze())
     # ploss = response_map_loss(pcp.squeeze(),boxes)
     Logger().set('loss_component.anchor_mean',anchor.data.mean())

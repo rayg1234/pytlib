@@ -114,7 +114,7 @@ class TripletDetectionSampler(implements(Sampler)):
 
     # pick a frame to generate positive and negative crop
     def next(self):
-        frame1,neg_box = None,None
+        frame1,neg_box,pos_box = None,None,None
         # TODO, this should probably break if never find anything for a while
         while neg_box is None:
             frame1 = self.source[random.choice(self.frame_ids)]
@@ -126,14 +126,14 @@ class TripletDetectionSampler(implements(Sampler)):
             neg_box = self.find_negative_crop(frame1,frame1_objs)
 
         perturbed_pos_box = RandomPerturber.perturb_crop_box(pos_box,self.perturbations)
-        affine_crop = crop_image_resize(frame1.image,perturbed_pos_box,self.crop_size)
-        pos_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
+        affine_crop0 = crop_image_resize(frame1.image,perturbed_pos_box,self.crop_size)
+        pos_crop = affine_crop0.apply_to_image(frame1.image,self.crop_size)
 
-        affine_crop = crop_image_resize(frame1.image,pos_box,self.crop_size)
-        anchor_crop = affine_crop.apply_to_image(frame1.image,self.anchor_size)
+        affine_crop1 = crop_image_resize(frame1.image,pos_box,self.anchor_size)
+        anchor_crop = affine_crop1.apply_to_image(frame1.image,self.anchor_size)
 
-        affine_crop = crop_image_resize(frame1.image,neg_box,self.crop_size)
-        neg_crop = affine_crop.apply_to_image(frame1.image,self.crop_size)
+        affine_crop2 = crop_image_resize(frame1.image,neg_box,self.crop_size)
+        neg_crop = affine_crop2.apply_to_image(frame1.image,self.crop_size)
         # neg_crop.visualize(display=True,title='neg')
 
         # now find all the boxes that intersect with the perturbed_pos_box
@@ -142,7 +142,7 @@ class TripletDetectionSampler(implements(Sampler)):
              if Box.intersection(obj.box,perturbed_pos_box) is not None:
                 intersected_boxes.append(obj.box)
 
-        intersected_boxes = list(map(lambda x: affine_crop.apply_to_box(x), intersected_boxes))
+        intersected_boxes = list(map(lambda x: affine_crop0.apply_to_box(x), intersected_boxes))
         # test display
         # disp_frame = Frame.from_image_and_objects(pos_crop,[Object(box_crop)])
         # disp_frame.visualize(display=True,title='pos frame')

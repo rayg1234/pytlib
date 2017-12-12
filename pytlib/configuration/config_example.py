@@ -16,5 +16,5 @@ loader = (MultiSampler,dict(loader=get_sampler,loader_args=dict(),num_procs=2))
 model = (AutoEncoder,dict())
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = nn.BCELoss()
-train_config = TrainConfiguration(loader,optimizer,model,loss,True)
+train_config = TrainConfiguration(loader,optimizer,model,loss,False)
 
