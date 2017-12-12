@@ -53,12 +53,14 @@ class TripletCorrelationalDetector(nn.Module):
         cxn = self.cross_correlation(neg_feature_map,anchor_feature_map)
         return anchor,cxp,cxn,recon,mu,logvar
 
-    def infer(self,frame,pos,neg):
+    def infer(self,frame,pos_crop):
+        self.vae.forward(pos_crop)
         batch_size = frame.size(0)
         self.init_anchor(frame.is_cuda)
         batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         crop_features = self.encoder.forward(batched_crop)
         frame_features = self.encoder.forward(frame)
-        posf,negf = self.encoder.forward(pos),self.encoder.forward(neg)
-        return self.cross_correlation(frame_features,crop_features),self.cross_correlation(posf,crop_features),self.cross_correlation(negf,crop_features)
+        # posf,negf = self.encoder.forward(pos),self.encoder.forward(neg)
+        #self.cross_correlation(posf,crop_features),self.cross_correlation(negf,crop_features)
+        return self.cross_correlation(frame_features,crop_features)
 

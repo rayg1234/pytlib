@@ -51,21 +51,17 @@ class TripletDetectionSample(implements(Sample)):
             img_frame = PTImage.from_cwh_torch(self.data[0])
             img_frame_xcor = PTImage.from_2d_wh_torch(F.sigmoid(self.output[0]).data)
 
-            img_pos = PTImage.from_cwh_torch(self.data[1])
-            img_neg = PTImage.from_cwh_torch(self.data[2])
-            image_pos_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[1]).data)
-            image_neg_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[2]).data)
-
-            image_pos_map.visualize(display=True,title='pos_map')
-            image_neg_map.visualize(display=True,title='neg_map')
-            img_frame_xcor.visualize(display=True,title='frame')
+            # img_pos = PTImage.from_cwh_torch(self.data[1])
+            # img_neg = PTImage.from_cwh_torch(self.data[2])
+            # image_pos_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[1]).data)
+            # image_neg_map = PTImage.from_2d_wh_torch(F.sigmoid(self.output[2]).data)
 
             ImageVisualizer().set_image(img_frame,parameters.get('title','') + ' : Frame')
             ImageVisualizer().set_image(img_frame_xcor,parameters.get('title','') + ' : Frame xcor')
-            ImageVisualizer().set_image(img_pos,parameters.get('title','') + ' : pos')
-            ImageVisualizer().set_image(image_pos_map,parameters.get('title','') + ' : pos xcor')
-            ImageVisualizer().set_image(img_neg,parameters.get('title','') + ' : neg')
-            ImageVisualizer().set_image(image_neg_map,parameters.get('title','') + ' : neg xcor')
+            # ImageVisualizer().set_image(img_pos,parameters.get('title','') + ' : pos')
+            # ImageVisualizer().set_image(image_pos_map,parameters.get('title','') + ' : pos xcor')
+            # ImageVisualizer().set_image(img_neg,parameters.get('title','') + ' : neg')
+            # ImageVisualizer().set_image(image_neg_map,parameters.get('title','') + ' : neg xcor')
 
     def set_output(self,output):
         self.output = output
@@ -167,7 +163,7 @@ class TripletDetectionSampler(implements(Sampler)):
             target = [pos_map,neg_map,anchor]
         else:
             frame_t = torch.Tensor(frame1.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
-            data = [frame_t,pos,neg]
+            data = [frame_t,anchor]
             target = [torch.Tensor(1)]
         return TripletDetectionSample(data,target)
 
