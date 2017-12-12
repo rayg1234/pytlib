@@ -11,12 +11,12 @@ def save(model,optimizer,iteration,output_dir):
     with open(os.path.join(output_dir,'model_{0:08d}.mdl'.format(iteration)),'wb') as f:
         torch.save(state,f)
 
-def load(output_dir,model,optimizer=None):
+def load(output_dir,model,iteration,optimizer=None):
     # list model files and find the latest_model
     all_models = list_files(output_dir,ext_filter='.mdl')
     if not all_models:
         print 'No previous checkpoints found!'
-        return
+        return iteration
 
     all_models_indexed = [(m,int(m.split('.mdl')[0].split('_')[-1])) for m in all_models]
     all_models_indexed.sort(key=lambda x: x[1],reverse=True)

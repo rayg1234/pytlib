@@ -16,6 +16,7 @@ from visualization.graph_visualizer import compute_graph
 from visualization.image_visualizer import ImageVisualizer
 from utils.batcher import Batcher
 from run_utils import load,save,load_samples
+from utils.directory_tools import mkdir
 
 class Trainer:
     def __init__(self,model,args):
@@ -41,7 +42,7 @@ class Trainer:
         # load after a forward call for dynamic models
         batched_data,_,_ = load_samples(self.model.get_loader(),self.model.cuda,self.args.batch_size)
         self.evaluate_model(batched_data)
-        self.iteration = load(self.args.output_dir,self.model.get_model(),self.model.get_optimizer())
+        self.iteration = load(self.args.output_dir,self.model.get_model(),self.iteration,self.model.get_optimizer())
 
         for i in range(self.iteration,self.iteration+self.args.iterations):
             #################### LOAD INPUTS ############################

@@ -11,7 +11,7 @@ import random
 
 # define these things here
 def get_sampler(mode):
-    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10)
+    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=5000)
     sampler_params = {'crop_size':[255,255],'anchor_size':[127,127],'obj_types':['Car'],'mode':mode}
     return TripletDetectionSampler(source,sampler_params)
 

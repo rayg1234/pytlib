@@ -37,7 +37,7 @@ class Tester:
         # load after a forward call for dynamic models
         batched_data,_,_ = load_samples(self.model.get_loader(),self.model.cuda,self.args.batch_size)
         self.evaluate_model(batched_data)
-        self.iteration = load(self.args.output_dir,self.model.get_model())
+        self.iteration = load(self.args.output_dir,self.model.get_model(),self.iteration)
 
         for i in range(self.iteration,self.iteration+self.args.iterations):
             #################### LOAD INPUTS ############################
