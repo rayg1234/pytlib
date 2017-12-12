@@ -54,7 +54,7 @@ class TripletCorrelationalDetector(nn.Module):
         return anchor,cxp,cxn,recon,mu,logvar
 
     def infer(self,frame,pos_crop):
-        self.vae.forward(pos_crop)
+        # self.vae.forward(pos_crop)
         batch_size = frame.size(0)
         self.init_anchor(frame.is_cuda)
         batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())

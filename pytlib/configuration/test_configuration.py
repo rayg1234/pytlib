@@ -1,3 +1,5 @@
+# This is equivalent of the TrainConfiguration for test time
+# see TrainConfiguration's comments
 class TestConfiguration:
     def __init__(self,loader_params,model_params,lossfn,cuda=True):
         self.loader_params = loader_params

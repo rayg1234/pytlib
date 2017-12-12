@@ -8,24 +8,12 @@ from networks.vae import VAE
 from loss_functions.vae_loss import vae_loss
 import random
 
-# define these things here
-use_cuda = True
-
 def get_sampler():
 	source = StanfordCarsSource(cars_dir='/home/ray/Data/StanfordCars/cars_train',
 								labels_mat='/home/ray/Data/StanfordCars/devkit/cars_train_annos.mat')
 	return AutoEncoderSampler(source,{'crop_size':[100,100],'obj_types':'car'})
-
-# todo, replace module based random seed
-# loader = getSampler()
-loader = MultiSampler(get_sampler,dict(),num_procs=10)
-model = VAE(encoding_size=128,training=True)
-
-# want to do this before constructing optimizer according to pytroch docs
-if use_cuda:
-	model.cuda()
-# optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-optimizer = optim.Adam(model.parameters(),lr=1e-3)
+loader = (MultiSampler,dict(loader=get_sampler,loader_args=dict(),num_procs=10))
+model = (VAE,dict(encoding_size=128,training=True))
+optimizer = (optim.Adam,dict(lr=1e-3))
 loss = vae_loss
-
 train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)

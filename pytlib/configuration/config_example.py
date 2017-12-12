@@ -1,19 +1,20 @@
 from configuration.train_configuration import TrainConfiguration
-from data_loading.sampler_factory import SamplerFactory
+from data_loading.sources.kitti_source import KITTISource
+from data_loading.samplers.autoencoder_sampler import AutoEncoderSampler
 from data_loading.samplers.multi_sampler import MultiSampler
 import torch.optim as optim
 import torch.nn as nn
 from networks.autoencoder import AutoEncoder
 
 # define these things here
-use_cuda = False
-loader = SamplerFactory.GetAESampler(source='/home/ray/Data/KITTI/training',max_frames=200,crop_size=[100,100])
-model = AutoEncoder()
+def get_sampler():
+    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10)
+    sampler_params = {'crop_size':[255,255],'obj_types':['Car']}
+    return AutoEncoderSampler(source,sampler_params)
 
-# want to do this before constructing optimizer according to pytroch docs
-if use_cuda:
-	model.cuda()
-optimizer = optim.Adam(model.parameters(),lr=1e-3)
+loader = (MultiSampler,dict(loader=get_sampler,loader_args=dict(),num_procs=2))
+model = (AutoEncoder,dict())
+optimizer = (optim.Adam,dict(lr=1e-3))
 loss = nn.BCELoss()
+train_config = TrainConfiguration(loader,optimizer,model,loss,True)
 
-train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)
