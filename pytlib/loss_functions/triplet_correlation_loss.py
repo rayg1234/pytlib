@@ -38,7 +38,7 @@ def triplet_correlation_loss2(anchor,pcp,pcn,recon_output,mu,logvar,pos_map,neg_
     # use avgpool + rounding
     # take the ratio of the spatial extends
 
-    # vloss = vae_loss(recon_output,mu,logvar,recon_target)
+    vloss = vae_loss(recon_output,mu,logvar,recon_target)
     pool_kernel = np.array(pos_map.size()[1:])/np.array(pcp.size()[-2:])
     pos_map_resized = torch.round(F.avg_pool2d(pos_map,pool_kernel))
     neg_map_resized = torch.round(F.avg_pool2d(neg_map,pool_kernel))
@@ -51,5 +51,5 @@ def triplet_correlation_loss2(anchor,pcp,pcn,recon_output,mu,logvar,pos_map,neg_
     Logger().set('loss_component.anchor_std',anchor.data.std())
     Logger().set('loss_component.ploss2',ploss.data.cpu()[0])
     Logger().set('loss_component.nloss2',nloss.data.cpu()[0])
-    # Logger().set('loss_component.vloss',vloss.data.cpu()[0])
-    return ploss+nloss
+    Logger().set('loss_component.vloss',vloss.data.cpu()[0])
+    return ploss+nloss+vloss
