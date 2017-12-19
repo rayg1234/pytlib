@@ -4,7 +4,6 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
-from utils.debug import pp
 
 class MLP(nn.Module):
     def __init__(self,depth=1,sizes=[128]):

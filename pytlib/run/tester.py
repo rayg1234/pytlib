@@ -11,7 +11,6 @@ import time
 import random
 from datetime import datetime
 from utils.logger import Logger
-from utils.debug import pp
 from utils.random_utils import random_str
 from utils.batcher import Batcher
 from visualization.image_visualizer import ImageVisualizer

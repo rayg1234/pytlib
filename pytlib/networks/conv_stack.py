@@ -2,7 +2,6 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
-from utils.debug import pp
 
 class ConvolutionStack(nn.Module):
     def __init__(self,in_chans,final_relu=True,padding=1):
@@ -56,10 +55,8 @@ class TransposedConvolutionStack(nn.Module):
     def forward(self, x, output_dims=[]):
         # print self.convs
         for i,c in enumerate(self.convs):
-            # pp(x.mean(),'input x: mean with dims {0}'.format(x.size()))
             x = c(x,output_size=output_dims[i])
             x = self.batchnorms[i](x)
             if i<len(self.convs)-1 or self.final_relu:
                 x = F.relu(x)
-            # pp(x.mean(),'output x: mean with dims {0}'.format(x.size()))
         return x
