@@ -12,6 +12,7 @@ import numpy as np
 import random
 import torch
 from interface import implements
+from visualization.image_visualizer import ImageVisualizer
 
 # This is a sample where the image and the target are both images
 class AutoEncoderSample(implements(Sample)):

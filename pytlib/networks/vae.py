@@ -12,7 +12,7 @@ class VAE(nn.Module):
         self.encoding_size = encoding_size
         self.outchannel_size = 256
         # encoding conv
-        self.encoder = ConvolutionStack(3,final_relu=False,padding=0)
+        self.encoder = ConvolutionStack(3,final_relu=True,padding=1)
         self.encoder.append(16,3,2)
         self.encoder.append(32,3,1)
         self.encoder.append(64,3,2)
@@ -20,7 +20,7 @@ class VAE(nn.Module):
         self.encoder.append(self.outchannel_size,3,1)
 
         # decode
-        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False,padding=0)
+        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False,padding=1)
         self.decoder.append(128,3,1)
         self.decoder.append(64,3,2)
         self.decoder.append(32,3,2)
@@ -35,14 +35,16 @@ class VAE(nn.Module):
         # linear op y = x*A_T + b 
         # so here the dims are [b x c] * [c x s], then the weights need to have dims (s x c)
         # where s is the encoding size and b is the batch size
-
         self.linear_mu_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
         stdv = 1. / math.sqrt(self.linear_mu_weights.size(1))
         self.linear_mu_weights.data.uniform_(-stdv, stdv)
 
         self.linear_logvar_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
+        stdv = 1. / math.sqrt(self.linear_logvar_weights.size(1))
         self.linear_logvar_weights.data.uniform_(-stdv, stdv)
-        self.linear_decode_weights = nn.Parameter(torch.Tensor(self.linear_size,self.encoding_size)) 
+        
+        self.linear_decode_weights = nn.Parameter(torch.Tensor(self.linear_size,self.encoding_size))
+        stdv = 1. / math.sqrt(self.linear_decode_weights.size(1)) 
         self.linear_decode_weights.data.uniform_(-stdv, stdv)
         if is_cuda:
             self.cuda()
@@ -68,7 +70,6 @@ class VAE(nn.Module):
 
         if self.linear_mu_weights is None:
             self.initialize_linear_params(x.data.is_cuda)
-
         mu = F.linear(conv_out.view(-1,self.linear_size),self.linear_mu_weights)
         logvar = F.linear(conv_out.view(-1,self.linear_size),self.linear_logvar_weights)
         # mu = self.linear_mu(conv_out.view(-1,linear_size))

@@ -16,4 +16,4 @@ loader = (MultiSampler,dict(loader=get_sampler,loader_args=dict(),num_procs=10))
 model = (VAE,dict(encoding_size=128,training=True))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = vae_loss
-train_config = TrainConfiguration(loader,optimizer,model,loss,use_cuda)
+train_config = TrainConfiguration(loader,optimizer,model,loss,True)
