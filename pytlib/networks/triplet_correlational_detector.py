@@ -40,7 +40,6 @@ class TripletCorrelationalDetector(nn.Module):
                 self.cuda()        
 
     def forward(self, pos, neg, pos_crop):
-        recon,mu,logvar = self.vae.forward(pos_crop)
         pos_feature_map = self.encoder.forward(pos)
         neg_feature_map = self.encoder.forward(neg)
         # initialize feature_encoding if None
@@ -48,6 +47,8 @@ class TripletCorrelationalDetector(nn.Module):
         self.init_anchor(pos.is_cuda)
         anchor = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
         anchor_feature_map = self.encoder.forward(anchor)
+        recon,mu,logvar = self.vae.forward(anchor)
+        # anchor_feature_map = self.vae.get_encoding_feature_map()
 
         cxp = self.cross_correlation(pos_feature_map,anchor_feature_map)
         cxn = self.cross_correlation(neg_feature_map,anchor_feature_map)

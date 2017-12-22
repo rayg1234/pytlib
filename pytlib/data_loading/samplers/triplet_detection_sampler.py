@@ -114,13 +114,16 @@ class TripletDetectionSampler(implements(Sampler)):
 
     # pick a frame to generate positive and negative crop
     def next(self):
-        frame1,neg_box,pos_box = None,None,None
+        frame1,frame2,neg_box,pos_box,anchor_box = None,None,None,None,None
         # TODO, this should probably break if never find anything for a while
         while neg_box is None:
-            frame1 = self.source[random.choice(self.frame_ids)]
+            indices = random.sample(self.frame_ids,2)
+            frame1,frame2 = [self.source[x] for x in indices]
             frame1_objs = filter(lambda x: x.obj_type in self.obj_types,frame1.get_objects())
+            frame2_objs = filter(lambda x: x.obj_type in self.obj_types,frame2.get_objects())
             # get random pos boxes
             pos_box = random.choice(frame1_objs).box
+            anchor_box = random.choice(frame2_objs).box
 
             # find random neg crop
             neg_box = self.find_negative_crop(frame1,frame1_objs)
@@ -129,8 +132,8 @@ class TripletDetectionSampler(implements(Sampler)):
         affine_crop0 = crop_image_resize(frame1.image,perturbed_pos_box,self.crop_size)
         pos_crop = affine_crop0.apply_to_image(frame1.image,self.crop_size)
 
-        affine_crop1 = crop_image_resize(frame1.image,pos_box,self.anchor_size)
-        anchor_crop = affine_crop1.apply_to_image(frame1.image,self.anchor_size)
+        affine_crop1 = crop_image_resize(frame2.image,anchor_box,self.anchor_size)
+        anchor_crop = affine_crop1.apply_to_image(frame2.image,self.anchor_size)
 
         affine_crop2 = crop_image_resize(frame1.image,neg_box,self.crop_size)
         neg_crop = affine_crop2.apply_to_image(frame1.image,self.crop_size)

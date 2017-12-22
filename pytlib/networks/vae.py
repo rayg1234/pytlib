@@ -12,7 +12,7 @@ class VAE(nn.Module):
         self.encoding_size = encoding_size
         self.outchannel_size = 256
         # encoding conv
-        self.encoder = ConvolutionStack(3,final_relu=True,padding=1)
+        self.encoder = ConvolutionStack(3,final_relu=False,padding=1)
         self.encoder.append(16,3,2)
         self.encoder.append(32,3,1)
         self.encoder.append(64,3,2)
@@ -52,6 +52,7 @@ class VAE(nn.Module):
     def encode(self, x):
         input_dims = x.size()
         conv_out = self.encoder.forward(x)
+        conv_out = F.relu(conv_out)
         self.encoding_feature_map = conv_out
         self.conv_output_dims = self.encoder.get_output_dims()[:-1][::-1]
         self.conv_output_dims.append(input_dims)
