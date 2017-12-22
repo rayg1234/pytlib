@@ -1,6 +1,6 @@
 from threading import Thread
 import Queue
-from data_loading.samplers.sampler import Sampler
+from data_loading.loaders.loader import Loader
 from interface import Interface, implements
 import time
 
@@ -11,7 +11,7 @@ def worker_function(worker,queue):
         queue.put(next_sample)
     return
 
-class MultiSampler(implements(Sampler)):
+class MultiLoader(implements(Loader)):
     def __init__(self,loader,loader_args,num_procs=10,max_queue_size=50):
         self.loader = loader
         self.loader_args = loader_args

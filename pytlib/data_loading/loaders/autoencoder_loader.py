@@ -1,7 +1,7 @@
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
-from data_loading.samplers.sampler import Sampler
+from data_loading.loaders.loader import Loader
 from data_loading.sample import Sample
 from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
@@ -38,10 +38,10 @@ class AutoEncoderSample(implements(Sample)):
     def get_target(self):
         return self.target
 
-# This sampler provides images that contains a single item of something
+# This loader provides images that contains a single item of something
 # we want to encode, the target tensor includes both the crop itself and the coordinates
 # random perturbations of the crop is an optional parameter
-class AutoEncoderSampler(implements(Sampler)):
+class AutoEncoderLoader(implements(Loader)):
 
     def __init__(self,source,params):
         self.source = source

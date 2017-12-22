@@ -1,7 +1,7 @@
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
-from data_loading.samplers.sampler import Sampler
+from data_loading.loaders.loader import Loader
 from data_loading.sample import Sample
 from image.affine import Affine
 from excepts.general_exceptions import NoFramesException
@@ -72,7 +72,7 @@ class TripletDetectionSample(implements(Sample)):
     def get_target(self):
         return self.target
 
-class TripletDetectionSampler(implements(Sampler)):
+class TripletDetectionLoader(implements(Loader)):
     def __init__(self,source,params):
         self.source = source
         self.crop_size = params['crop_size']
