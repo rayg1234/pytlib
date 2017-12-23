@@ -34,7 +34,7 @@ The following shows an example output of the encoding detector on trained featur
 
 ![encoding detector output](encoding_detector_output.png)
 
-# Running Locally for on Native Ubuntu 16.04
+# Running Locally on Native Ubuntu 16.04
 
 Install: `sudo bash pytlib/install.sh`
 
