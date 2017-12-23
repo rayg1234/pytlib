@@ -30,7 +30,7 @@ Most of state-of-the-art detection/localization methods involve either direct bo
 
 ![encoding detector](encoding_detector_diagram.svg)
 
-The following shows an example output of the encoding detector on trained feature maps on cars from the KITTI dataset on full frame test images. White pixels shows regions that are highly likely to be cars.
+The following shows an example output of the encoding detector on trained feature maps on cars from the [KITTI](http://www.cvlibs.net/datasets/kitti/) dataset on full frame test images. White pixels shows regions that are highly likely to be cars.
 
 ![encoding detector output](encoding_detector_output.png)
 
@@ -41,6 +41,8 @@ Install: `sudo bash pytlib/install.sh`
 Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
 
 Run the trainer: `python run/trainer.py ...`
+
+More helpful instructions to come ...
 
 # Running with Docker
 Create the docker container run `docker-compose up -d --force-recreate --build`
