@@ -12,7 +12,7 @@ class VAE(nn.Module):
         self.encoding_size = encoding_size
         self.outchannel_size = 256
         # encoding conv
-        self.encoder = ConvolutionStack(3,final_relu=False,padding=1)
+        self.encoder = ConvolutionStack(3,final_relu=False,padding=0)
         self.encoder.append(16,3,2)
         self.encoder.append(32,3,1)
         self.encoder.append(64,3,2)
@@ -20,7 +20,7 @@ class VAE(nn.Module):
         self.encoder.append(self.outchannel_size,3,1)
 
         # decode
-        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False,padding=1)
+        self.decoder = TransposedConvolutionStack(self.outchannel_size,final_relu=False,padding=0)
         self.decoder.append(128,3,1)
         self.decoder.append(64,3,2)
         self.decoder.append(32,3,2)
@@ -65,7 +65,6 @@ class VAE(nn.Module):
         # assert that h1 has dimensions b x c x 1 x 1 (squeeze to b x c)
 
         # OPTION B -- DIRECT FC
-
         self.conv_out_spatial = [conv_out.size(2),conv_out.size(3)]
         self.linear_size = self.outchannel_size*conv_out.size(2)*conv_out.size(3)
 
@@ -86,15 +85,13 @@ class VAE(nn.Module):
           return mu
 
     def decode(self, z):
-        # h2 = F.relu(self.linear_decode(z))
         # the output dims here should be [b x c] 
 
         # OPTION A -- upsample
         # assert self.pool_size is not None
         # next upsample here to dimensions of conv_out from the encoder 
-        # TODO, whats the correct thing to do here? unpool, unsample, deconv?
-
         # h3 = F.upsample(h2.view(-1,self.outchannel_size,1,1),scale_factor=self.pool_size) 
+
         # OPTION B -- Direct FC
         if self.linear_decode_weights is None:
             self.initialize_linear_params(z.data.is_cuda)
