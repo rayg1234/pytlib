@@ -30,6 +30,10 @@ Most of state-of-the-art detection/localization methods involve either direct bo
 
 ![encoding detector](encoding_detector_diagram.svg)
 
+The following shows example output of correlating one of these trained feature maps on cars from the KITTI dataset on full frame test images, white pixels shows regions that are highly likely to be cars.
+
+![encoding detector output](encoding_detector_output.png)
+
 # Running Locally for on Native Ubuntu 16.04
 
 Install: `sudo bash pytlib/install.sh`
