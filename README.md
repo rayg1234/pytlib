@@ -20,9 +20,9 @@ defining pixel masks and bounding boxes.
 # Examples and Active projects
 
 ## Variational autoencoder 
-Example implementation of a [variational auto-encoder](https://arxiv.org/abs/1312.6114)  using the [Stanford Cars dataset](http://ai.stanford.edu/~jkrause/cars/car_dataset.html). The configuration is defined [here](configuration/vae_config_stanford_cars.py). We use the [autoencoder_loader](data_loading/autoencoder_loader.py) and the [vae network](networks/vae.py) with the [vae loss function](loss/vae_loss.py). Below shows input/output pair visualizations produced by this configuration.
+Example implementation of a [variational auto-encoder](https://arxiv.org/abs/1312.6114)  using the [Stanford Cars dataset](http://ai.stanford.edu/~jkrause/cars/car_dataset.html). The configuration is defined [here](pytlib/configuration/vae_config_stanford_cars.py). We use the [autoencoder_loader](pytlib/data_loading/autoencoder_loader.py) and the [vae network](pytlib/networks/vae.py) with the [vae loss function](pytlib/loss/vae_loss.py). Below shows input/output pair visualizations produced by this configuration.
 
-
+![alt text](vae_example.svg)
 
 ## Encoding Detector
 
