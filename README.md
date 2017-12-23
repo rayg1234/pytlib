@@ -14,7 +14,18 @@ training example. The framework takes care of the batching and debatching for yo
 defining pixel masks and bounding boxes.
 * Visualization and Logging tools allows json data and images to be recorded from anywhere in the pipeline
 * All tools built to support dynamic models (tensor sizes are determined at runtime given inputs, this is a frequent issue when you don't want to just build models that support a single resolution)
+* Model saving and loading
 * Code as configuration. A single python script fully defines all components that can used to train and test a model.
+
+# Examples and Active projects
+
+## Variational autoencoder 
+Example implementation of a [variational auto-encoder](https://arxiv.org/abs/1312.6114)  using the [Stanford Cars dataset](http://ai.stanford.edu/~jkrause/cars/car_dataset.html). The configuration is defined [here](configuration/vae_config_stanford_cars.py). We use the [autoencoder_loader](data_loading/autoencoder_loader.py) and the [vae network](networks/vae.py) with the [vae loss function](loss/vae_loss.py). Below shows input/output pair visualizations produced by this configuration.
+
+
+
+## Encoding Detector
+
 
 # Running Locally for on Native Ubuntu 16.04
 
