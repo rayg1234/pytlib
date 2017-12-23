@@ -29,21 +29,6 @@ class KITTILabel:
     def to_object(self):
         box_format = [self.bbox[0],self.bbox[1],self.bbox[2],self.bbox[3]]
         return Object(Box.from_single_array(box_format),self.track_idx,self.type)
-    
-class KITTILoader:
-    @classmethod
-    def load_labelled_frames(cls,frame_dir,labels_file):
-        files = [f for f in listdir(frame_dir) if isfile(join(frame_dir, f))]
-        labels = KITTILabel.labels_from_file(labels_file)
-        frames = []
-        for f in files:
-            file_index = int(splitext(basename(f))[0])
-            objects = []
-            for l in labels:
-                if int(l.frame_idx) == file_index:
-                    objects.append(l.to_object())
-            frames.append(Frame(join(frame_dir,f),objects))
-        return frames
 
 class KITTISource(implements(Source)):
 
@@ -55,6 +40,19 @@ class KITTISource(implements(Source)):
         self.__load_frames(dir_path)
         self.size = len(self.frames)
         self.cur = 0
+
+    def __load_labelled_frames(self,frame_dir,labels_file):
+        files = [f for f in listdir(frame_dir) if isfile(join(frame_dir, f))]
+        labels = KITTILabel.labels_from_file(labels_file) if labels_file is not None else []
+        frames = []
+        for f in files:
+            file_index = int(splitext(basename(f))[0])
+            objects = []
+            for l in labels:
+                if int(l.frame_idx) == file_index:
+                    objects.append(l.to_object())
+            frames.append(Frame(join(frame_dir,f),objects))
+        return frames
 
     # label folders are of the form label_02
     def __parse_label(self,full_path,label_prefix):
@@ -90,14 +88,13 @@ class KITTISource(implements(Source)):
                 labelfiles[ret] = full_item_path
 
         for k,image_path in imagedirs.items():
-            if k in labelfiles:
-                label_path = labelfiles[k]
-                for item in listdir(image_path):
-                    if self.__validate_file_name(item):
-                        new_frames = KITTILoader.load_labelled_frames(os.path.join(image_path,item),os.path.join(label_path,item+'.txt'))
-                        if len(self.frames) >= self.max_frames:
-                            return
-                        self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
+            for item in listdir(image_path):
+                if self.__validate_file_name(item):
+                    label_path = os.path.join(labelfiles[k],item+'.txt') if k in labelfiles else None
+                    new_frames = self.__load_labelled_frames(os.path.join(image_path,item),label_path)
+                    if len(self.frames) >= self.max_frames:
+                        return
+                    self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
 
 
     def next(self):
