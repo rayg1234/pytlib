@@ -28,7 +28,7 @@ Example implementation of a [variational auto-encoder](https://arxiv.org/abs/131
 
 Most of state-of-the-art detection/localization methods involve either direct bounding box regression (ie SSD or YOLO variants) or refining proposed bounding boxes (ie: RCNN variants). However, these methods can learn strong biases towards the contextual information and can overfit to output bounding boxes without ever learning a useful feature representation of the objects in question. A different way to approach the problem is attempt to learn some average representation of the object in a highly constrained feature space and use that representation to find regions of high correlation in some search space. This is inspired by the work by [Bertinetto et al.](http://www.robots.ox.ac.uk/~luca/siamese-fc.html) using a simple cross-correlation siamese network to track arbitrary objects. Here the idea is to learn that average feature with the help of a varianational autoencoder and then maximizing the cross-correlation signal between that and a positive feature while minimizing the signal between that and a negative feature. See diagram below.
 
-
+![alt text](encoding_detector_diagram.svg.svg)
 
 # Running Locally for on Native Ubuntu 16.04
 
