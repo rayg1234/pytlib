@@ -11,7 +11,8 @@ import random
 
 # define these things here
 def get_loader(mode):
-    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10000)
+    path = '/home/ray/Data/KITTI/testing' if mode=='test' else '/home/ray/Data/KITTI/training'
+    source = KITTISource(path,max_frames=10000)
     loader_params = {'crop_size':[255,255],'anchor_size':[127,127],'obj_types':['Car'],'mode':mode}
     return TripletDetectionLoader(source,loader_params)
 
