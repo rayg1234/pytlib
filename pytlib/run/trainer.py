@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('-i','--iterations',required=False, type=int, help='the number of iterations', default=1)
     parser.add_argument('-v','--visualize_iter',required=False, default=1000,type=int, help='save visualizations every this many iterations')
     parser.add_argument('-o','--output_dir',required=False,type=str,default='tmp',help='the directory to output the model params and logs')
-    parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=1000)
+    parser.add_argument('-s','--save_iter',type=int,help='save params every this many iterations',default=5000)
     parser.add_argument('-r','--override',action='store_true',help='if override, the directory will be wiped, otherwise resume from the current dir')
     parser.add_argument('-e','--seed',type=int,help='the random seed for torch',default=123)
     parser.add_argument('-g','--compute_graph',default='cgraph',type=str,help='generate the computational graph on the first iteration and write to this file')
