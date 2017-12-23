@@ -7,8 +7,11 @@ There are many common challenges with training deep neural nets for vision tasks
 ## Features
 
 * Threaded loader pool to elimiante dataloading time during training
+* Automated batch handling from end-to-end. Users only need to write code to generate a single 
+training example. The framework takes care of the batching and debatching for you.
 * Flexible image class abstracts away intensity scaling and byte ordering differences between PIL images and torch tensors
-* Utilities to deal with bounding box regression and pixel masking targets
+* Helpful utilities to deal with common vision taskes as affine transforms, image perturbations,
+defining pixel masks and bounding boxes.
 * Visualization and Logging tools allows json data and images to be recorded from anywhere in the pipeline
 * All tools built to support dynamic models (tensor sizes are determined at runtime given inputs, this is a frequent issue when you don't want to just build models that support a single resolution)
 * Code as configuration. A single python script fully defines all components that can used to train and test a model.
