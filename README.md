@@ -1,5 +1,7 @@
 # A pytorch library for building neurals networks for visual recognition, encoding, and detection tasks
 
+![alt text](pytlib_diagram.svg)
+
 # Detailed description coming...
 
 # Running Locally for Ubuntu16.04
