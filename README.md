@@ -32,7 +32,9 @@ Most of state-of-the-art detection/localization methods involve either direct bo
 
 At inference time, the method is extremely simple and efficient, we just evaluation the cross-correlation between the car feature map \phi(F) and the search image feature map \phi(X).
 
-<center>![encoding detector](site_content/xcor_eqn.svg)</center>
+<p align="center">
+![encoding detector](site_content/xcor_eqn.svg)
+</p>
 
 The following shows some example outputs of the encoding detector on trained feature maps on cars from the [KITTI](http://www.cvlibs.net/datasets/kitti/) dataset on full frame holdout test images. White pixels shows regions that are highly likely to be cars.
 
