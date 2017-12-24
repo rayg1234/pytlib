@@ -60,9 +60,10 @@ class Tester:
             self.logger.dump_line()
             self.iteration+=1
 
+            Batcher.debatch_outputs(sample_array,outputs)
+            map(lambda x:x.visualize({'title':random_str(5),'mode':'test'}),sample_array)
             if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
-                Batcher.debatch_outputs(sample_array,outputs)
-                map(lambda x:x.visualize({'title':random_str(5),'mode':'test'}),sample_array)
+                print 'dumping {}'.format('testviz_{0:08d}.svg'.format(self.iteration))
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'testviz_{0:08d}.svg'.format(self.iteration)))
 
             #############################################################

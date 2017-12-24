@@ -18,6 +18,7 @@ class TripletCorrelationalDetector(nn.Module):
         # I will keep it this way incase I want to revisit        
         self.register_parameter('anchor_crop', None)
         self.anchor_size = torch.Size((3,anchor_size[0],anchor_size[1]))
+        self.register_parameter('anchor_feature_map', None)
 
     # now compute the xcorrelation of these feature maps
     # need to compute these unbatched because we are not using the same filter map for each conv
@@ -43,25 +44,31 @@ class TripletCorrelationalDetector(nn.Module):
         pos_feature_map = self.encoder.forward(pos)
         neg_feature_map = self.encoder.forward(neg)
         # initialize feature_encoding if None
-        batch_size = pos.size(0)
-        self.init_anchor(pos.is_cuda)
-        anchor = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
-        anchor_feature_map = self.encoder.forward(anchor)
-        recon,mu,logvar = self.vae.forward(anchor)
-        # anchor_feature_map = self.vae.get_encoding_feature_map()
+        # batch_size = pos.size(0)
+        # self.init_anchor(pos.is_cuda)
+        # anchor = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
+        # anchor_feature_map = self.encoder.forward(anchor)
+        recon,mu,logvar = self.vae.forward(pos_crop)
+
+        anchor_feature_map = self.vae.get_encoding_feature_map()
+
+        # save the feature_map for inference, yes this overwrites it every frame
+        self.anchor_feature_map = nn.Parameter(anchor_feature_map.data[0])
 
         cxp = self.cross_correlation(pos_feature_map,anchor_feature_map)
         cxn = self.cross_correlation(neg_feature_map,anchor_feature_map)
-        return anchor,cxp,cxn,recon,mu,logvar
+        return pos_crop,cxp,cxn,recon,mu,logvar
 
-    def infer(self,frame,pos_crop):
-        self.vae.forward(pos_crop)
+    def infer(self,frame,random_patch):
+        self.vae.forward(random_patch)
         batch_size = frame.size(0)
-        self.init_anchor(frame.is_cuda)
-        batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
-        crop_features = self.encoder.forward(batched_crop)
+        # self.init_anchor(frame.is_cuda)
+        # batched_crop = self.anchor_crop.expand(batch_size,*self.anchor_crop.size())
+        # crop_features = self.encoder.forward(batched_crop)
+        if self.anchor_feature_map is None:
+            self.anchor_feature_map = nn.Parameter(self.vae.get_encoding_feature_map().data)
+        
+        batched_feature_map = self.anchor_feature_map.expand(batch_size,*self.anchor_feature_map.size())
         frame_features = self.encoder.forward(frame)
-        # posf,negf = self.encoder.forward(pos),self.encoder.forward(neg)
-        #self.cross_correlation(posf,crop_features),self.cross_correlation(negf,crop_features)
-        return self.cross_correlation(frame_features,crop_features)
+        return self.cross_correlation(frame_features,self.anchor_feature_map)
 

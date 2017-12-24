@@ -83,16 +83,17 @@ class TripletDetectionLoader(implements(Loader)):
         self.mode = params.get('mode','train')
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
-        for i,frame in enumerate(self.source):
-            crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
-            if(len(crop_objs)>0):
-                self.frame_ids.append(i)
+        if self.mode=='train':
+            for i,frame in enumerate(self.source):
+                crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
+                if(len(crop_objs)>0):
+                    self.frame_ids.append(i)
 
-        print 'The source has {0} items'.format(len(self.source))
-        if len(self.frame_ids)==0:
-            raise NoFramesException('No Valid Frames Found!')
+            print 'The source has {0} items'.format(len(self.source))
+            if len(self.frame_ids)==0:
+                raise NoFramesException('No Valid Frames Found!')
 
-        print '{0} frames found'.format(len(self.frame_ids))
+            print '{0} frames found'.format(len(self.frame_ids))
 
     # find a negative crop in a frame, must not contain an object of interest
     def find_negative_crop(self,frame,objects):
@@ -112,8 +113,7 @@ class TripletDetectionLoader(implements(Loader)):
                 return new_box
         return None
 
-    # pick a frame to generate positive and negative crop
-    def next(self):
+    def load_train(self):
         frame1,frame2,neg_box,pos_box,anchor_box = None,None,None,None,None
         # TODO, this should probably break if never find anything for a while
         while neg_box is None:
@@ -160,15 +160,20 @@ class TripletDetectionLoader(implements(Loader)):
         pos_map = torch.Tensor(generate_response_map_from_boxes(pos_crop.get_hw(),intersected_boxes))
         neg_map = torch.Tensor(generate_response_map_from_boxes(pos_crop.get_hw()))
 
-        data, target = [],[]
-        if self.mode=='train':
-            data = [pos,neg,anchor]
-            target = [pos_map,neg_map,anchor]
-        else:
-            frame_t = torch.Tensor(frame1.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
-            data = [frame_t,anchor]
-            target = [torch.Tensor(1)]
+        data = [pos,neg,anchor]
+        target = [pos_map,neg_map,anchor]
         return TripletDetectionSample(data,target)
 
+    def load_test(self):
+        frame = random.choice(self.source)
+        random_t = torch.Tensor(3,self.anchor_size[0],self.anchor_size[1])
+        frame_t = torch.Tensor(frame.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01).get_data().astype(float))
+        data = [frame_t,random_t]
+        target = [torch.Tensor(1)] # dummy target
+        return TripletDetectionSample(data,target)
+
+    # pick a frame to generate positive and negative crop
+    def next(self):
+        return self.load_train() if self.mode == 'train' else self.load_test()
  
 
