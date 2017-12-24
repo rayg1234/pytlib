@@ -30,7 +30,7 @@ Most of state-of-the-art detection/localization methods involve either direct bo
 
 ![encoding detector](site_content/encoding_detector_diagram.svg)
 
-At inference time, the method is extremely simple and efficient, we just evaluation the cross-correlation between the car feature map and the search image.
+At inference time, the method is extremely simple and efficient, we just evaluation the cross-correlation between the car feature map \phi(F) and the search image feature map \phi(X).
 
 ![encoding detector](site_content/xcor_eqn.svg)
 
