@@ -2,7 +2,7 @@
 
 ![pytlib](site_content/pytlib_diagram.svg)
 
-There are many common challenges with training deep neural nets for vision tasks using real world data beyond the classic MNIST and Imagenet datasets, such as properly handling the loading of large images for batched training without bottlenecking performance, augmenting samples with perturbations, generating and storing visualizations from different parts of the pipeline. This library tries address some of these challenges in a scalable way, coupled with the flexible architecture of pytorch, to allow the user to quickly experiment with different datasets and different models in deeplearning vision research.
+There are many common challenges with training deep neural nets for vision tasks using real world data beyond the classic MNIST and Imagenet datasets, such as properly handling the loading of large images for batched training without bottlenecking performance, augmenting samples with perturbations, generating and storing visualizations from different parts of the pipeline. This library addresses some of these challenges in a scalable way. Coupled with the flexible architecture of pytorch, it allows the user to quickly experiment with different datasets and different models in deeplearning vision research.
 
 ## Some Key Features
 
