@@ -19,12 +19,12 @@ defining pixel masks and bounding boxes.
 
 # Examples and Active projects
 
-## Variational autoencoder 
-Example implementation (extended from [pytorch vae for MNIST](https://github.com/pytorch/examples/tree/master/vae)) of a vanilla [variational auto-encoder](https://arxiv.org/abs/1312.6114)  using the [Stanford Cars dataset](http://ai.stanford.edu/~jkrause/cars/car_dataset.html). The configuration is defined [here](pytlib/configuration/vae_config_stanford_cars.py). We use the [autoencoder_loader](pytlib/data_loading/loaders/autoencoder_loader.py) and the [vae network](pytlib/networks/vae.py) with the [vae loss function](pytlib/loss_functions/vae_loss.py). Below shows input/output pair visualizations produced by this configuration after an hour of training on a GPU.
+## [Variational autoencoder](pytlib/configuration/vae_config_stanford_cars.py)
+Example implementation (extended from [pytorch vae for MNIST](https://github.com/pytorch/examples/tree/master/vae)) of a vanilla [variational auto-encoder](https://arxiv.org/abs/1312.6114)  using the [Stanford Cars dataset](http://ai.stanford.edu/~jkrause/cars/car_dataset.html). The configuration is defined [here](pytlib/configuration/vae_config_stanford_cars.py). We use the [autoencoder_loader](pytlib/data_loading/loaders/autoencoder_loader.py) and the [vae network](pytlib/networks/vae.py) with the [vae loss function](pytlib/loss_functions/vae_loss.py). Below shows input/output pair visualizations produced by this configuration after an hour of training on a GPU. Note the trademark blurry reconstruction from a VAE using purely mean squared loss.
 
 ![vae on stanford cars](site_content/vae_example.svg)
 
-## Encoding Detector (Active project)
+## [Encoding Detector](pytlib/configuration/triplet_detector_config.py) (Active project)
 
 Most of state-of-the-art object detection/localization methods involve either direct bounding box regression or refining region proposals (ie SSD, YOLO, Faster RCNN etc.). However, these methods are not fully convolutional (translation invariant) and can overfit to output bounding boxes without ever learning a useful feature representation of the objects in question. A different way to approach the problem is attempt to learn a representation of a class of objects (ie: a car) in a highly constrained feature space and use that representation to find regions of high correlation in some search space. 
 
