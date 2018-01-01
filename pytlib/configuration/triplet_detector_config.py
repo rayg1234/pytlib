@@ -9,7 +9,6 @@ from networks.triplet_correlational_detector import TripletCorrelationalDetector
 from loss_functions.triplet_correlation_loss import triplet_correlation_loss,triplet_correlation_loss2
 import random
 
-# define these things here
 def get_loader(mode):
     path = '/home/ray/Data/KITTI/testing' if mode=='test' else '/home/ray/Data/KITTI/training'
     source = KITTISource(path,max_frames=10000)
