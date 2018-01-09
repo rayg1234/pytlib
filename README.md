@@ -42,9 +42,9 @@ The following shows some example outputs of the encoding detector on trained fea
 
 # Running Locally on Native Ubuntu 16.04
 
-Install: `sudo bash pytlib/install.sh`
+Install: `cd pytlib; bash local_install.sh`
 
-Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
+Start up virtualenv: `source pytenv/bin/activate`
 
 Run the trainer: `python run/trainer.py ...`
 
