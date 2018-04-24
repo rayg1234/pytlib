@@ -74,7 +74,7 @@ class PTImage:
         else:
             cur_ax = axes
         # cur_ax.imshow(display_img.get_data())
-        cur_ax.imshow(display_img.get_data(), vmin=0, vmax=255)
+        cur_ax.imshow(display_img.get_data().squeeze(), vmin=0, vmax=255)
         if display:
             plt.show(block=True)
             plt.close()
@@ -119,8 +119,16 @@ class PTImage:
             return np.array([shape[0],shape[1]])
 
     @classmethod
+    def from_numpy_array(cls,np_array,ordering=Ordering.HWC,vc=ValueClass.BYTE0255):
+        return cls(data=np_array,ordering=ordering,vc=vc)
+
+    @classmethod
+    def from_pil_image(cls,pil_img):
+        return cls(data=np.asarray(pil_img),ordering=Ordering.HWC,vc=ValueClass.BYTE0255)
+
+    @classmethod
     def from_cwh_torch(cls,torch_img):
-        return cls(data=torch_img.cpu().numpy().squeeze(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
+        return cls(data=torch_img.cpu().numpy(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
     @classmethod
     def from_2d_numpy(cls,map2d):

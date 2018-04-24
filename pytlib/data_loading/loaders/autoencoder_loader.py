@@ -46,14 +46,14 @@ class AutoEncoderLoader(implements(Loader)):
     def __init__(self,source,params):
         self.source = source
         self.crop_size = params['crop_size']
-        self.obj_types = params['obj_types']
+        self.obj_types = params.get('obj_types')
 
         self.frame_ids = []
 
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
         for i,frame in enumerate(self.source):
-            crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
+            crop_objs = filter(lambda x: not self.obj_types or x.obj_type in self.obj_types,frame.get_objects())
             if(len(crop_objs)>0):
                 self.frame_ids.append(i)
 
@@ -68,7 +68,7 @@ class AutoEncoderLoader(implements(Loader)):
         frame = self.source[random.choice(self.frame_ids)]
         # frame.show_image_with_labels()
         # get a random crop object
-        crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
+        crop_objs = filter(lambda x: not self.obj_types or x.obj_type in self.obj_types,frame.get_objects())
         # print 'Num crop objs in sample: {0}'.format(len(crop_objs))
         crop = random.choice(crop_objs)
         # print 'crop_box: ' + str(crop.box)
@@ -79,6 +79,7 @@ class AutoEncoderLoader(implements(Loader)):
         transformed_box = RandomPerturber.perturb_crop_box(crop.box,{})
 
         # 2) Take crop, todo, change to using center crop to preserve aspect ratio
+        # check if the affine is identity within some toleranc, then don't bother applying
         affine = Affine()
         scalex = float(self.crop_size[0])/transformed_box.edges()[0]
         scaley = float(self.crop_size[1])/transformed_box.edges()[1]

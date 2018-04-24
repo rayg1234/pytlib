@@ -5,10 +5,11 @@ from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 import torch
 
 class AutoEncoder(nn.Module):
-    def __init__(self):
+    def __init__(self,inchans=3):
         super(AutoEncoder, self).__init__()
         # conv, deconv
-        self.convs = ConvolutionStack(3)
+        self.inchans=inchans
+        self.convs = ConvolutionStack(self.inchans)
         self.convs.append(3,3,2)
         self.convs.append(6,3,1)
         self.convs.append(16,3,1)
@@ -18,7 +19,7 @@ class AutoEncoder(nn.Module):
         self.tconvs.append(16,3,2)
         self.tconvs.append(6,3,1)
         self.tconvs.append(3,3,1)
-        self.tconvs.append(3,3,2)
+        self.tconvs.append(self.inchans,3,2)
 
     def forward(self, x):
         input_dims = x.size()
