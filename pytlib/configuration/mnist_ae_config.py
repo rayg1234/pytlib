@@ -13,7 +13,7 @@ def get_loader():
     return AutoEncoderLoader(source,loader_params)
 
 loader = (get_loader,dict())
-# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=1))
+# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))
 model = (AutoEncoder,dict(inchans=1))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = nn.BCELoss()
