@@ -44,7 +44,7 @@ class DRAW(nn.Module):
     # selects where to sample from the input image, no attention version
     # dims is 2*W*H
     def read(self,x,x_hat,dec_state):
-        return torch.cat((x,x_hat),0)
+        return torch.cat((x,x_hat),1)
 
     # write takes use from "encoding space" to image space
     def write(self,decoding):
@@ -54,7 +54,7 @@ class DRAW(nn.Module):
     def sampleZ(self,encoding):
         mu = F.linear(encoding,self.encoding_mu_weights)
         logvar = F.linear(encoding,self.encoding_logvar_weights)
-        return reparameterize(mu, logvar),mu,logvar
+        return self.reparameterize(mu, logvar),mu,logvar
 
     def reparameterize(self, mu, logvar):
         if self.training:
@@ -66,37 +66,39 @@ class DRAW(nn.Module):
 
     # takes an input, returns the sequence of outputs, mus, and logvars
     def forward(self,x):
-        # flatten x to 1-d
-        xview = x.view(x.nelement())
-        self.input_size = x.nelement()
+        # flatten x to 1-d, except for batch dimension
+        xview = x.view(x.size()[0],x.nelement()/x.size()[0])
+        batch_size = x.size()[0]
 
-        if not self.decoder_linear_weights:
+        if self.decoder_linear_weights is None:
             self.initialize(xview)
 
         # zero out initial states
         self.zero_rnn_states()
         outputs,mus,logvars = [],[],[]
-        outputs.append(torch.zeros(self.input_size))
+
+        outputs.append(Variable(torch.zeros(x.size())))
 
         for t in range(0,self.timesteps):
             # Step 1: diff the input against the prev output
-            x_hat = xview - F.sigmoid(outputs[t])
+            x_hat = xview - F.sigmoid(outputs[t].view(xview.size()))
             # Step 2: read
-            r = self.read(xview,x_hat,self.decoder_rnn.get_hidden_state())
+            rvec = self.read(xview,x_hat,self.decoder_rnn.get_hidden_state())
             # Step 3: encoder rnn
             # note the dimensions of r doesn't have to match with the decoding size because
             # we are just concating 2 dim-1 tensors, which is kind of wierd, but ok...
-            encoding = self.encoder_rnn.forward(torch.cat((r,self.decoder_rnn.get_hidden_state()), 0))
+            cat = torch.cat((rvec,self.decoder_rnn.get_hidden_state().view(batch_size,self.encoding_size)),1)
+            encoding = self.encoder_rnn.forward(cat)
             # Step 4: sample z
             z,mu,logvar = self.sampleZ(encoding)
             # store the mu and logvar for the loss function
             mus.append(mu)
-            logvar.append(logvar)
+            logvars.append(logvar)
 
             # Step 5: decoder rnn
             decoding = self.decoder_rnn.forward(z)
-            # Step 6: write to canvas
-            outputs.append(torch.sum(outputs[-1],self.write(decoding)))
+            # Step 6: write to canvas, (in the original dimensions of the input)
+            outputs.append(torch.add(outputs[-1],self.write(decoding).view(x.size())))
 
         return outputs, mus, logvars
 

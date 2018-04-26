@@ -38,20 +38,22 @@ class BasicRNN(nn.Module):
         stdv = 1. / math.sqrt(self.U.size(1))
         self.U.data.uniform_(-stdv, stdv)
 
-        self.V = nn.Parameter(torch.Tensor(output_size,self.hstate_size))
+        self.V = nn.Parameter(torch.Tensor(self.output_size,self.hstate_size))
         stdv = 1. / math.sqrt(self.V.size(1))
         self.V.data.uniform_(-stdv, stdv)  
 
         self.W = nn.Parameter(torch.Tensor(self.hstate_size,self.hstate_size))
         stdv = 1. / math.sqrt(self.W.size(1))
         self.W.data.uniform_(-stdv, stdv)
+        if input.data.is_cuda:
+            self.cuda()
 
-        self.cuda()
-
-    def forward(self, x):
+    def forward(self, x):        
+        batch_size = x.size(0)
         if self.U is None:
             self.init_weights(x)
         # assert the dimensions are correct here
-        cat = torch.cat((F.linear(x,self.U),F.linear(self.hidden_state,self.V)),0)
+        cat = torch.add(F.linear(x,self.U),F.linear(self.hidden_state.view(batch_size,self.hstate_size),self.V))
+        #cat = torch.cat((F.linear(x,self.U),F.linear(self.hidden_state.view(batch_size,self.hstate_size),self.V)),1)
         self.hidden_state = F.tanh(cat)
         return F.linear(self.hidden_state,self.W)       

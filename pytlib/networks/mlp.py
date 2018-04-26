@@ -21,7 +21,8 @@ class MLP(nn.Module):
             stdv = 1. / math.sqrt(linear_weight.size(1))
             linear_weight.data.uniform_(-stdv, stdv)
             self.linear_weights.append(linear_weight)
-        self.cuda()
+        if input.data.is_cuda:
+            self.cuda()
 
     def forward(self, x):
         if self.linear_weights is None:
