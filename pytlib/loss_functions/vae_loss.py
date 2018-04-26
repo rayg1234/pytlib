@@ -23,3 +23,21 @@ def vae_loss(reconstruction,mu,logvar,targets):
     Logger().set('loss_component.KLD',KLD.data.cpu()[0])
     Logger().set('loss_component.BCE',BCE.data.cpu()[0])
     return BCE + KLD
+
+# for DRAW model https://arxiv.org/pdf/1502.04623.pdf
+def sequence_vae_loss(recs,mus,logvars,target):
+    assert len(recs)>0 and len(recs)==len(mus) and len(mus)==len(logvars), "sequence_vae_loss: dimensions don't match"
+    BCE = F.binary_cross_entropy(recs[-1], target)
+    KLD = -0.5 * torch.sum(1 + logvars[0] - mus[0].pow(2) - logvars[0].exp())
+    for t in range(1,len(mus)):
+        KLD = torch.sum(KLD, -0.5 * torch.sum(1 + logvars[t] - mus[t].pow(2) - logvars[t].exp()))
+    total_elements = recs[-1].nelement()
+    total_elements *= len(mus)
+    KDL /= total_elements
+
+    Logger().set('loss_component.reconstruction_mean',reconstruction.data.mean())
+    Logger().set('loss_component.reconstruction_std',reconstruction.data.std())    
+    Logger().set('loss_component.KLD',KLD.data.cpu()[0])
+    Logger().set('loss_component.BCE',BCE.data.cpu()[0])    
+    return BCE + KLD
+

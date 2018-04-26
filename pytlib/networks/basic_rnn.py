@@ -23,15 +23,15 @@ class BasicRNN(nn.Module):
         self.register_parameter('U', None)
         self.register_parameter('V', None)
         self.register_parameter('W', None)
-        # hidden state, initialized to 0?
-        self.hidden_state = nn.Variable(torch.Zeros(self.hstate_size))
+        # hidden state, initialized to 0? # this needs to be moved to GPU
+        self.hidden_state = Variable(torch.zeros(self.hstate_size))
 
     def get_hidden_state(self):
         return self.hidden_state
 
     # zero the hidden states
     def reset(self):
-        self.hidden_state = nn.Variable(torch.Zeros(self.hstate_size))
+        self.hidden_state = Variable(torch.zeros(self.hstate_size))
 
     def init_weights(self,input):
         self.U = nn.Parameter(torch.Tensor(self.hstate_size,input.size(1)))
