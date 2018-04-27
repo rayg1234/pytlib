@@ -21,7 +21,8 @@ class DRAW(nn.Module):
         self.register_parameter('encoding_logvar_weights', None)
 
     def initialize(self,x):
-        self.decoder_linear_weights = nn.Parameter(torch.Tensor(x.nelement(),self.encoding_size))
+        batch_size = x.size(0)
+        self.decoder_linear_weights = nn.Parameter(torch.Tensor(x.nelement()/batch_size,self.encoding_size))
         stdv = 1. / math.sqrt(self.decoder_linear_weights.size(1))
         self.decoder_linear_weights.data.uniform_(-stdv, stdv)        
         
@@ -34,12 +35,6 @@ class DRAW(nn.Module):
         self.encoding_logvar_weights.data.uniform_(-stdv, stdv)   
         if x.data.is_cuda:
             self.cuda()
-
-    def zero_rnn_states(self):
-        # initialize the first output as zero tensor with same size as input (blank canvas)
-        # the initial hidden states should be zero as well
-        self.encoder_rnn.reset()
-        self.decoder_rnn.reset()
 
     # selects where to sample from the input image, no attention version
     # dims is 2*W*H
@@ -74,7 +69,8 @@ class DRAW(nn.Module):
             self.initialize(xview)
 
         # zero out initial states
-        self.zero_rnn_states()
+        self.encoder_rnn.reset_hidden_state(batch_size)
+        self.decoder_rnn.reset_hidden_state(batch_size)
         outputs,mus,logvars = [],[],[]
 
         outputs.append(Variable(torch.zeros(x.size())))
