@@ -23,12 +23,13 @@ class AutoEncoderSample(implements(Sample)):
 
     def visualize(self,parameters={}):
         # here output[0] could either be a single image or a sequence of images
+
         if isinstance(self.output[0],list):
             image_target = PTImage.from_cwh_torch(self.target[0])
             ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
             for i,o in enumerate(self.output[0]):
                 image_output = PTImage.from_cwh_torch(o)
-                ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output {}'.format(i))                
+                ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output{:02d}'.format(i))                
         else:
             image_target = PTImage.from_cwh_torch(self.target[0])
             image_output = PTImage.from_cwh_torch(self.output[0])
