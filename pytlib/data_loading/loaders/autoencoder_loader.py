@@ -22,14 +22,22 @@ class AutoEncoderSample(implements(Sample)):
         self.output = None
 
     def visualize(self,parameters={}):
-        image_target = PTImage.from_cwh_torch(self.target[0])
-        image_output = PTImage.from_cwh_torch(self.output[0])
-        ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
-        ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
+        # here output[0] could either be a single image or a sequence of images
+        if isinstance(self.output[0],list):
+            image_target = PTImage.from_cwh_torch(self.target[0])
+            ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
+            for i,o in enumerate(self.output[0]):
+                image_output = PTImage.from_cwh_torch(o)
+                ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output {}'.format(i))                
+        else:
+            image_target = PTImage.from_cwh_torch(self.target[0])
+            image_output = PTImage.from_cwh_torch(self.output[0])
+            ImageVisualizer().set_image(image_target,parameters.get('title','') + ' : Target')
+            ImageVisualizer().set_image(image_output,parameters.get('title','') + ' : Output')
 
     # specific to the AE sample, the first element of the output has the same shape as the target
     def set_output(self,output):
-        assert output[0].size() == self.target[0].size()
+        # assert output[0].size() == self.target[0].size()
         self.output = output
 
     def get_data(self):
