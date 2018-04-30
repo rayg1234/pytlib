@@ -95,7 +95,7 @@ class DRAW(nn.Module):
             # Step 5: decoder rnn
             decoding = self.decoder_rnn.forward(z)
             # Step 6: write to canvas, (in the original dimensions of the input)
-            outputs.append(torch.add(outputs[-1],F.sigmoid(self.write(decoding).view(x.size()))))
-
+            outputs.append(torch.add(outputs[-1],self.write(decoding).view(x.size())))
+        outputs[-1] = F.sigmoid(outputs[-1])
         return outputs, mus, logvars
 
