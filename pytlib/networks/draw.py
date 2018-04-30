@@ -76,6 +76,7 @@ class DRAW(nn.Module):
         outputs.append(Variable(torch.zeros(x.size())))
 
         for t in range(0,self.timesteps):
+            # import ipdb;ipdb.set_trace()
             # Step 1: diff the input against the prev output
             x_hat = xview - F.sigmoid(outputs[t].view(xview.size()))
             # Step 2: read
@@ -94,7 +95,7 @@ class DRAW(nn.Module):
             # Step 5: decoder rnn
             decoding = self.decoder_rnn.forward(z)
             # Step 6: write to canvas, (in the original dimensions of the input)
-            outputs.append(torch.add(outputs[-1],self.write(decoding).view(x.size())))
+            outputs.append(torch.add(outputs[-1],F.sigmoid(self.write(decoding).view(x.size()))))
 
         return outputs, mus, logvars
 

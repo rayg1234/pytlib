@@ -30,8 +30,8 @@ def vae_loss(reconstruction,mu,logvar,targets):
 # for DRAW model https://arxiv.org/pdf/1502.04623.pdf
 def sequence_vae_loss(recs,mus,logvars,target):
     assert len(recs)>0 and len(mus)==len(logvars), "sequence_vae_loss: dimensions don't match"
-    # not sure why we sigmoid in the loss here
-    BCE = F.binary_cross_entropy(F.sigmoid(recs[-1]), target)
+    # import ipdb;ipdb.set_trace()
+    BCE = F.binary_cross_entropy(recs[-1], target)
     KLD = KLD_gaussian(mus[0],logvars[0])
     for t in range(1,len(mus)):
         KLD = torch.add(KLD, KLD_gaussian(mus[t],logvars[t]))

@@ -58,4 +58,4 @@ class BasicRNN(nn.Module):
         cat = torch.add(F.linear(x,self.U),F.linear(self.hidden_state.view(batch_size,self.hstate_size),self.V))
         #cat = torch.cat((F.linear(x,self.U),F.linear(self.hidden_state.view(batch_size,self.hstate_size),self.V)),1)
         self.hidden_state = F.tanh(cat)
-        return F.linear(self.hidden_state,self.W)       
+        return F.linear(self.hidden_state,self.W)
