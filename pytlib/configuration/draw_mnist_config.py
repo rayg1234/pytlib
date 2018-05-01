@@ -14,8 +14,8 @@ def get_loader():
     return AutoEncoderLoader(source,loader_params)
 
 loader = (get_loader,dict())
-# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))
+# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
 model = (DRAW,dict())
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = sequence_vae_loss
-train_config = TrainConfiguration(loader,optimizer,model,loss,False)
+train_config = TrainConfiguration(loader,optimizer,model,loss,True)

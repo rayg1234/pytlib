@@ -29,28 +29,30 @@ class BasicRNN(nn.Module):
         return self.hidden_state
 
     # zero the hidden states
-    def reset_hidden_state(self,batch_size):
+    def reset_hidden_state(self,batch_size,is_cuda):
         # hidden state, initialized to 0? # this needs to be moved to GPU
         self.hidden_state = Variable(torch.zeros((batch_size,self.hstate_size)))
+        if is_cuda:
+            self.hidden_state = self.hidden_state.cuda()
 
     def init_weights(self,input):
         self.U = nn.Parameter(torch.Tensor(self.hstate_size,input.size(1)))
         stdv = 1. / math.sqrt(self.U.size(1))
         self.U.data.uniform_(-stdv, stdv)
 
-        self.V = nn.Parameter(torch.Tensor(self.output_size,self.hstate_size))
+        self.V = nn.Parameter(torch.Tensor(self.hstate_size,self.hstate_size))
         stdv = 1. / math.sqrt(self.V.size(1))
         self.V.data.uniform_(-stdv, stdv)  
 
-        self.W = nn.Parameter(torch.Tensor(self.hstate_size,self.hstate_size))
+        self.W = nn.Parameter(torch.Tensor(self.output_size,self.hstate_size))
         stdv = 1. / math.sqrt(self.W.size(1))
         self.W.data.uniform_(-stdv, stdv)
 
-        self.reset_hidden_state(input.size(0))
+        self.reset_hidden_state(input.size(0),input.data.is_cuda)
         if input.data.is_cuda:
             self.cuda()
 
-    def forward(self, x):        
+    def forward(self, x):
         batch_size = x.size(0)
         if self.U is None:
             self.init_weights(x)
