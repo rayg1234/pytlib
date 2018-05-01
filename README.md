@@ -42,11 +42,11 @@ The following shows some example outputs of the encoding detector on trained fea
 
 # Running Locally on Native Ubuntu 16.04
 
-Install: `cd pytlib; bash local_install.sh`
+Install: `sudo bash pytlib/install.sh`
 
-Start up virtualenv: `source pytenv/bin/activate`
+Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
 
-Run the trainer: `python run/trainer.py ...`
+Train an example simple autoencoder for 100 iterations: `python run/trainer.py --train_config configuration/config_example.py -i 100`
 
 More helpful instructions to come ...
 
