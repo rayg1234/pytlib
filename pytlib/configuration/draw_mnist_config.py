@@ -15,7 +15,7 @@ def get_loader():
 
 loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
-model = (DRAW,dict())
+model = (DRAW,dict(use_attention=True))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = sequence_vae_loss
 train_config = TrainConfiguration(loader,optimizer,model,loss,True)

@@ -26,6 +26,8 @@ class DRAW(nn.Module):
         self.register_parameter('encoding_logvar_weights', None)
         self.filter_linear_layer = nn.Linear(self.encoding_size,5)
         self.grid_size = grid_size
+        self.minclamp = 1e-8
+        self.maxclamp = 1e8
 
     def initialize(self,x):
         batch_size = x.size(0)
@@ -59,42 +61,50 @@ class DRAW(nn.Module):
     # 2) batch x N x H (Fy)
     def generate_filter_matrices(self,gx,gy,sigma2,delta):
         N = self.grid_size
-        grid_points = torch.arange(0,N).view((1,N,1))
+        grid_points = Variable(torch.arange(0,N).view((1,N,1)))
+        a = Variable(torch.arange(0,self.image_w).view((1,1,-1)))
+        b = Variable(torch.arange(0,self.image_h).view((1,1,-1)))
+        if gx.data.is_cuda:
+            grid_points = grid_points.cuda()
+            a = a.cuda()
+            b = b.cuda()
+
         # gx is Bx1, grid is (1xNx1), so this is a broadcast op -> BxNx1
-        mux = gx.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta 
-        muy = gy.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta
-        a = torch.arange(0,self.image_w).view((1,1,-1))
-        b = torch.arange(0,self.image_h).view((1,1,-1))
+        mux = gx.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta.view((-1,1,1))
+        muy = gy.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta.view((-1,1,1))
+
         s2 = sigma2.view((-1,1,1))
         fx = torch.exp(-(a-mux).pow(2)/(2*s2))
         fy = torch.exp(-(b-muy).pow(2)/(2*s2))
         # normalize
-        fx = fx/torch.sum(fx,2,keepdim=True)
-        fy = fy/torch.sum(fy,2,keepdim=True)
+        fx = fx/torch.clamp(torch.sum(fx,2,keepdim=True),self.minclamp,self.maxclamp)
+        fy = fy/torch.clamp(torch.sum(fy,2,keepdim=True),self.minclamp,self.maxclamp)
         return fx,fy
 
     def generate_filter_params(self,state):
         filter_vector = self.filter_linear_layer(state)
-        _gx,_gy,log_sigma2,log_delta,loggamma = filter_vector.split(5)
+        _gx,_gy,log_sigma2,log_delta,loggamma = filter_vector.split(1,1)
         gx=(self.image_w+1)/2*(_gx+1)
         gy=(self.image_h+1)/2*(_gy+1)
         sigma2=torch.exp(log_sigma2)
         delta=(max(self.image_w,self.image_h)-1)/(self.grid_size-1)*torch.exp(log_delta)       
         gamma=torch.exp(loggamma)
-        return gx,gy,sigma2,gamma        
+        return gx,gy,sigma2,delta,gamma        
 
     def read_w_att(self,x,x_hat,dec_state):
+        batch_size = x.size()[0]
+
         # 1) linear to convert dec_state into batchx5 params gx,gy,logsigma2,logdelta,loggamma
         # 2) convert to gaussian parameters
-        gx,gy,sigma2,gamma = generate_filter_params(dec_state)
+        gx,gy,sigma2,delta,gamma = self.generate_filter_params(dec_state)
 
         # 3) generate filter matrices
-        fx,fy = generate_filter_matrices(gx,gy,sigma2,delta)
+        fx,fy = self.generate_filter_matrices(gx,gy,sigma2,delta)
 
         # 4) apply filter matrices to get glimpses
-        output = gamma.view(-1,1,1)*torch.bmm(torch.bmm(fy,x),torch.transpose(fx,1,2))
-        output_hat = gamma.view(-1,1,1)*torch.bmm(torch.bmm(fy,x_hat),torch.transpose(fx,1,2))
-        output_total = torch.cat(output,output_hat)
+        output = gamma.view(-1,1,1)*torch.bmm(torch.bmm(fy,x.view(batch_size,self.image_h,self.image_w)),torch.transpose(fx,1,2))
+        output_hat = gamma.view(-1,1,1)*torch.bmm(torch.bmm(fy,x_hat.view(batch_size,self.image_h,self.image_w)),torch.transpose(fx,1,2))
+        output_total = torch.cat((output.view(batch_size,self.grid_size*self.grid_size),output_hat.view(batch_size,self.grid_size*self.grid_size)),1)
         return output_total
 
     # write takes use from "encoding space" to image space
@@ -102,10 +112,11 @@ class DRAW(nn.Module):
         return F.linear(decoding,self.decoder_linear_weights)
 
     def write_w_att(self,decoding):
-        write_patch = F.linear(decoding,self.decoder_linear_weights)
-        gx,gy,sigma2,gamma = generate_filter_params(decoding)
-        fx,fy = generate_filter_matrices(gx,gy,sigma2,delta)
-        output = (1/gamma).view(-1,1,1)*torch.bmm(torch.bmm(fy.transpose(1,2),x),fx)
+        batch_size = decoding.size()[0]
+        write_patch = F.linear(decoding,self.decoder_linear_weights).view(batch_size,self.grid_size,self.grid_size)
+        gx,gy,sigma2,gamma,delta = self.generate_filter_params(decoding)
+        fx,fy = self.generate_filter_matrices(gx,gy,sigma2,delta)
+        output = (1/gamma).view(-1,1,1)*torch.bmm(torch.bmm(fy.transpose(1,2),write_patch),fx)
         return output
 
     # this converts the encoding into both a mu and logvar vector
@@ -144,12 +155,19 @@ class DRAW(nn.Module):
             init_tensor = init_tensor.cuda()
         outputs.append(init_tensor)
 
+        if self.use_attention:
+            read_fn = self.read_w_att
+            write_fn = self.write_w_att
+        else:
+            read_fn = self.read
+            write_fn = self.write
+
         for t in range(0,self.timesteps):
             # import ipdb;ipdb.set_trace()
             # Step 1: diff the input against the prev output
             x_hat = xview - F.sigmoid(outputs[t].view(xview.size()))
             # Step 2: read
-            rvec = self.read(xview,x_hat,self.decoder_rnn.get_hidden_state())
+            rvec = read_fn(xview,x_hat,self.decoder_rnn.get_hidden_state())
             # Step 3: encoder rnn
             # note the dimensions of r doesn't have to match with the decoding size because
             # we are just concating 2 dim-1 tensors, which is kind of wierd, but ok...
@@ -164,7 +182,7 @@ class DRAW(nn.Module):
             # Step 5: decoder rnn
             decoding = self.decoder_rnn.forward(z)
             # Step 6: write to canvas, (in the original dimensions of the input)
-            outputs.append(torch.add(outputs[-1],self.write(decoding).view(x.size())))
+            outputs.append(torch.add(outputs[-1],write_fn(decoding).view(x.size())))
 
         # return the sigmoided versions
         for i in range(len(outputs)):
