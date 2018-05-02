@@ -42,11 +42,15 @@ The following shows some example outputs of the encoding detector on trained fea
 
 # Running Locally on Native Ubuntu 16.04
 
-Install: `sudo bash pytlib/install.sh`
+Install: `bash pytlib/install.sh`
 
 Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
 
-Train an example simple autoencoder for 100 iterations: `python run/trainer.py --train_config configuration/config_example.py -i 100`
+Train an example simple autoencoder for 100 iterations, batch size of 32: `python run/trainer.py -t configuration/mnist_ae_config.py -i 100 -b 32 -v 100`
+
+This will train (on cpu) a basic CNN autoencoder on the mnist dataset and produce a visualization at the end of the 100 iterations. All the data is stored in `tmp` directory in the local directory. To view the visualization:
+
+`eog tmp/visualizations_00000100.svg`
 
 More helpful instructions to come ...
 
