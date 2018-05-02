@@ -29,7 +29,7 @@ An implementation of the [Deep Recurrent Attentive Writer](https://arxiv.org/abs
 
 ![DRAW on MNIST](site_content/draw_output.png)
 
-## [Encoding Detector](pytlib/configuration/triplet_detector_config.py) (Active project)
+## [Encoding Detector](pytlib/configuration/triplet_detector_config.py)
 
 Most of state-of-the-art object detection/localization methods involve either direct bounding box regression or refining region proposals (ie SSD, YOLO, Faster RCNN etc.). However, these methods are not fully convolutional (translation invariant) and can overfit to output bounding boxes without ever learning a useful feature representation of the objects in question. A different way to approach the problem is attempt to learn a representation of a class of objects (ie: a car) in a highly constrained feature space and use that representation to find regions of high correlation in some search space. 
 
