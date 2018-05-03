@@ -19,12 +19,12 @@ def vae_loss(reconstruction,mu,logvar,targets):
     # assume bchw format
     total_elements = reduce((lambda x, y: x * y), reconstruction.size())
     KLD /= total_elements
-    Logger().set('loss_component.variance_mean',logvar.exp().data.mean())
-    Logger().set('loss_component.mu_mean',mu.data.mean())
-    Logger().set('loss_component.reconstruction_mean',reconstruction.data.mean())
-    Logger().set('loss_component.reconstruction_std',reconstruction.data.std())
-    Logger().set('loss_component.KLD',KLD.data.cpu()[0])
-    Logger().set('loss_component.BCE',BCE.data.cpu()[0])
+    Logger().set('loss_component.variance_mean',logvar.exp().data.mean().item())
+    Logger().set('loss_component.mu_mean',mu.data.mean().item())
+    Logger().set('loss_component.reconstruction_mean',reconstruction.data.mean().item())
+    Logger().set('loss_component.reconstruction_std',reconstruction.data.std().item())
+    Logger().set('loss_component.KLD',KLD.data.cpu().item())
+    Logger().set('loss_component.BCE',BCE.data.cpu().item())
     return BCE + KLD
 
 # for DRAW model https://arxiv.org/pdf/1502.04623.pdf
@@ -40,9 +40,9 @@ def sequence_vae_loss(recs,mus,logvars,target):
     total_elements *= len(mus)
     KLD /= total_elements
 
-    Logger().set('loss_component.reconstruction_mean',recs[-1].data.mean())
-    Logger().set('loss_component.reconstruction_std',recs[-1].data.std())    
-    Logger().set('loss_component.KLD',KLD.data.cpu()[0])
-    Logger().set('loss_component.BCE',BCE.data.cpu()[0])    
+    Logger().set('loss_component.reconstruction_mean',recs[-1].data.mean().item())
+    Logger().set('loss_component.reconstruction_std',recs[-1].data.std().item())    
+    Logger().set('loss_component.KLD',KLD.data.cpu().item())
+    Logger().set('loss_component.BCE',BCE.data.cpu().item())    
     return BCE + KLD
 

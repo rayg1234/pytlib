@@ -68,7 +68,7 @@ class Trainer:
             #############################################################
 
             #################### LOGGING, VIZ and SAVE ###################
-            print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data[0])
+            print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data.item())
 
             if self.args.compute_graph and i==self.iteration:
                 compute_graph(loss,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
@@ -78,7 +78,7 @@ class Trainer:
 
             self.logger.set('time',time.time())
             self.logger.set('date',str(datetime.now()))
-            self.logger.set('loss',loss.data[0])
+            self.logger.set('loss',loss.data.item())
             self.logger.set('iteration',self.iteration)
             self.logger.dump_line()
             self.iteration+=1
