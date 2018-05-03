@@ -27,7 +27,7 @@ Example implementation (extended from [pytorch vae for MNIST](https://github.com
 ## [Sequential VAE, eg DRAW](pytlib/configuration/draw_mnist_config.py)
 An implementation of the [Deep Recurrent Attentive Writer](https://arxiv.org/abs/1502.04623). This recurrent writer uses the VAE gaussian prior sampler, a vanilla RNN (instead of LSTM), and the same Gaussian attention mechanism used in the paper. The MNIST dataset is way too easy of a problem. The training was very quick with a relatively small batch and converges well below 10k iterations. The goal here was to tryout the Gaussian attention mechanism. Moving toward, one direction I have is to investigate the [Inverse Draw](https://openai.com/requests-for-research/#inverse-draw) problem. Another is to use the recurrent attention mechanism for the detection problem. Some results is shown below.
 
-![DRAW on MNIST](site_content/draw_output.png){:height="50%" width="50%"}
+<img src="site_content/draw_output.png" width="500">
 
 ## [Encoding Detector](pytlib/configuration/triplet_detector_config.py)
 
