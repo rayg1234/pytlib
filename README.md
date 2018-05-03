@@ -68,9 +68,10 @@ Create the docker container run `docker-compose up -d --force-recreate --build`
 
 Now run `docker ps` you should see a container running.
 
-Now to attach a shell script to the container run `docker exec -it <name_of_docker_process> /bin/bash`.
+Now to attach a shell script to the container run `docker exec -it <name_of_docker_process> /bin/bash 
 
-Export your python path by running `export PYTHONPATH="${PYTHONPATH}:/pytlib"`
-Activate your virtualenv with `source pytenv/bin/activate`
+Now you should be able to do just cd into pytlib and start running, no need to use a virtual env because we've installed all the packages directly in the container
 
-Note: CUDA support in docker not tested yet.
+`cd pytlib; python run/trainer.py -t configuration/mnist_ae_config.py -i 100 -b 32 -v 100`
+
+Note I haven't configured the docker image with Nvidia and CUDA drivers yet... 
