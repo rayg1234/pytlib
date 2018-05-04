@@ -9,8 +9,7 @@ import random
 
 def get_loader():
     source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10000)
-    loader_params = {'crop_size':[255,255],'obj_types':['Car']}
-    return AutoEncoderLoader(source,loader_params)
+    return AutoEncoderLoader(source,crop_size=[255,255],obj_types=['Car'])
 
 loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=10))
 model = (AutoEncoder,dict())

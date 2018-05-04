@@ -40,16 +40,16 @@ def triplet_correlation_loss2(anchor,pcp,pcn,recon_output,mu,logvar,pos_map,neg_
 
     vloss = vae_loss(recon_output,mu,logvar,recon_target)
     pool_kernel = np.array(pos_map.size()[1:])/np.array(pcp.size()[-2:])
-    pos_map_resized = torch.round(F.avg_pool2d(pos_map,pool_kernel))
-    neg_map_resized = torch.round(F.avg_pool2d(neg_map,pool_kernel))
+    pos_map_resized = torch.round(F.avg_pool2d(pos_map,tuple(pool_kernel)))
+    neg_map_resized = torch.round(F.avg_pool2d(neg_map,tuple(pool_kernel)))
 
     nloss = F.binary_cross_entropy_with_logits(pcn.squeeze(),neg_map_resized.squeeze())
     ploss = F.binary_cross_entropy_with_logits(pcp.squeeze(),pos_map_resized.squeeze())
     # nloss = response_map_loss(pcn.squeeze())
     # ploss = response_map_loss(pcp.squeeze(),boxes)
-    Logger().set('loss_component.anchor_mean',anchor.data.mean())
-    Logger().set('loss_component.anchor_std',anchor.data.std())
-    Logger().set('loss_component.ploss2',ploss.data.cpu()[0])
-    Logger().set('loss_component.nloss2',nloss.data.cpu()[0])
-    Logger().set('loss_component.vloss',vloss.data.cpu()[0])
+    Logger().set('loss_component.anchor_mean',anchor.data.mean().item())
+    Logger().set('loss_component.anchor_std',anchor.data.std().item())
+    Logger().set('loss_component.ploss2',ploss.data.cpu().item())
+    Logger().set('loss_component.nloss2',nloss.data.cpu().item())
+    Logger().set('loss_component.vloss',vloss.data.cpu().item())
     return ploss+nloss+vloss

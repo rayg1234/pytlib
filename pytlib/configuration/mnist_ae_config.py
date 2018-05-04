@@ -9,8 +9,7 @@ import random
 
 def get_loader():
     source = MNISTSource('mnist_example',download=True)
-    loader_params = {'crop_size':[28,28]}
-    return AutoEncoderLoader(source,loader_params)
+    return AutoEncoderLoader(source,crop_size=[28,28])
 
 loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))

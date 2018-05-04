@@ -52,11 +52,10 @@ class AutoEncoderSample(implements(Sample)):
 # random perturbations of the crop is an optional parameter
 class AutoEncoderLoader(implements(Loader)):
 
-    def __init__(self,source,params):
+    def __init__(self,source,crop_size,obj_types=None):
         self.source = source
-        self.crop_size = params['crop_size']
-        self.obj_types = params.get('obj_types')
-
+        self.crop_size = crop_size
+        self.obj_types = obj_types
         self.frame_ids = []
 
         #index all the frames that have at least one item we want

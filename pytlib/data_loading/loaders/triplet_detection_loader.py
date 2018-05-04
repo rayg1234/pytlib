@@ -73,14 +73,14 @@ class TripletDetectionSample(implements(Sample)):
         return self.target
 
 class TripletDetectionLoader(implements(Loader)):
-    def __init__(self,source,params):
+    def __init__(self,source,crop_size,anchor_size,obj_types=None,mode='train'):
         self.source = source
-        self.crop_size = params['crop_size']
-        self.obj_types = params['obj_types']
-        self.anchor_size = params['anchor_size']
+        self.crop_size = crop_size
+        self.obj_types = obj_types
+        self.anchor_size = anchor_size
         self.frame_ids = []
         self.perturbations = {'translation_range':[-0.0,0.0],'scaling_range':[2.0,2.0]}
-        self.mode = params.get('mode','train')
+        self.mode = mode
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
         if self.mode=='train':

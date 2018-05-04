@@ -4,11 +4,6 @@ def format_path(path):
     else:
         return path
 
-# note this doesn't do array indexing yet, TODO
-# def get_deep(d, path):
-#     path = format_path(path)
-#     return reduce(dict.__getitem__, path, d)
-
 def get_deep(d,path,default=None):
     val = d
     path = format_path(path)

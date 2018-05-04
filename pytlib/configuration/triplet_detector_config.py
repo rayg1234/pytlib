@@ -12,12 +12,11 @@ import random
 def get_loader(mode):
     path = '/home/ray/Data/KITTI/testing' if mode=='test' else '/home/ray/Data/KITTI/training'
     source = KITTISource(path,max_frames=10000)
-    loader_params = {'crop_size':[255,255],'anchor_size':[127,127],'obj_types':['Car'],'mode':mode}
-    return TripletDetectionLoader(source,loader_params)
+    return TripletDetectionLoader(source,crop_size=[255,255],anchor_size=[127,127],obj_types=['Car'],mode=mode)
 
 loader_test = (MultiLoader,dict(loader=get_loader,loader_args=dict(mode='test'),num_procs=1))
-loader_train = (MultiLoader,dict(loader=get_loader,loader_args=dict(mode='train'),num_procs=10))
-model = (TripletCorrelationalDetector,dict(anchor_size=(127,127)))
+loader_train = (MultiLoader,dict(loader=get_loader,loader_args=dict(mode='train'),num_procs=1))
+model = (TripletCorrelationalDetector,dict())
 optimizer = (optim.Adam,dict(lr=1e-4))
 loss = triplet_correlation_loss2
 train_config = TrainConfiguration(loader_train,optimizer,model,loss,cuda=True)
