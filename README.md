@@ -6,16 +6,16 @@ There are many common challenges with training deep neural nets for vision tasks
 
 ## Some Key Features
 
-* Threaded loader pool to elimiante dataloading overhead during training
+* Code as configuration. A single python script fully defines all components that can used to train and test a model.
 * Automated batch handling from end-to-end. Users only need to write code to generate a single 
 training example. The framework takes care of the batching and debatching for you.
 * Flexible image class abstracts away intensity scaling and byte ordering differences between PIL images and pytorch tensors
 * Helpful utilities to deal with common vision tasks such as affine transforms, image perturbations,
 defining pixel masks and bounding boxes.
 * Visualization and Logging tools allows json data and images to be recorded from anywhere in the pipeline
-* Built to support dynamically sized models (tensor sizes are determined at runtime given inputs, this is a frequent real-world issue when you don't want to just build models that support a single resolution)
+* Built with dynamically sized inputs in mind (model sizes are determined at train-time given inputs, this is a frequent real-world issue when you don't want to just build models that support a single resolution)
 * Model saving and loading
-* Code as configuration. A single python script fully defines all components that can used to train and test a model.
+* Threaded loader pool to elimiante dataloading overhead during training
 
 # Examples and Active projects
 
@@ -24,7 +24,7 @@ Example implementation (extended from [pytorch vae for MNIST](https://github.com
 
 ![vae on stanford cars](site_content/vae_example.svg)
 
-## [Sequential VAE, eg DRAW](pytlib/configuration/draw_mnist_config.py)
+## [Sequential VAE, (DRAW)](pytlib/configuration/draw_mnist_config.py)
 An implementation of the [Deep Recurrent Attentive Writer](https://arxiv.org/abs/1502.04623). This recurrent writer uses the VAE gaussian prior sampler, a vanilla RNN (instead of LSTM), and the same Gaussian attention mechanism used in the paper. The MNIST dataset is way too easy of a problem. The training was very quick with a relatively small batch and converges well below 10k iterations. The goal here was to tryout the Gaussian attention mechanism. Moving toward, one direction I have is to investigate the [Inverse Draw](https://openai.com/requests-for-research/#inverse-draw) problem. Another is to use the recurrent attention mechanism for the detection problem. Some results is shown below.
 
 <p align="center">

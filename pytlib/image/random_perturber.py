@@ -44,9 +44,14 @@ class RandomPerturber:
     def perturb_frame(frame,params):
         dims = frame.image.get_hw()
         rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
-        perturbed_frame = Frame(frame.image_path,copy.deepcopy(frame.objects))
+        perturbed_frame = Frame(frame.image_path)
         perturbed_frame.image = rand_affine.apply_to_image(frame.image,dims)
         for i,obj in enumerate(frame.objects):
-            perturbed_frame.objects[i].box = rand_affine.apply_to_box(obj.box)
+            # filter out completely out of bound objects
+            perturbed_obj_box = rand_affine.apply_to_box(obj.box)
+            if Box.intersection(perturbed_obj_box,perturbed_frame.image.get_bounding_box()) is not None:
+                obj_copy = copy.deepcopy(obj)
+                obj_copy.box = perturbed_obj_box
+                perturbed_frame.objects.append(obj_copy)
         return perturbed_frame
 

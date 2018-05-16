@@ -4,6 +4,7 @@ import os
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+from box import Box
 # This is a general representation of images
 # and act as a mediator between different types and storage orders
 # here is main use case:
@@ -101,6 +102,9 @@ class PTImage:
 
     def get_dims(self):
         return np.array(self.get_data().shape)
+
+    def get_bounding_box(self):
+        return Box.from_single_array(np.array([0,0,self.get_wh()[0],self.get_wh()[1]]))
 
     # get height and width, in that order
     def get_wh(self):

@@ -9,6 +9,7 @@ def KLD_gaussian(mu,logvar):
     return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
 def vae_loss(reconstruction,mu,logvar,targets):
+    # TODO, this should be the mse loss for a gaussian likelihood, (as opposed to BCE for bernouli, eg for MNIST)
     BCE = F.binary_cross_entropy(reconstruction, targets)
     # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
