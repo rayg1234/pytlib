@@ -6,6 +6,7 @@ RUN apt-get install -y python-tk
 RUN apt-get install -y graphviz
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 ADD requirements.txt /
+RUN pip install Cython
 RUN pip install -r requirements.txt
 RUN echo 'export PYTHONPATH="${PYTHONPATH}:/pytlib"' >> ~/.bashrc 
 
