@@ -14,6 +14,10 @@ class Box:
         self.ymax=ymax
 
     @classmethod
+    def from_xywh(cls,data):
+        return cls(data[0],data[1],data[0]+data[2],data[1]+data[3])
+
+    @classmethod
     def from_double_array(cls,box):
         return cls(box[0][0],box[0][1],box[1][0],box[1][1])
 
