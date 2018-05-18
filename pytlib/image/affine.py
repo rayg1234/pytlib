@@ -2,6 +2,7 @@ from scipy.ndimage.interpolation import affine_transform
 from scipy.ndimage.interpolation import map_coordinates
 from image.box import Box
 from image.ptimage import PTImage,Ordering,ValueClass
+from image.polygon import Polygon
 import numpy as np
 import math
 
@@ -49,6 +50,13 @@ class Affine:
     def apply_to_box(self,box):
         transformed_box = np.dot(self.transform,box.augmented_matrix())
         return Box.from_augmented_matrix(transformed_box)
+
+    def apply_to_polygons(self,polygons):
+        transformed_polys = []
+        for p in polygons:
+            transformed_polygon = np.dot(self.transform,p.augmented_matrix())
+            transformed_polys.append(Polygon.from_augmented_matrix(transformed_polygon))
+        return transformed_polys
 
     def unapply_to_box(self,box):
         transformed_box = np.dot(self.inverse,box.augmented_matrix())

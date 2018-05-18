@@ -49,9 +49,11 @@ class RandomPerturber:
         for i,obj in enumerate(frame.objects):
             # filter out completely out of bound objects
             perturbed_obj_box = rand_affine.apply_to_box(obj.box)
+            perturbed_polygons = rand_affine.apply_to_polygons(obj.polygons)
             if Box.intersection(perturbed_obj_box,perturbed_frame.image.get_bounding_box()) is not None:
                 obj_copy = copy.deepcopy(obj)
                 obj_copy.box = perturbed_obj_box
+                obj_copy.polygons = perturbed_polygons
                 perturbed_frame.objects.append(obj_copy)
         return perturbed_frame
 
