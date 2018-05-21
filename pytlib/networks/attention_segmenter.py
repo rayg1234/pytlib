@@ -8,6 +8,8 @@ from torch.autograd import Variable
 from networks.basic_rnn import BasicRNN
 from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 from networks.gaussian_attention_sampler import GaussianAttentionReader,GaussianAttentionWriter
+from visualization.image_visualizer import ImageVisualizer
+from image.ptimage import PTImage
 
 class AttentionSegmenter(nn.Module):
     def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=10,attn_grid_size=50):
@@ -16,14 +18,20 @@ class AttentionSegmenter(nn.Module):
         self.att_encoding_size = att_encoding_size
         self.timesteps = timesteps
         self.attn_grid_size = attn_grid_size
-        self.encoder = ConvolutionStack(inchans,final_relu=False)
-        self.encoder.append(16,3,1)
+        self.encoder = ConvolutionStack(inchans,final_relu=False,padding=0)
+        self.encoder.append(32,3,1)
+        self.encoder.append(32,3,2)
+        self.encoder.append(64,3,1)
         self.encoder.append(64,3,2)
         self.encoder.append(96,3,1)
+        self.encoder.append(96,3,2)
 
-        self.decoder = TransposedConvolutionStack(96,final_relu=False)
-        self.decoder.append(96,3,1)
-        self.decoder.append(64,3,2) # fix this deconv structure for correct num classes
+        self.decoder = TransposedConvolutionStack(96,final_relu=False,padding=0)
+        self.decoder.append(96,3,2)
+        self.decoder.append(64,3,1)
+        self.decoder.append(64,3,2)
+        self.decoder.append(32,3,1)
+        self.decoder.append(32,3,2)
         self.decoder.append(self.num_classes,3,1)
 
         self.attn_reader = GaussianAttentionReader()
@@ -66,6 +74,10 @@ class AttentionSegmenter(nn.Module):
 
             # 2) extract glimpse
             glimpse = self.attn_reader.forward(x,gauss_attn_params,self.attn_grid_size)
+
+            # visualize first glimpse in batch for all t
+            torch_glimpses = torch.chunk(glimpse,batch_size,dim=0)
+            ImageVisualizer().set_image(PTImage.from_cwh_torch(torch_glimpses[0].squeeze().data),'zGlimpse {}'.format(t))            
 
             # 3) use conv stack or resnet to extract features
             feature_map = self.encoder.forward(glimpse)

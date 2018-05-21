@@ -12,11 +12,11 @@ def get_loader(mode='train'):
     root = '/home/ray/Data/COCO/val2017'
     annos = '/home/ray/Data/COCO/annotations/instances_val2017.json'
     source = COCOSource(root,annos)
-    return SegmentationLoader(source,max_frames=10,crop_size=[255,255],obj_types=['car','person'])
+    return SegmentationLoader(source,max_frames=100,crop_size=[255,255],obj_types=['person'])
 
 loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))
-model = (AttentionSegmenter,dict(num_classes=2,timesteps=5))
+model = (AttentionSegmenter,dict(num_classes=1,timesteps=5))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = recurrent_segmenter_loss
-train_config = TrainConfiguration(loader,optimizer,model,loss,cuda=False)
+train_config = TrainConfiguration(loader,optimizer,model,loss,cuda=True)
