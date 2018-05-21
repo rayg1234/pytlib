@@ -10,7 +10,7 @@ from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 from networks.gaussian_attention_sampler import GaussianAttentionReader,GaussianAttentionWriter
 
 class AttentionSegmenter(nn.Module):
-    def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=1,attn_grid_size=10):
+    def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=10,attn_grid_size=50):
         super(AttentionSegmenter, self).__init__()
         self.num_classes = num_classes
         self.att_encoding_size = att_encoding_size
@@ -25,8 +25,6 @@ class AttentionSegmenter(nn.Module):
         self.decoder.append(96,3,1)
         self.decoder.append(64,3,2) # fix this deconv structure for correct num classes
         self.decoder.append(self.num_classes,3,1)
-
-        self.mask_decoder = TransposedConvolutionStack(128,final_relu=False)
 
         self.attn_reader = GaussianAttentionReader()
         self.attn_writer = GaussianAttentionWriter()
@@ -47,6 +45,8 @@ class AttentionSegmenter(nn.Module):
 
         # need to first determine the hidden state size, which is tied to the cnn feature size
         dummy_glimpse = torch.Tensor(batch_size,chans,self.attn_grid_size,self.attn_grid_size)
+        if x.is_cuda:
+            dummy_glimpse = dummy_glimpse.cuda()
         dummy_feature_map = self.encoder.forward(dummy_glimpse)
         self.att_rnn.forward(dummy_feature_map.view(batch_size,dummy_feature_map.nelement()/batch_size))
         self.att_rnn.reset_hidden_state(batch_size,x.data.is_cuda)
