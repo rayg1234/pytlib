@@ -1,0 +1,88 @@
+import torch
+import math
+from torch.autograd import Variable
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn import ModuleList
+from torch.autograd import Variable
+from networks.basic_rnn import BasicRNN
+from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
+from networks.gaussian_attention_sampler import GaussianAttentionReader,GaussianAttentionWriter
+
+class AttentionSegmenter(nn.Module):
+    def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=10,attn_grid_size=5):
+        super(AttentionSegmenter, self).__init__()
+        self.num_classes = num_classes
+        self.att_encoding_size = att_encoding_size
+        self.timesteps = timesteps
+        self.attn_grid_size = attn_grid_size
+        self.encoder = ConvolutionStack(inchans,final_relu=False)
+        self.encoder.append(16,3,2)
+        self.encoder.append(64,3,2)
+        self.encoder.append(64,3,1)
+        self.encoder.append(128,3,2)
+        self.encoder.append(128,3,1)
+
+        self.decoder = TransposedConvolutionStack(128,final_relu=False)
+        self.decoder.append(128,3,1)
+        self.decoder.append(64,3,2)
+        self.decoder.append(64,3,1)
+        self.decoder.append(16,3,2) # fix this deconv structure for correct num classes
+        self.decoder.append(self.num_classes,3,2)
+
+        self.mask_decoder = TransposedConvolutionStack(128,final_relu=False)
+
+        self.attn_reader = GaussianAttentionReader()
+        self.attn_writer = GaussianAttentionWriter()
+        self.att_rnn = BasicRNN(hstate_size=att_encoding_size,output_size=5)
+        self.register_parameter('att_decoder_weights', None)
+
+    def init_weights(self,hstate):
+        if not self.att_decoder_weights:
+            batch_size = hstate.size(0)
+            self.att_decoder_weights = nn.Parameter(torch.Tensor(5,hstate.nelement()/batch_size))
+            stdv = 1. / math.sqrt(self.att_decoder_weights.size(1))
+            self.att_decoder_weights.data.uniform_(-stdv, stdv)
+        if hstate.data.is_cuda:
+            self.cuda()
+
+    def forward(self, x):
+        batch_size,chans,height,width = x.size()
+        # need to first determine the hidden state size, which is tied to the cnn feature size
+        dummy_glimpse = torch.Tensor(batch_size,chans,self.attn_grid_size,self.attn_grid_size)
+        dummy_feature_map = self.encoder.forward(dummy_glimpse)
+        self.att_rnn.forward(dummy_feature_map.view(batch_size,dummy_feature_map.nelement()/batch_size))
+        self.att_rnn.reset_hidden_state(batch_size,x.data.is_cuda)
+
+        outputs = []
+        init_tensor = torch.zeros(batch_size,self.num_classes,height,width)
+        if x.data.is_cuda:
+            init_tensor = init_tensor.cuda()
+        outputs.append(init_tensor) 
+
+        self.init_weights(self.att_rnn.get_hidden_state())
+
+        for t in range(self.timesteps):
+            # 1) decode hidden state to generate gaussian attention parameters
+            state = self.att_rnn.get_hidden_state()
+            gauss_attn_params = F.linear(state,self.att_decoder_weights)
+
+            # 2) extract glimpse
+            glimpse = self.attn_reader.forward(x,gauss_attn_params,self.attn_grid_size)
+
+            # 3) use conv stack or resnet to extract features
+            feature_map = self.encoder.forward(glimpse)
+            conv_output_dims = self.encoder.get_output_dims()[:-1][::-1]
+            conv_output_dims.append(glimpse.size())
+            # import ipdb;ipdb.set_trace()
+
+            # 4) update hidden state # think about this connection a bit more
+            self.att_rnn.forward(feature_map.view(batch_size,feature_map.nelement()/batch_size))
+
+            # 5) use deconv network to get partial masks
+            partial_mask = self.decoder.forward(feature_map,conv_output_dims)
+
+            # 6) write masks additively to mask canvas
+            partial_canvas = self.attn_writer.forward(partial_mask,gauss_attn_params,(height,width))
+            outputs.append(torch.add(outputs[-1],partial_canvas))
+        return outputs

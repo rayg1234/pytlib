@@ -35,7 +35,7 @@ class Frame:
         # draw objects
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
-            poly_objs = [patches.Polygon(x) for x in obj.polygons]
+            poly_objs = [patches.Polygon(x.data) for x in obj.polygons]
             polys = PatchCollection(poly_objs)
             axes.add_patch(rect)
             axes.add_collection(polys)

@@ -2,7 +2,7 @@ from configuration.train_configuration import TrainConfiguration
 from data_loading.sources.coco_source import COCOSource 
 from data_loading.loaders.semantic_segmentation_loader import SegmentationLoader
 from data_loading.loaders.multi_loader import MultiLoader
-from networks.autoencoder import AutoEncoder
+from networks.attention_segmenter import AttentionSegmenter
 import torch.optim as optim
 import torch.nn as nn
 import random
@@ -15,7 +15,7 @@ def get_loader(mode='train'):
 
 loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))
-model = (AutoEncoder,dict())
+model = (AttentionSegmenter,dict(num_classes=2))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = nn.BCELoss()
 train_config = TrainConfiguration(loader,optimizer,model,loss,cuda=False)

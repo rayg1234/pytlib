@@ -55,7 +55,7 @@ class TransposedConvolutionStack(nn.Module):
     def forward(self, x, output_dims=[]):
         # print self.convs
         for i,c in enumerate(self.convs):
-            x = c(x,output_size=output_dims[i])
+            x = c(x,output_size=output_dims[i]) if output_dims else c(x)
             x = self.batchnorms[i](x)
             if i<len(self.convs)-1 or self.final_relu:
                 x = F.relu(x)

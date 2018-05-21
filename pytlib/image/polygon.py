@@ -15,12 +15,12 @@ class Polygon:
 
     @classmethod
     def from_augmented_matrix(cls,poly):
-        return poly[0:2,:].T
+        return cls(poly[0:2,:].T)
 
     # merge a bunch of polygons to create a binary mask, currently use the pycocotools to do this
     @classmethod
     def create_mask(cls,polygons,width,height):
-        poly1d = [list(x.reshape(x.size)) for x in polygons]
+        poly1d = [list(x.data.reshape(x.data.size)) for x in polygons]
         rles = mask.frPyObjects(poly1d, height, width)
         rle = mask.merge(rles)
         m = mask.decode(rle)

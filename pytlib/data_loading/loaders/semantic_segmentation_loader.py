@@ -9,6 +9,7 @@ from utils.dict_utils import get_deep
 from image.ptimage import PTImage,Ordering,ValueClass
 from image.random_perturber import RandomPerturber
 from image.polygon import Polygon
+from image.affine_transforms import resize_image_center_crop,apply_affine_to_frame
 import numpy as np
 import random
 import torch
@@ -24,7 +25,8 @@ class SegmentationSample(implements(Sample)):
         self.class_lookup = class_lookup
 
     def visualize(self,parameters={}):
-        pass
+        # need to draw the mask layers ontop of the data with transparency
+        assert False
 
     def set_output(self,output):
         self.output = output
@@ -71,9 +73,11 @@ class SegmentationLoader(implements(Loader)):
 
         # 2) generate a random perturbation and perturb the frame, this also perturbs the objects including segementation polygons
         perturbed_frame = RandomPerturber.perturb_frame(frame,{})
-
+        # 3) scale the perturbed frame to the desired input resolution
+        crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
+        perturbed_frame = apply_affine_to_frame(perturbed_frame,crop_affine,self.crop_size)
         # visualize the perturbed_frame along with its perturbed objects and masks here
-        # perturbed_frame.visualize(display=True)
+        perturbed_frame.visualize(display=True)
 
         # 3) for each object type, produce a merged binary mask over the frame, 
         # this results in a w x h x k target map where k is the number of classes in consideration 
