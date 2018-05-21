@@ -16,7 +16,7 @@ def get_loader(mode='train'):
 
 loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=16))
-model = (AttentionSegmenter,dict(num_classes=2,timesteps=1))
+model = (AttentionSegmenter,dict(num_classes=2,timesteps=5))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = recurrent_segmenter_loss
 train_config = TrainConfiguration(loader,optimizer,model,loss,cuda=False)

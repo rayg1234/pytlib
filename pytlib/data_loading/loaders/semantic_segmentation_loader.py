@@ -22,11 +22,20 @@ class SegmentationSample(implements(Sample)):
         self.target = target
         self.output = None
         # a dictionary of value to name for decoding the class
-        self.class_lookup = class_lookup
+        self.class_lookup = dict(class_lookup)
 
     def visualize(self,parameters={}):
+        image_original = PTImage.from_cwh_torch(self.data[0])
+        ImageVisualizer().set_image(image_original,parameters.get('title','') + ' : Input')
         # need to draw the mask layers ontop of the data with transparency
-        assert False
+        target_mask_chw = self.target[0]
+        output_mask_chw = self.output[0][-1]
+        # draw a separate image for each channel for now
+        for i in range(target_mask_chw.size(0)):
+            imt = PTImage.from_cwh_torch(target_mask_chw[i,:,:].unsqueeze(0))
+            imo = PTImage.from_cwh_torch(output_mask_chw[i,:,:].unsqueeze(0))
+            ImageVisualizer().set_image(imt,parameters.get('title','') + ' : Target-{}'.format(self.class_lookup[i]))
+            ImageVisualizer().set_image(imo,parameters.get('title','') + ' : LOutput-{}'.format(self.class_lookup[i]))             
 
     def set_output(self,output):
         self.output = output
@@ -57,10 +66,10 @@ class SegmentationLoader(implements(Loader)):
                 if obj.obj_type in obj_types or not obj_types:
                     valid_obj_count+=1
                     self.obj_types_to_ids[obj.obj_type]=self.obj_types_to_ids.get(obj.obj_type,len(self.obj_types_to_ids))
-                    self.ids_to_obj_types[i]=self.ids_to_obj_types.get(i,obj.obj_type)
+                    oid = self.obj_types_to_ids[obj.obj_type]
+                    self.ids_to_obj_types[oid]=obj.obj_type
             if valid_obj_count>0:
                 self.frame_ids.append(i)
-
         print 'The source has {0} items'.format(len(self.source))
         if len(self.frame_ids)==0:
             raise NoFramesException('No Valid Frames Found!')
