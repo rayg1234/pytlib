@@ -17,12 +17,14 @@ from visualization.image_visualizer import ImageVisualizer
 from utils.batcher import Batcher
 from run_utils import load,save,load_samples
 from utils.directory_tools import mkdir
+from utils.memory import Memory
 
 class Trainer:
     def __init__(self,model,args):
         self.model = model
         self.args = args
         self.iteration = 0
+        self.memory = Memory()
 
         if self.args.override or not os.path.isdir(self.args.output_dir) or self.args.output_dir=='tmp':
             mkdir(self.args.output_dir,wipe=True)     
@@ -80,6 +82,7 @@ class Trainer:
             self.logger.set('date',str(datetime.now()))
             self.logger.set('loss',loss.data.item())
             self.logger.set('iteration',self.iteration)
+            self.logger.set('resident_memory',str(self.memory.resident(scale='mB'))+'mB')
             self.logger.dump_line()
             self.iteration+=1
 

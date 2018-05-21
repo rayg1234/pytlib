@@ -1,4 +1,5 @@
 from image.box import Box
+import copy
 
 # and Object contains an id,box,and type
 class Object:
@@ -6,4 +7,4 @@ class Object:
         self.box = box # box object
         self.unique_id = unique_id # int
         self.obj_type = obj_type # string 
-        self.polygons = polygons # list of polygon objects
+        self.polygons = copy.deepcopy(polygons) # list of polygon objects

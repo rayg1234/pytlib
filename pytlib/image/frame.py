@@ -13,9 +13,9 @@ from image.ptimage import PTImage,Ordering,ValueClass
 # note we only store the numpy image and not the PIL image, this makes some processes like
 # visualization slower but makes the interface simpler.
 class Frame:
-    def __init__(self,image_path='',objects=[]):
+    def __init__(self,image_path='',objs=[]):
         self.image_path = image_path
-        self.objects = objects
+        self.objects = copy.deepcopy(objs)
         self.image = PTImage(pil_image_path=self.image_path,persist=False)
 
     @classmethod
@@ -36,7 +36,7 @@ class Frame:
         for obj in self.objects:
             rect = patches.Rectangle(obj.box.xy_min(),obj.box.edges()[0],obj.box.edges()[1],linewidth=1,edgecolor='r',facecolor='none')
             poly_objs = [patches.Polygon(x.data) for x in obj.polygons]
-            polys = PatchCollection(poly_objs)
+            polys = PatchCollection(poly_objs,alpha=0.75)
             axes.add_patch(rect)
             axes.add_collection(polys)
             coord_string = str([int(round(x)) for x in obj.box.to_single_array()])

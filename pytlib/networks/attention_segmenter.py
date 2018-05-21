@@ -10,25 +10,21 @@ from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 from networks.gaussian_attention_sampler import GaussianAttentionReader,GaussianAttentionWriter
 
 class AttentionSegmenter(nn.Module):
-    def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=10,attn_grid_size=5):
+    def __init__(self,num_classes,inchans=3,att_encoding_size=128,timesteps=1,attn_grid_size=10):
         super(AttentionSegmenter, self).__init__()
         self.num_classes = num_classes
         self.att_encoding_size = att_encoding_size
         self.timesteps = timesteps
         self.attn_grid_size = attn_grid_size
         self.encoder = ConvolutionStack(inchans,final_relu=False)
-        self.encoder.append(16,3,2)
+        self.encoder.append(16,3,1)
         self.encoder.append(64,3,2)
-        self.encoder.append(64,3,1)
-        self.encoder.append(128,3,2)
-        self.encoder.append(128,3,1)
+        self.encoder.append(96,3,1)
 
-        self.decoder = TransposedConvolutionStack(128,final_relu=False)
-        self.decoder.append(128,3,1)
-        self.decoder.append(64,3,2)
-        self.decoder.append(64,3,1)
-        self.decoder.append(16,3,2) # fix this deconv structure for correct num classes
-        self.decoder.append(self.num_classes,3,2)
+        self.decoder = TransposedConvolutionStack(96,final_relu=False)
+        self.decoder.append(96,3,1)
+        self.decoder.append(64,3,2) # fix this deconv structure for correct num classes
+        self.decoder.append(self.num_classes,3,1)
 
         self.mask_decoder = TransposedConvolutionStack(128,final_relu=False)
 
@@ -48,6 +44,7 @@ class AttentionSegmenter(nn.Module):
 
     def forward(self, x):
         batch_size,chans,height,width = x.size()
+
         # need to first determine the hidden state size, which is tied to the cnn feature size
         dummy_glimpse = torch.Tensor(batch_size,chans,self.attn_grid_size,self.attn_grid_size)
         dummy_feature_map = self.encoder.forward(dummy_glimpse)

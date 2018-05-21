@@ -70,7 +70,6 @@ class SegmentationLoader(implements(Loader)):
     def next(self):
         # 1) pick a random frame
         frame = self.source[random.choice(self.frame_ids)]
-
         # 2) generate a random perturbation and perturb the frame, this also perturbs the objects including segementation polygons
         perturbed_frame = RandomPerturber.perturb_frame(frame,{})
         # 3) scale the perturbed frame to the desired input resolution
