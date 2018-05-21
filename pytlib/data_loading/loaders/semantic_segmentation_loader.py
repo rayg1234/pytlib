@@ -77,7 +77,7 @@ class SegmentationLoader(implements(Loader)):
         crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
         perturbed_frame = apply_affine_to_frame(perturbed_frame,crop_affine,self.crop_size)
         # visualize the perturbed_frame along with its perturbed objects and masks here
-        perturbed_frame.visualize(display=True)
+        # perturbed_frame.visualize(display=True)
 
         # 3) for each object type, produce a merged binary mask over the frame, 
         # this results in a w x h x k target map where k is the number of classes in consideration 

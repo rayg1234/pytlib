@@ -38,7 +38,7 @@ class AttentionSegmenter(nn.Module):
         self.register_parameter('att_decoder_weights', None)
 
     def init_weights(self,hstate):
-        if not self.att_decoder_weights:
+        if self.att_decoder_weights is None:
             batch_size = hstate.size(0)
             self.att_decoder_weights = nn.Parameter(torch.Tensor(5,hstate.nelement()/batch_size))
             stdv = 1. / math.sqrt(self.att_decoder_weights.size(1))
@@ -85,4 +85,8 @@ class AttentionSegmenter(nn.Module):
             # 6) write masks additively to mask canvas
             partial_canvas = self.attn_writer.forward(partial_mask,gauss_attn_params,(height,width))
             outputs.append(torch.add(outputs[-1],partial_canvas))
+
+                # return the sigmoided versions
+        for i in range(len(outputs)):
+            outputs[i] = F.sigmoid(outputs[i])
         return outputs

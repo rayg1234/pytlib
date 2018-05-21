@@ -4,17 +4,16 @@ import torch.nn.functional as F
 import torch
 from utils.logger import Logger
 
-# adapted from https://github.com/pytorch/examples/blob/master/vae/main.py
+# KLD for two gaussians
+# Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+# https://arxiv.org/abs/1312.6114
+# 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
 def KLD_gaussian(mu,logvar):
     return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
 def vae_loss(reconstruction,mu,logvar,targets):
     # TODO, this should be the mse loss for a gaussian likelihood, (as opposed to BCE for bernouli, eg for MNIST)
     BCE = F.binary_cross_entropy(reconstruction, targets)
-    # see Appendix B from VAE paper:
-    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
-    # https://arxiv.org/abs/1312.6114
-    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = KLD_gaussian(mu,logvar)
     # Normalise by same number of elements as in reconstruction
     # assume bchw format
@@ -31,7 +30,7 @@ def vae_loss(reconstruction,mu,logvar,targets):
 # for DRAW model https://arxiv.org/pdf/1502.04623.pdf
 def sequence_vae_loss(recs,mus,logvars,target):
     assert len(recs)>0 and len(mus)==len(logvars), "sequence_vae_loss: dimensions don't match"
-    # import ipdb;ipdb.set_trace()
+    # TODO, this should be the mse loss for a gaussian likelihood, (as opposed to BCE for bernouli, eg for MNIST)
     BCE = F.binary_cross_entropy(recs[-1], target)
     KLD = KLD_gaussian(mus[0],logvars[0])
     for t in range(1,len(mus)):
