@@ -70,7 +70,7 @@ class AttentionSegmenter(nn.Module):
         for t in range(self.timesteps):
             # 1) decode hidden state to generate gaussian attention parameters
             state = self.att_rnn.get_hidden_state()
-            gauss_attn_params = F.linear(state,self.att_decoder_weights)
+            gauss_attn_params = F.tanh(F.linear(state,self.att_decoder_weights))
 
             # 2) extract glimpse
             glimpse = self.attn_reader.forward(x,gauss_attn_params,self.attn_grid_size)

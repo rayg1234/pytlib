@@ -7,6 +7,8 @@ from torch.nn import ModuleList
 from torch.autograd import Variable
 
 class GaussianAttentionGenerator:
+
+    # here the params expect to be in the range from -1 to 1 to be kind of bounded within the image 
     @staticmethod
     def generate_filter_params(sampling_params,image_w,image_h,grid_size):
         _gx,_gy,log_sigma2,log_delta,loggamma = sampling_params.split(1,1)
