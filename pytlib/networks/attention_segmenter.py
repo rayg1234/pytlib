@@ -67,6 +67,7 @@ class AttentionSegmenter(nn.Module):
 
         self.init_weights(self.att_rnn.get_hidden_state())
         gauss_attn_params_all = []
+        partial_maskes = []
 
         for t in range(self.timesteps):
             # 1) decode hidden state to generate gaussian attention parameters
@@ -92,6 +93,7 @@ class AttentionSegmenter(nn.Module):
 
             # 5) use deconv network to get partial masks
             partial_mask = self.decoder.forward(feature_map,conv_output_dims)
+            partial_maskes.append(partial_mask)
 
             # 6) write masks additively to mask canvas
             partial_canvas = self.attn_writer.forward(partial_mask,gauss_attn_params,(height,width))
@@ -100,4 +102,4 @@ class AttentionSegmenter(nn.Module):
             # return the sigmoided versions
         for i in range(len(outputs)):
             outputs[i] = F.sigmoid(outputs[i])
-        return outputs, gauss_attn_params_all
+        return outputs, gauss_attn_params_all, partial_maskes
