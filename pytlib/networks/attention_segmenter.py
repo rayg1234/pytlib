@@ -66,11 +66,13 @@ class AttentionSegmenter(nn.Module):
         outputs.append(init_tensor) 
 
         self.init_weights(self.att_rnn.get_hidden_state())
+        gauss_attn_params_all = []
 
         for t in range(self.timesteps):
             # 1) decode hidden state to generate gaussian attention parameters
             state = self.att_rnn.get_hidden_state()
-            gauss_attn_params = F.tanh(F.linear(state,self.att_decoder_weights))
+            gauss_attn_params = F.linear(state,self.att_decoder_weights)
+            gauss_attn_params_all.append(gauss_attn_params)
 
             # 2) extract glimpse
             glimpse = self.attn_reader.forward(x,gauss_attn_params,self.attn_grid_size)
@@ -95,7 +97,7 @@ class AttentionSegmenter(nn.Module):
             partial_canvas = self.attn_writer.forward(partial_mask,gauss_attn_params,(height,width))
             outputs.append(torch.add(outputs[-1],partial_canvas))
 
-                # return the sigmoided versions
+            # return the sigmoided versions
         for i in range(len(outputs)):
             outputs[i] = F.sigmoid(outputs[i])
-        return outputs
+        return outputs, gauss_attn_params_all

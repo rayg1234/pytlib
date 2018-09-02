@@ -7,16 +7,29 @@ from torch.nn import ModuleList
 from torch.autograd import Variable
 
 class GaussianAttentionGenerator:
-
-    # here the params expect to be in the range from -1 to 1 to be kind of bounded within the image 
+    
     @staticmethod
     def generate_filter_params(sampling_params,image_w,image_h,grid_size):
         _gx,_gy,log_sigma2,log_delta,loggamma = sampling_params.split(1,1)
+        # here we want to bound gx and gy between -1 and 1
+        _gx = torch.tanh(_gx)
+        _gy = torch.tanh(_gy)
+        # print _gx,_gy,log_sigma2,log_delta,loggamma
         gx=(image_w+1)/2*(_gx+1)
         gy=(image_h+1)/2*(_gy+1)
+
         sigma2=torch.exp(log_sigma2)
-        delta=(max(image_w,image_h)-1)/(grid_size-1)*torch.exp(log_delta)       
+        
+        # if log_delta -> 0, this becomes image_size/grid spacing
+        # if log_delta > 0, this becomes large, we dont want this
+        # we really just want delta to scaling the grid spacing between
+        # 0 and image_dim/grid_size
+        rel_delta = torch.sigmoid(torch.exp(log_delta))
+        delta=(max(image_w,image_h)-1)/(grid_size-1)*rel_delta    
+
+        # bound gamma between 0 and 1   
         gamma=torch.exp(loggamma)
+        gamma = torch.sigmoid(gamma)
         return gx,gy,sigma2,delta,gamma
 
     # generate two sets of filterbanks 
