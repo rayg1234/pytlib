@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 from  data_loading.sample import Sample
-from torch.autograd import Variable
 
 class Batcher:
     # turns an array of inputs into a batched Variables
@@ -10,7 +9,7 @@ class Batcher:
     @staticmethod
     def batch(inputs):
         assert isinstance(inputs,list) and isinstance(inputs[0],list)
-        return [Variable(torch.stack(x,0)) for x in inputs]
+        return [torch.stack(x,0) for x in inputs]
 
     # turns a batched output into an array of outputs
     # the expected input dimensions to this function is:

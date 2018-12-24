@@ -1,4 +1,3 @@
-from torch.autograd import Variable
 import torch
 import torch.nn.functional as F
 from utils.logger import Logger
