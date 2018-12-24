@@ -1,4 +1,3 @@
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
@@ -39,7 +38,7 @@ class VAE(nn.Module):
         stdv = 1. / math.sqrt(self.linear_mu_weights.size(1))
         self.linear_mu_weights.data.uniform_(-stdv, stdv)
 
-        self.linear_logvar_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
+        self.linear_logvar_weights = nfn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
         stdv = 1. / math.sqrt(self.linear_logvar_weights.size(1))
         self.linear_logvar_weights.data.uniform_(-stdv, stdv)
         
@@ -79,7 +78,7 @@ class VAE(nn.Module):
     def reparameterize(self, mu, logvar):
         if self.training:
           std = logvar.mul(0.5).exp_()
-          eps = Variable(std.data.new(std.size()).normal_())
+          eps = std.data.new(std.size()).normal_()
           return eps.mul(std).add_(mu)
         else:
           return mu

@@ -1,10 +1,8 @@
 import torch
 import math
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
-from torch.autograd import Variable
 
 # basic RNN module, contains a hidden state
 # each time forward is called, the hidden state is concatenated with the input
@@ -31,7 +29,7 @@ class BasicRNN(nn.Module):
     # zero the hidden states
     def reset_hidden_state(self,batch_size,is_cuda):
         # hidden state, initialized to 0? # this needs to be moved to GPU
-        self.hidden_state = Variable(torch.zeros((batch_size,self.hstate_size)))
+        self.hidden_state = torch.zeros((batch_size,self.hstate_size))
         if is_cuda:
             self.hidden_state = self.hidden_state.cuda()
 

@@ -1,4 +1,3 @@
-from torch.autograd import Variable
 from networks.basic_rnn import BasicRNN
 import torch.nn as nn
 import torch.nn.functional as F
@@ -61,9 +60,9 @@ class DRAW(nn.Module):
     # 2) batch x N x H (Fy)
     def generate_filter_matrices(self,gx,gy,sigma2,delta):
         N = self.grid_size
-        grid_points = Variable(torch.arange(0,N).view((1,N,1)))
-        a = Variable(torch.arange(0,self.image_w).view((1,1,-1)))
-        b = Variable(torch.arange(0,self.image_h).view((1,1,-1)))
+        grid_points = torch.arange(0,N).view((1,N,1))
+        a = torch.arange(0,self.image_w).view((1,1,-1))
+        b = torch.arange(0,self.image_h).view((1,1,-1))
         if gx.data.is_cuda:
             grid_points = grid_points.cuda()
             a = a.cuda()
@@ -128,7 +127,7 @@ class DRAW(nn.Module):
     def reparameterize(self, mu, logvar):
         if self.training:
           std = logvar.mul(0.5).exp_()
-          eps = Variable(std.data.new(std.size()).normal_())
+          eps = std.data.new(std.size()).normal_()
           return eps.mul(std).add_(mu)
         else:
           return mu
@@ -150,7 +149,7 @@ class DRAW(nn.Module):
         self.decoder_rnn.reset_hidden_state(batch_size,x.data.is_cuda)
         outputs,mus,logvars = [],[],[]
 
-        init_tensor = Variable(torch.zeros(x.size()))
+        init_tensor = torch.zeros(x.size())
         if x.data.is_cuda:
             init_tensor = init_tensor.cuda()
         outputs.append(init_tensor)

@@ -1,10 +1,8 @@
 import torch
 import math
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
-from torch.autograd import Variable
 from networks.basic_rnn import BasicRNN
 from networks.conv_stack import ConvolutionStack,TransposedConvolutionStack
 from networks.gaussian_attention_sampler import GaussianAttentionReader,GaussianAttentionWriter

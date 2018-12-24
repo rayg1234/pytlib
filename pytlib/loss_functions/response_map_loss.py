@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -24,6 +23,6 @@ def response_map_loss(rmap,target_box=None):
             # image_tmap = PTImage.from_2d_wh_torch(torch.Tensor(binarized_target_map[k,:,:]))
             # ImageVisualizer().set_image(image_tmap,'TMap {}'.format(k))
 
-    target_map_var = Variable(torch.Tensor(binarized_target_map))
+    target_map_var = torch.Tensor(binarized_target_map)
     target_map_var = target_map_var.cuda() if rmap.is_cuda else target_map_var
     return F.binary_cross_entropy_with_logits(rmap,target_map_var)

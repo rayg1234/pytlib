@@ -2,7 +2,6 @@
 
 from graphviz import Digraph
 import torch
-from torch.autograd import Variable
 
 def compute_graph(var, params=None, output_file=None,view=False):
     """ Produces Graphviz representation of PyTorch autograd graph
