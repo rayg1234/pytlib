@@ -3,14 +3,15 @@ from torchvision.models.resnet import BasicBlock,Bottleneck
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 # default is a resnet101 model
 class ResNetCNN(nn.Module):
     def __init__(self, block=Bottleneck, layers=[3, 4, 23, 3], initchans=3):
         self.initchans = initchans
         self.inplanes = 64
-        super(ResNet, self).__init__()
-        self.conv1 = nn.Conv2d(self.inchans, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        super(ResNetCNN, self).__init__()
+        self.conv1 = nn.Conv2d(self.initchans, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
