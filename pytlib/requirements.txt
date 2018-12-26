@@ -21,9 +21,9 @@ ipywidgets==7.0.1
 Jinja2==2.9.6
 jsonschema==2.6.0
 jupyter==1.0.0
-jupyter-client==5.1.0
+jupyter-client==5.2.0
 jupyter-console==5.2.0
-jupyter-core==4.3.0
+jupyter-core==4.4.0
 MarkupSafe==1.0
 matplotlib==2.0.2
 mistune==0.7.4
@@ -48,7 +48,7 @@ python-interface==1.2.0
 pytz==2017.2
 PyWavelets==0.5.2
 PyYAML==3.12
-pyzmq==16.0.2
+pyzmq==17
 qtconsole==4.3.1
 scandir==1.6
 scikit-image==0.13.1
@@ -57,7 +57,7 @@ simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.11.0
 subprocess32==3.2.7
-terminado==0.6
+terminado==0.8.1
 testpath==0.3.1
 torch==1.0.0
 torchvision==0.2.1
