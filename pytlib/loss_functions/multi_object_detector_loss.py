@@ -1,5 +1,5 @@
 import torch
-import scipy
+import scipy.optimize
 import torch.nn.functional as F
 from loss_functions.box_loss import box_loss
 
@@ -64,9 +64,9 @@ def assign_targets(box_preds, box_targets):
     # explicit loop over batches
     pred_indices,target_indices = [[],[]],[[],[]]
     for i in range(0,box_targets.shape[0]):
-        iou_for_batch = batch_box_IOU(box_preds[i,:,:],box_targets[i,:,:])
+        iou_cost = 1 - batch_box_IOU(box_preds[i,:,:],box_targets[i,:,:])
         # next use scipy's hungarian to create the assignment
-        row_inds, col_inds = scipy.optimize.linear_sum_assignment(iou_for_batch.detach().cpu().numpy())
+        row_inds, col_inds = scipy.optimize.linear_sum_assignment(iou_cost.detach().cpu().numpy())
         pred_indices[0].extend([i]*len(col_inds))
         pred_indices[1].extend(col_inds)
         target_indices[0].extend([i]*len(row_inds))
@@ -98,7 +98,6 @@ def multi_object_detector_loss(original_image,
     total_box_loss = box_loss(normalized_box_preds[pred_indices], normalized_box_targets[target_indices])
 
     # 4) all targets get classification loss
-    # pos classes get extra weight
     num_classes = class_preds.shape[1]
     class_preds_flatten_hw = class_preds.flatten(start_dim=2).view(batch_size,-1,num_classes)
     softmax_preds = F.log_softmax(class_preds_flatten_hw,dim=2)
@@ -108,9 +107,9 @@ def multi_object_detector_loss(original_image,
     neg_preds = torch.masked_select(softmax_preds,mask).reshape(-1,2)
     neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(num_classes-1)
     negative_class_loss = F.nll_loss(neg_preds,neg_targets)
-    class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
+    total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
         + 1./(1+pos_to_neg_class_weight_ratio)*negative_class_loss
 
     # 5) total loss = w0*class_loss + w1*box_loss
-    total_loss = class_loss_weight*class_loss + box_loss_weight*total_box_loss
+    total_loss = class_loss_weight*total_class_loss + box_loss_weight*total_box_loss
     return total_loss
