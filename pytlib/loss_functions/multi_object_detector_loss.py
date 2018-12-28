@@ -1,4 +1,7 @@
 import torch
+import scipy
+import torch.nn.functional as F
+from loss_functions.box_loss import box_loss
 
 def normalize_boxes(original_image, boxes):
     # use input dimensions to normalize boxes between 0 and 1
@@ -6,10 +9,9 @@ def normalize_boxes(original_image, boxes):
     assert len(boxes.shape)==3 and boxes.shape[2]==4, 'boxes must a BxNx4 tensor'
     height = original_image.shape[2]
     width = original_image.shape[3]
-    new_boxes = boxes.new_tensor(boxes.data)
-    new_boxes[:,:,[0,2]] = boxes[:,:,[0,2]]/width
-    new_boxes[:,:,[1,3]] = boxes[:,:,[1,3]]/height
-    return new_boxes
+    boxes[:,:,[0,2]] = boxes[:,:,[0,2]]/width
+    boxes[:,:,[1,3]] = boxes[:,:,[1,3]]/height
+    return boxes
 
 def preprocess_targets(targets):
     # 1) prune dummy targets, remove all rows with [-1]*5
@@ -58,15 +60,25 @@ def batch_box_IOU(t1,t2):
 def assign_targets(box_preds, box_targets):
     # first construct cost function using IOU
     # for each box in box_targets, create IOU cost against a row in box_preds
-
-    # next use scipy's hungarian to create the assignment
-    pass
+    assert len(box_preds.shape)==3 and len(box_targets.shape)==3, 'boxes must be BxNx4'
+    # explicit loop over batches
+    pred_indices,target_indices = [[],[]],[[],[]]
+    for i in range(0,box_targets.shape[0]):
+        iou_for_batch = batch_box_IOU(box_preds[i,:,:],box_targets[i,:,:])
+        # next use scipy's hungarian to create the assignment
+        row_inds, col_inds = scipy.optimize.linear_sum_assignment(iou_for_batch.detach().cpu().numpy())
+        pred_indices[0].extend([i]*len(col_inds))
+        pred_indices[1].extend(col_inds)
+        target_indices[0].extend([i]*len(row_inds))
+        target_indices[1].extend(row_inds)        
+    return pred_indices,target_indices
 
 def multi_object_detector_loss(original_image, 
                                box_preds, 
                                class_preds, 
                                targets, 
-                               class_loss_weight=1.0, 
+                               pos_to_neg_class_weight_ratio=3.0,
+                               class_loss_weight=1.0,
                                box_loss_weight=1.0):
     batch_size = original_image.shape[0]
     # 1) preprocess targets
@@ -80,12 +92,25 @@ def multi_object_detector_loss(original_image,
     normalized_box_preds = normalize_boxes(original_image, box_preds_flatten_hw.view(batch_size,-1,4))
 
     # 2) globally assign targets against predictions
-    matches = assign_targets(normalized_box_targets, normalized_box_preds)
+    pred_indices,target_indices = assign_targets(normalized_box_targets, normalized_box_preds)
 
     # 3) only targets that have been assigned gets a box loss
+    total_box_loss = box_loss(normalized_box_preds[pred_indices], normalized_box_targets[target_indices])
 
     # 4) all targets get classification loss
+    # pos classes get extra weight
+    num_classes = class_preds.shape[1]
+    class_preds_flatten_hw = class_preds.flatten(start_dim=2).view(batch_size,-1,num_classes)
+    softmax_preds = F.log_softmax(class_preds_flatten_hw,dim=2)
+    positive_class_loss = F.nll_loss(softmax_preds[pred_indices],class_targets.flatten().long())
+    mask = torch.ones_like(softmax_preds,dtype=torch.uint8)
+    mask[pred_indices] = 0
+    neg_preds = torch.masked_select(softmax_preds,mask).reshape(-1,2)
+    neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(num_classes-1)
+    negative_class_loss = F.nll_loss(neg_preds,neg_targets)
+    class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
+        + 1./(1+pos_to_neg_class_weight_ratio)*negative_class_loss
 
     # 5) total loss = w0*class_loss + w1*box_loss
-    total_loss = class_loss_weight*class_loss + box_loss_weight*box_loss
+    total_loss = class_loss_weight*class_loss + box_loss_weight*total_box_loss
     return total_loss

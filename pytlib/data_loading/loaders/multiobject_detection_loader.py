@@ -39,7 +39,7 @@ class MultiObjectDetectionLoader(implements(Loader)):
     def __init__(self,source,crop_size,max_objects=100,obj_types=None):
         self.source = source
         self.crop_size = crop_size
-        self.obj_types = obj_types
+        self.obj_types = set(obj_types)
         self.max_objects = max_objects
         self.frame_ids = []
 
@@ -73,6 +73,8 @@ class MultiObjectDetectionLoader(implements(Loader)):
         class_encoding,class_decoding = dict(),dict()
         padvec = [np.array([-1]*5) for i in range(self.max_objects)]
         for i,obj in enumerate(frame.objects[0:min(self.max_objects,len(frame.objects))]):
+            if obj.obj_type not in self.obj_types:
+                continue
             if obj.obj_type not in class_encoding:
                 code = len(class_encoding)
                 class_encoding[obj.obj_type] = code
