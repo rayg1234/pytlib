@@ -13,6 +13,7 @@ funcsigs==1.0.2
 functools32==3.2.3.post2
 graphviz==0.8.1
 html5lib==1.0b10
+ipaddress==1.0.22
 ipdb==0.10.3
 ipykernel==4.6.1
 ipython==5.5.0
@@ -30,6 +31,7 @@ mistune==0.7.4
 nbconvert==5.3.1
 nbformat==4.4.0
 networkx==2.1
+nose==1.3.7
 notebook==5.7.2
 numpy==1.14.3
 olefile==0.44
@@ -38,6 +40,7 @@ pathlib2==2.3.0
 pexpect==4.2.1
 pickleshare==0.7.4
 Pillow==5.1.0
+prometheus-client==0.5.0
 prompt-toolkit==1.0.15
 ptyprocess==0.5.2
 pycocotools==2.0.0
@@ -48,11 +51,12 @@ python-interface==1.2.0
 pytz==2017.2
 PyWavelets==0.5.2
 PyYAML==3.12
-pyzmq==17
+pyzmq==17.0.0
 qtconsole==4.3.1
 scandir==1.6
 scikit-image==0.13.1
 scipy==0.19.1
+Send2Trash==1.5.0
 simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.11.0

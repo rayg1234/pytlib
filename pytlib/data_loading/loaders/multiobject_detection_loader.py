@@ -66,19 +66,19 @@ class MultiObjectDetectionLoader(implements(Loader)):
         # 3) encode the objects into targets with size that does not exceed max_objects
         # if there are more objects than max_objects, the remaining ones are dropped.
         # vector of length max_objects
-        # each comp vector has the form [class(1),conf(1),bbox(4)]
-        # a padding target is used to represent a non-existent object, this has the form [-1,-1,-1,-1,-1,-1]
+        # each comp vector has the form [class(1),bbox(4)]
+        # a padding target is used to represent a non-existent object, this has the form [-1,-1,-1,-1,-1]
         
         # create the padding vector
         class_encoding,class_decoding = dict(),dict()
-        padvec = [np.array([-1]*6) for i in range(self.max_objects)]
+        padvec = [np.array([-1]*5) for i in range(self.max_objects)]
         for i,obj in enumerate(frame.objects[0:min(self.max_objects,len(frame.objects))]):
             if obj.obj_type not in class_encoding:
                 code = len(class_encoding)
                 class_encoding[obj.obj_type] = code
                 class_decoding[code] = obj.obj_type
             box_coords = obj.box.to_single_array()
-            padvec[i] = np.concatenate((np.array([class_encoding[obj.obj_type],1.0]),box_coords),axis=0)
+            padvec[i] = np.concatenate((np.array([class_encoding[obj.obj_type]]),box_coords),axis=0)
 
         chw_image = perturbed_frame.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
         # chw_image.visualize(title='chw_image')
