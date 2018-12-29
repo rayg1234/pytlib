@@ -1,9 +1,7 @@
 import unittest
 import torch
 from loss_functions.multi_object_detector_loss import batch_box_intersection, batch_box_area, batch_box_IOU, assign_targets
-
-def near_equality(m1,m2):
-    return torch.all(torch.lt(torch.abs(torch.add(m1, -m2)), 1e-4)) 
+from utils.test_utils import near_tensor_equality
 
 class TestMultiObjectDetectorLoss(unittest.TestCase):
 
@@ -21,7 +19,7 @@ class TestMultiObjectDetectorLoss(unittest.TestCase):
         t2 = torch.Tensor([[0,0,0,0]])
         ious = batch_box_IOU(t1,t2)
         expected_matrix = torch.Tensor([[0.]])
-        self.assertTrue(near_equality(ious,expected_matrix))
+        self.assertTrue(near_tensor_equality(ious,expected_matrix))
 
     def test_batch_box_IOU(self):
         t1 = torch.Tensor([[0,0,1,1],
@@ -33,7 +31,7 @@ class TestMultiObjectDetectorLoss(unittest.TestCase):
         expected_matrix = torch.Tensor([[1.0000, 0.0000],
                                         [0.0000, 0.5319],
                                         [0.0000, 0.0000]])
-        self.assertTrue(near_equality(ious,expected_matrix))
+        self.assertTrue(near_tensor_equality(ious,expected_matrix))
 
     def test_batch_box_intersection_edge_cases(self):
         # no intersection
@@ -70,7 +68,7 @@ class TestMultiObjectDetectorLoss(unittest.TestCase):
                               [0,0,0,0]])
         areas = batch_box_area(boxes)
         expected_areas = torch.tensor([[1.,36.,0.]]).transpose(0,1)
-        self.assertTrue(near_equality(areas,expected_areas))
+        self.assertTrue(near_tensor_equality(areas,expected_areas))
 
 if __name__ == '__main__':
     unittest.main()

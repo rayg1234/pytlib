@@ -8,11 +8,13 @@ from excepts.general_exceptions import NoFramesException
 from utils.dict_utils import get_deep
 from image.ptimage import PTImage,Ordering,ValueClass
 from image.random_perturber import RandomPerturber
+from image.image_utils import draw_objects_on_np_image
 import numpy as np
 import random
 import torch
 from interface import implements
 from visualization.image_visualizer import ImageVisualizer
+from networks.multi_object_detector import MultiObjectDetector
 
 class MultiObjectDetectionSample(implements(Sample)):
     def __init__(self,data,target,class_lookup=dict()):
@@ -22,8 +24,29 @@ class MultiObjectDetectionSample(implements(Sample)):
         # a dictionary of value to name for decoding the class
         self.class_lookup = class_lookup
 
+    def __convert_to_objects(self,boxes,classes):
+        boxlist = Box.tensor_to_boxes(boxes.cpu())
+        objects = []
+        for x,y in zip(*(boxlist,classes.cpu().numpy())):
+            objects.append(Object(x,0,self.class_lookup[y]))
+        return objects
+
     def visualize(self,parameters={}):
-        pass
+        image_original = PTImage.from_cwh_torch(self.data[0])
+        drawing_image = image_original.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255).get_data().copy()
+
+        boxes,classes = self.output[1:]
+        # Nx4 boxes and N class tensor 
+        valid_boxes, valid_classes = MultiObjectDetector.post_process_boxes(boxes,classes,len(self.class_lookup))
+        # convert targets
+        real_targets = self.target[0][:,0]>-1
+        filtered_targets = self.target[0][real_targets].reshape(-1,self.target[0].shape[1])
+        target_boxes = filtered_targets[:,1:]
+        target_classes = filtered_targets[:,0]
+
+        draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
+        draw_objects_on_np_image(drawing_image,self.__convert_to_objects(target_boxes,target_classes),color=(255,0,0))
+        ImageVisualizer().set_image(PTImage(drawing_image),parameters.get('title','') + ' : Output')
 
     def set_output(self,output):
         self.output = output

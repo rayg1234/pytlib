@@ -46,9 +46,24 @@ class MultiObjectDetector(nn.Module):
     def __class_predictor(self,feature_maps):
         convoutput = F.conv2d(feature_maps, self.class_predictor_weights)
         new_shape = convoutput.shape[0:1] + torch.Size([self.num_classes, self.nboxes_per_pixel]) + convoutput.shape[2:4]
-        # rehsape as BxNxKxHxW, where K is num classes
         # dont take softmax here, take logsoftmax in the loss
         return torch.reshape(convoutput,new_shape)
+
+    @classmethod
+    def post_process_boxes(cls, boxes, classes, num_classes, conf_threshold=0.5):
+        # post-process to produce a Nx5 tensor of valid boxes
+        assert len(boxes.shape)==4 and len(classes.shape)==4, \
+            'boxes and classes must be non-batched tensors of dim 4'
+        batch_size = boxes.shape[0]
+        softmax_classes = F.softmax(classes,dim=0).flatten(start_dim=1)
+        flatten_boxes = boxes.flatten(start_dim=1)
+        argmax_classes = torch.argmax(softmax_classes,dim=0)
+        mask = argmax_classes<num_classes
+        # only select those that are non-background
+        valid_boxes = flatten_boxes[:,mask].transpose(0,1)
+        valid_classes = argmax_classes[mask]
+        return valid_boxes, valid_classes
+
 
     def forward(self, x):   	
         # CNN Compute, outputs BCHW order on cudnn
