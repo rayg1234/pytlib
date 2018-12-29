@@ -2,6 +2,7 @@ import torch
 import scipy.optimize
 import torch.nn.functional as F
 from loss_functions.box_loss import box_loss
+from utils.logger import Logger
 
 def normalize_boxes(original_image, boxes):
     # use input dimensions to normalize boxes between 0 and 1
@@ -111,5 +112,9 @@ def multi_object_detector_loss(original_image,
         + 1./(1+pos_to_neg_class_weight_ratio)*negative_class_loss
 
     # 5) total loss = w0*class_loss + w1*box_loss
+    Logger().set('loss_component.positive_class_loss',positive_class_loss.mean().item())
+    Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
+    Logger().set('loss_component.total_box_loss',total_box_loss.mean().item())
+    Logger().set('loss_component.total_class_loss',total_class_loss.mean().item())
     total_loss = class_loss_weight*total_class_loss + box_loss_weight*total_box_loss
     return total_loss

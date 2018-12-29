@@ -14,8 +14,8 @@ def get_loader():
     source = KITTISource('/home/ray/Data/KITTI/training',max_frames=2)
     return MultiObjectDetectionLoader(source,crop_size=[255,255],obj_types=classes,max_objects=100)
 
-loader = (get_loader,dict())
-# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=10))
+# loader = (get_loader,dict())
+loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=10))
 model = (MultiObjectDetector,dict(nboxes_per_pixel=5, num_classes=len(classes)+1))
 optimizer = (optim.Adam,dict(lr=1e-3))
 loss = multi_object_detector_loss
