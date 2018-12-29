@@ -95,7 +95,7 @@ class MultiObjectDetectionLoader(implements(Loader)):
         # create the padding vector
         class_encoding,class_decoding = dict(),dict()
         padvec = [np.array([-1]*5) for i in range(self.max_objects)]
-        for i,obj in enumerate(frame.objects[0:min(self.max_objects,len(frame.objects))]):
+        for i,obj in enumerate(perturbed_frame.objects[0:min(self.max_objects,len(perturbed_frame.objects))]):
             if obj.obj_type not in self.obj_types:
                 continue
             if obj.obj_type not in class_encoding:
@@ -106,7 +106,7 @@ class MultiObjectDetectionLoader(implements(Loader)):
             padvec[i] = np.concatenate((np.array([class_encoding[obj.obj_type]]),box_coords),axis=0)
 
         chw_image = perturbed_frame.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
-        # chw_image.visualize(title='chw_image')
+        # perturbed_frame.visualize(title='chw_image',display=True)
         sample = MultiObjectDetectionSample([torch.Tensor(chw_image.get_data().astype(float))],
                                             [torch.Tensor(padvec)],
                                             class_decoding)
