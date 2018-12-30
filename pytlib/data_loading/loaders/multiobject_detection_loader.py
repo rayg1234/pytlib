@@ -9,6 +9,7 @@ from utils.dict_utils import get_deep
 from image.ptimage import PTImage,Ordering,ValueClass
 from image.random_perturber import RandomPerturber
 from image.image_utils import draw_objects_on_np_image
+from image.affine_transforms import resize_image_center_crop,apply_affine_to_frame
 import numpy as np
 import random
 import torch
@@ -44,8 +45,10 @@ class MultiObjectDetectionSample(implements(Sample)):
         target_boxes = filtered_targets[:,1:]
         target_classes = filtered_targets[:,0]
 
-        draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
-        draw_objects_on_np_image(drawing_image,self.__convert_to_objects(target_boxes,target_classes),color=(255,0,0))
+        if valid_boxes.shape[0]>0:
+            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
+        if target_boxes.shape[0]>0:
+            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(target_boxes,target_classes),color=(255,0,0))
         ImageVisualizer().set_image(PTImage(drawing_image),parameters.get('title','') + ' : Output')
 
     def set_output(self,output):
@@ -87,6 +90,10 @@ class MultiObjectDetectionLoader(implements(Loader)):
         perturb_params = {'translation_range':[0.0,0.0],
                           'scaling_range':[1.0,1.0]}
         perturbed_frame = RandomPerturber.perturb_frame(frame,perturb_params)
+        crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
+        output_size = [self.crop_size[1],self.crop_size[0]]
+        perturbed_frame = apply_affine_to_frame(perturbed_frame,crop_affine,output_size)
+        # perturbed_frame.visualize(title='chw_image',display=True)
 
         # 3) encode the objects into targets with size that does not exceed max_objects
         # if there are more objects than max_objects, the remaining ones are dropped.
@@ -106,9 +113,7 @@ class MultiObjectDetectionLoader(implements(Loader)):
                 class_decoding[code] = obj.obj_type
             box_coords = obj.box.to_single_array()
             padvec[i] = np.concatenate((np.array([class_encoding[obj.obj_type]]),box_coords),axis=0)
-
         chw_image = perturbed_frame.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
-        # perturbed_frame.visualize(title='chw_image',display=True)
         sample = MultiObjectDetectionSample([torch.Tensor(chw_image.get_data().astype(float))],
                                             [torch.Tensor(padvec)],
                                             class_decoding)
