@@ -3,6 +3,7 @@ import scipy.optimize
 import torch.nn.functional as F
 from loss_functions.box_loss import box_loss
 from utils.logger import Logger
+import numpy as np
 
 def normalize_boxes(original_image, boxes):
     # use input dimensions to normalize boxes between 0 and 1
@@ -14,16 +15,26 @@ def normalize_boxes(original_image, boxes):
     boxes[:,:,[1,3]] = boxes[:,:,[1,3]]/height
     return boxes
 
-def preprocess_targets(targets):
-    # 1) prune dummy targets, remove all rows with [-1]*5
+def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image):
+    # 1) prepare dummy masks
     # 2) separate box targets
     # 3) separate class targets, no need for 1-hot encoding, apply NLL loss directly
     # dummy targets have the first column set to -1
-    condition = targets[:,:,0]>-1
-    filtered_targets = targets[condition].reshape(targets.shape[0],-1,targets.shape[2])
-    box_targets = filtered_targets[:,:,1:]
-    class_targets = filtered_targets[:,:,0]
-    return box_targets, class_targets
+    batch_size = original_image.shape[0]
+
+    dummy_mask = targets[:,:,0]>-1
+    dummy_masks = [x.squeeze() for x in torch.chunk(dummy_mask,targets.shape[0])]
+    box_targets = targets[:,:,1:]
+    class_targets = targets[:,:,0]
+
+    normalized_box_targets = normalize_boxes(original_image, box_targets.view(batch_size,-1,4))
+    box_preds_flatten_hw = box_preds.flatten(start_dim=2)
+    normalized_box_preds = normalize_boxes(original_image, box_preds_flatten_hw.view(batch_size,-1,4))
+
+    num_classes = class_preds.shape[1]
+    class_preds_flatten_hw = class_preds.flatten(start_dim=2).view(batch_size,-1,num_classes)
+    logsoftmax_preds = F.log_softmax(class_preds_flatten_hw,dim=2)
+    return normalized_box_preds, normalized_box_targets, logsoftmax_preds, class_targets, dummy_masks
 
 def batch_box_intersection(t1,t2):
     assert len(t1.shape)==2 and len(t2.shape)==2 and \
@@ -58,20 +69,27 @@ def batch_box_IOU(t1,t2):
         torch.zeros_like(intersections), torch.div(intersections, unions))        
     return iou
 
-def assign_targets(box_preds, box_targets):
+def assign_targets(box_preds, box_targets, dummy_target_masks=None):
+    if dummy_target_masks is None:
+        dummy_target_masks = [torch.ones_like(box_targets[0,:,0],dtype=torch.uint8)]*box_targets.shape[0]
+
     # first construct cost function using IOU
     # for each box in box_targets, create IOU cost against a row in box_preds
     assert len(box_preds.shape)==3 and len(box_targets.shape)==3, 'boxes must be BxNx4'
+    assert len(dummy_target_masks)==box_preds.shape[0], 'dummy_masks must match batch size'
     # explicit loop over batches
     pred_indices,target_indices = [[],[]],[[],[]]
     for i in range(0,box_targets.shape[0]):
-        iou_cost = 1 - batch_box_IOU(box_preds[i,:,:],box_targets[i,:,:])
+
+        iou_cost = 1 - batch_box_IOU(box_preds[i,:,:],box_targets[i,dummy_target_masks[i],:])
+        original_target_indices = (dummy_target_masks[i]!=0).nonzero().squeeze(1).cpu().numpy()
         # next use scipy's hungarian to create the assignment
         row_inds, col_inds = scipy.optimize.linear_sum_assignment(iou_cost.detach().cpu().numpy())
-        pred_indices[0].extend([i]*len(col_inds))
-        pred_indices[1].extend(col_inds)
-        target_indices[0].extend([i]*len(row_inds))
-        target_indices[1].extend(row_inds)        
+        pred_indices[0].extend([i]*len(row_inds)) # batch index
+        pred_indices[1].extend(row_inds)
+        target_indices[0].extend([i]*len(col_inds)) # batch index
+        original_col_indices = [original_target_indices[k] for k in col_inds]
+        target_indices[1].extend(original_col_indices) #original target indices        
     return pred_indices,target_indices
 
 def multi_object_detector_loss(original_image, 
@@ -81,40 +99,45 @@ def multi_object_detector_loss(original_image,
                                pos_to_neg_class_weight_ratio=3.0,
                                class_loss_weight=1.0,
                                box_loss_weight=1.0):
-    batch_size = original_image.shape[0]
     # 1) preprocess targets
-    # box_targets: BxNx4
-    # class_targets: BxNx1
-    box_targets, class_targets = preprocess_targets(targets)
-
-    # 2) normalize box targets and inputs coordinate system 0-1
-    normalized_box_targets = normalize_boxes(original_image, box_targets.view(batch_size,-1,4))
-    box_preds_flatten_hw = box_preds.flatten(start_dim=2)
-    normalized_box_preds = normalize_boxes(original_image, box_preds_flatten_hw.view(batch_size,-1,4))
+    # p_box_targets: BxNx4
+    # p_box_preds: BxNx4
+    # p_class_preds: BxNxC
+    # p_class_targets: BxNx1
+    # dummy_masks: list, batch items of N
+    p_box_preds, p_box_targets, p_class_preds, p_class_targets, dummy_target_masks = \
+        preprocess_targets_and_preds(targets, box_preds, class_preds, original_image)
 
     # 2) globally assign targets against predictions
-    pred_indices,target_indices = assign_targets(normalized_box_targets, normalized_box_preds)
+    pred_indices, target_indices = assign_targets(p_box_preds, p_box_targets, dummy_target_masks)
+
+    targets_exist = p_box_targets[target_indices].numel()
 
     # 3) only targets that have been assigned gets a box loss
-    total_box_loss = box_loss(normalized_box_preds[pred_indices], normalized_box_targets[target_indices])
+    total_box_loss = 0
+    if targets_exist:
+        total_box_loss = box_loss(p_box_preds[pred_indices], p_box_targets[target_indices])
+        Logger().set('loss_component.total_box_loss',total_box_loss.mean().item())
 
     # 4) all targets get classification loss
-    num_classes = class_preds.shape[1]
-    class_preds_flatten_hw = class_preds.flatten(start_dim=2).view(batch_size,-1,num_classes)
-    softmax_preds = F.log_softmax(class_preds_flatten_hw,dim=2)
-    positive_class_loss = F.nll_loss(softmax_preds[pred_indices],class_targets.flatten().long())
-    mask = torch.ones_like(softmax_preds,dtype=torch.uint8)
+    # TODO, move this into a function with a unit test
+    positive_class_loss = 0
+    Logger().set('loss_component.positve_class_targets_size',p_class_targets[target_indices].shape[0])
+    if targets_exist:
+        positive_class_loss += F.nll_loss(p_class_preds[pred_indices], p_class_targets[target_indices].long())
+        Logger().set('loss_component.positive_class_loss',positive_class_loss.mean().item())
+    
+    mask = torch.ones_like(p_class_preds,dtype=torch.uint8)
     mask[pred_indices] = 0
-    neg_preds = torch.masked_select(softmax_preds,mask).reshape(-1,2)
-    neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(num_classes-1)
+    neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,2)
+    neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(class_preds.shape[1]-1)
+    Logger().set('loss_component.negative_class_targets_size',neg_targets.flatten().shape[0])
     negative_class_loss = F.nll_loss(neg_preds,neg_targets)
+    Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
     total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
         + 1./(1+pos_to_neg_class_weight_ratio)*negative_class_loss
 
     # 5) total loss = w0*class_loss + w1*box_loss
-    Logger().set('loss_component.positive_class_loss',positive_class_loss.mean().item())
-    Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
-    Logger().set('loss_component.total_box_loss',total_box_loss.mean().item())
     Logger().set('loss_component.total_class_loss',total_class_loss.mean().item())
     total_loss = class_loss_weight*total_class_loss + box_loss_weight*total_box_loss
     return total_loss

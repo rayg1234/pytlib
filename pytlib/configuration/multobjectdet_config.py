@@ -12,7 +12,7 @@ import random
 classes = ['Car']
 def get_loader():
     source = KITTISource('/home/ray/Data/KITTI/training',max_frames=2)
-    return MultiObjectDetectionLoader(source,crop_size=[255,255],obj_types=classes,max_objects=100)
+    return MultiObjectDetectionLoader(source,crop_size=[640,480],obj_types=classes,max_objects=100)
 
 # loader = (get_loader,dict())
 loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=5))
