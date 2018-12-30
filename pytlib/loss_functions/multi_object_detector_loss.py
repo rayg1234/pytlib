@@ -11,9 +11,10 @@ def normalize_boxes(original_image, boxes):
     assert len(boxes.shape)==3 and boxes.shape[2]==4, 'boxes must a BxNx4 tensor'
     height = original_image.shape[2]
     width = original_image.shape[3]
-    boxes[:,:,[0,2]] = boxes[:,:,[0,2]]/width
-    boxes[:,:,[1,3]] = boxes[:,:,[1,3]]/height
-    return boxes
+    new_boxes = boxes.clone()
+    new_boxes[:,:,[0,2]] = boxes[:,:,[0,2]]/width
+    new_boxes[:,:,[1,3]] = boxes[:,:,[1,3]]/height
+    return new_boxes
 
 def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image):
     # 1) prepare dummy masks
@@ -27,12 +28,13 @@ def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image
     box_targets = targets[:,:,1:]
     class_targets = targets[:,:,0]
 
-    normalized_box_targets = normalize_boxes(original_image, box_targets.view(batch_size,-1,4))
-    box_preds_flatten_hw = box_preds.flatten(start_dim=2)
-    normalized_box_preds = normalize_boxes(original_image, box_preds_flatten_hw.view(batch_size,-1,4))
+    box_targets_flatten = box_targets.view(batch_size,-1,4)
+    normalized_box_targets = normalize_boxes(original_image, box_targets_flatten)
+    box_preds_flatten_hw = box_preds.flatten(start_dim=2).transpose(1,2)
+    normalized_box_preds = normalize_boxes(original_image, box_preds_flatten_hw)
 
     num_classes = class_preds.shape[1]
-    class_preds_flatten_hw = class_preds.flatten(start_dim=2).view(batch_size,-1,num_classes)
+    class_preds_flatten_hw = class_preds.flatten(start_dim=2).transpose(1,2)
     logsoftmax_preds = F.log_softmax(class_preds_flatten_hw,dim=2)
     return normalized_box_preds, normalized_box_targets, logsoftmax_preds, class_targets, dummy_masks
 
@@ -96,7 +98,7 @@ def multi_object_detector_loss(original_image,
                                box_preds, 
                                class_preds, 
                                targets, 
-                               pos_to_neg_class_weight_ratio=3.0,
+                               pos_to_neg_class_weight_ratio=3,
                                class_loss_weight=1.0,
                                box_loss_weight=1.0):
     # 1) preprocess targets
@@ -112,7 +114,6 @@ def multi_object_detector_loss(original_image,
     pred_indices, target_indices = assign_targets(p_box_preds, p_box_targets, dummy_target_masks)
 
     targets_exist = p_box_targets[target_indices].numel()
-
     # 3) only targets that have been assigned gets a box loss
     total_box_loss = 0
     if targets_exist:
@@ -130,14 +131,15 @@ def multi_object_detector_loss(original_image,
     mask = torch.ones_like(p_class_preds,dtype=torch.uint8)
     mask[pred_indices] = 0
     neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,2)
-    neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(class_preds.shape[1]-1)
+    neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(p_class_preds.shape[2]-1)
     Logger().set('loss_component.negative_class_targets_size',neg_targets.flatten().shape[0])
-    negative_class_loss = F.nll_loss(neg_preds,neg_targets)
+    negative_class_loss = F.nll_loss(neg_preds,neg_targets,reduction='sum')
     Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
     total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
-        + 1./(1+pos_to_neg_class_weight_ratio)*negative_class_loss
-
+        + 1/(1.+pos_to_neg_class_weight_ratio)*negative_class_loss       
     # 5) total loss = w0*class_loss + w1*box_loss
     Logger().set('loss_component.total_class_loss',total_class_loss.mean().item())
     total_loss = class_loss_weight*total_class_loss + box_loss_weight*total_box_loss
+    total_negative_targets = torch.sum(F.softmax(class_preds.flatten(start_dim=2).transpose(1,2),dim=2)[:,:,1]>0.5)
+    Logger().set('loss_component.total_negative_targets',total_negative_targets.item())
     return total_loss

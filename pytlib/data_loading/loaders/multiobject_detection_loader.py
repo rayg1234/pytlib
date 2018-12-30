@@ -84,7 +84,9 @@ class MultiObjectDetectionLoader(implements(Loader)):
         frame = self.source[random.choice(self.frame_ids)]
 
         # 2) generate a random perturbation and perturb the frame
-        perturbed_frame = RandomPerturber.perturb_frame(frame,{})
+        perturb_params = {'translation_range':[0.0,0.0],
+                          'scaling_range':[1.0,1.0]}
+        perturbed_frame = RandomPerturber.perturb_frame(frame,perturb_params)
 
         # 3) encode the objects into targets with size that does not exceed max_objects
         # if there are more objects than max_objects, the remaining ones are dropped.
