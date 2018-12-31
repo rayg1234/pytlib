@@ -56,7 +56,8 @@ class PTImage:
             return self.__data
 
     def get_pil_image(self):
-        return Image.fromarray(self.get_data())
+        transform_image = self.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255)
+        return Image.fromarray(transform_image.get_data())
 
     @staticmethod
     def scale_np_img(image,input_range,output_range,output_type=float):

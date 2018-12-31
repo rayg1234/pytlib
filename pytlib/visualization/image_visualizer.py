@@ -15,6 +15,9 @@ class ImageVisualizer:
         def dump_image(self,output_file,display=False,save=True,max_cols=7):
             rows = int(math.ceil(float(len(self.cur_images)) / max_cols))
             cols = max_cols if len(self.cur_images) > max_cols else len(self.cur_images)
+            if rows==0 or cols==0:
+                print "Nothing to visualize..."
+                return
             fig,axes = plt.subplots(rows,cols,figsize=(cols*3,rows*3))
             # fig.subplots_adjust(hspace=0.5, wspace=0.5)
             fig.canvas.set_window_title('Visualizations')

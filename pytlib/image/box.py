@@ -39,6 +39,9 @@ class Box:
     def xy_min(self):
         return np.array([self.xmin,self.ymin])
 
+    def xy_max(self):
+        return np.array([self.xmax,self.ymax])
+
     def center(self):
         return np.array([(self.xmin+self.xmax)/2,(self.ymin+self.ymax)/2])
 
@@ -85,6 +88,7 @@ class Box:
         else:
             return None
 
+    #TODO unify these methods, some of them are normalized, some are not :(
     @staticmethod
     def box_to_tensor(box,frame_size):
         # normalize box coord to between 0 and 1
@@ -100,9 +104,22 @@ class Box:
         return torch.Tensor(np.stack(box_array))
 
     @staticmethod
-    def tensor_to_box(tensor,frame_size):
+    def tensor_to_boxes(tensor):
+        assert len(tensor.shape)==2 and tensor.shape[1]==4, \
+            'tensor boxes must be Nx4 shape'
+        chunks = torch.chunk(tensor,tensor.shape[0],dim=0)
+        box_list = []
+        for c in chunks:
+            box_list.append(Box.tensor_to_box(c.squeeze()))
+        return box_list
+
+    @staticmethod
+    def tensor_to_box(tensor,frame_size=None):
         assert tensor.size()==torch.Size([4]), 'tensor must of size 4 got {}'.format(tensor.size())
-        return Box.from_single_array(tensor.numpy()).scale(frame_size)
+        ret_box = Box.from_single_array(tensor.numpy())
+        if frame_size is not None:
+            ret_box.scale(frame_size)
+        return ret_box
 
     def __str__(self):
         return 'Box [[x0,y0],[x1,y1]]:' + str([[self.xmin,self.ymin],[self.xmax,self.ymax]])
