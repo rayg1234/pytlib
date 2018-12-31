@@ -38,17 +38,17 @@ class MultiObjectDetectionSample(implements(Sample)):
 
         boxes,classes = self.output[1:]
         # Nx4 boxes and N class tensor 
-        valid_boxes, valid_classes = MultiObjectDetector.post_process_boxes(boxes,classes,len(self.class_lookup))
+        valid_boxes, valid_classes = MultiObjectDetector.post_process_boxes(self.data[0],boxes,classes,len(self.class_lookup))
         # convert targets
         real_targets = self.target[0][:,0]>-1
         filtered_targets = self.target[0][real_targets].reshape(-1,self.target[0].shape[1])
         target_boxes = filtered_targets[:,1:]
         target_classes = filtered_targets[:,0]
 
-        if valid_boxes.shape[0]>0:
-            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
         if target_boxes.shape[0]>0:
             draw_objects_on_np_image(drawing_image,self.__convert_to_objects(target_boxes,target_classes),color=(255,0,0))
+        if valid_boxes.shape[0]>0:
+            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
         ImageVisualizer().set_image(PTImage(drawing_image),parameters.get('title','') + ' : Output')
 
     def set_output(self,output):

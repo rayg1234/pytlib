@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
 from networks.resnetcnn import ResNetCNN
+from utils.batch_box_utils import rescale_boxes, generate_region_meshgrid
+import numpy as np
 
 class MultiObjectDetector(nn.Module):
     def __init__(self, nboxes_per_pixel=5, num_classes=2):
@@ -50,15 +52,21 @@ class MultiObjectDetector(nn.Module):
         return torch.reshape(convoutput,new_shape)
 
     @classmethod
-    def post_process_boxes(cls, boxes, classes, num_classes, conf_threshold=0.5):
+    def post_process_boxes(cls, original_image, boxes, classes, num_classes):
         # post-process to produce a Nx5 tensor of valid boxes
         assert len(boxes.shape)==4 and len(classes.shape)==4, \
             'boxes and classes must be non-batched tensors of dim 4'
         batch_size = boxes.shape[0]
         softmax_classes = F.softmax(classes,dim=0).flatten(start_dim=1)
-        flatten_boxes = boxes.flatten(start_dim=1)
         argmax_classes = torch.argmax(softmax_classes,dim=0)
         mask = argmax_classes<num_classes
+
+        # transform from (-1,1) region coordinate system to original image coords
+        region_size = np.array(original_image.shape[1:])/np.array(boxes.shape[2:])
+        hh,ww = generate_region_meshgrid(boxes.shape[2:], region_size, region_size/2)
+        rescaled_box_preds = rescale_boxes(boxes.unsqueeze(0), region_size, [hh,ww])        
+        flatten_boxes = rescaled_box_preds.squeeze().flatten(start_dim=1)
+
         # only select those that are non-background
         valid_boxes = flatten_boxes[:,mask].transpose(0,1)
         valid_classes = argmax_classes[mask]
