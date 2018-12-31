@@ -67,8 +67,8 @@ def multi_object_detector_loss(original_image,
                                box_preds, 
                                class_preds, 
                                targets, 
-                               pos_to_neg_class_weight_ratio=3,
-                               class_loss_weight=1.0,
+                               pos_to_neg_class_weight_ratio=0.25,
+                               class_loss_weight=2.0,
                                box_loss_weight=1.0):
     # 1) preprocess targets
     # p_box_targets: BxNx4
@@ -102,7 +102,7 @@ def multi_object_detector_loss(original_image,
     neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,2)
     neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(p_class_preds.shape[2]-1)
     Logger().set('loss_component.negative_class_targets_size',neg_targets.flatten().shape[0])
-    negative_class_loss = F.nll_loss(neg_preds,neg_targets,reduction='sum')
+    negative_class_loss = F.nll_loss(neg_preds,neg_targets)
     Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
     total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
         + 1/(1.+pos_to_neg_class_weight_ratio)*negative_class_loss       

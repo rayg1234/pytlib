@@ -87,8 +87,8 @@ class MultiObjectDetectionLoader(implements(Loader)):
         frame = self.source[random.choice(self.frame_ids)]
 
         # 2) generate a random perturbation and perturb the frame
-        perturb_params = {'translation_range':[0.0,0.0],
-                          'scaling_range':[1.0,1.0]}
+        perturb_params = {'translation_range':[-0.1,0.1],
+                          'scaling_range':[0.9,1.1]}
         perturbed_frame = RandomPerturber.perturb_frame(frame,perturb_params)
         crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
         output_size = [self.crop_size[1],self.crop_size[0]]
