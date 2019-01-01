@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
-from networks.resnetcnn import ResNetCNN
+# from networks.resnetcnn import ResNetCNN
+from networks.maskresnet import MaskResnetCNN
 from utils.batch_box_utils import rescale_boxes, generate_region_meshgrid
 import numpy as np
 
@@ -13,7 +14,7 @@ class MultiObjectDetector(nn.Module):
     def __init__(self, nboxes_per_pixel=5, num_classes=2):
     	# num_classes to predict, includes background
         super(MultiObjectDetector, self).__init__()
-        self.feature_map_generator = ResNetCNN()
+        self.feature_map_generator = MaskResnetCNN()
         self.register_parameter('box_predictor_weights', None)
         self.register_parameter('class_predictor_weights', None)
         self.nboxes_per_pixel = nboxes_per_pixel
@@ -70,15 +71,17 @@ class MultiObjectDetector(nn.Module):
         # only select those that are non-background
         valid_boxes = flatten_boxes[:,mask].transpose(0,1)
         valid_classes = argmax_classes[mask]
+
+        #TODO: add NMS
         return valid_boxes, valid_classes
 
 
     def forward(self, x):   	
         # CNN Compute, outputs BCHW order on cudnn
-        feature_maps = self.feature_map_generator.forward(x)
+        feature_maps,masks = self.feature_map_generator.forward(x)
     	if self.class_predictor_weights is None:
     		self.__init_weights(feature_maps)         
         boxes = self.__box_predictor(feature_maps)
         classes = self.__class_predictor(feature_maps)
-        return x, boxes, classes
+        return x, boxes, classes, masks
 

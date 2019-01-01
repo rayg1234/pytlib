@@ -35,8 +35,11 @@ class MultiObjectDetectionSample(implements(Sample)):
     def visualize(self,parameters={}):
         image_original = PTImage.from_cwh_torch(self.data[0])
         drawing_image = image_original.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255).get_data().copy()
+        boxes,classes = self.output[1],self.output[2]
+        mask0 = self.output[3][0]
+        mask_image = PTImage.from_cwh_torch(mask0)
+        ImageVisualizer().set_image(mask_image,parameters.get('title','') + ' : Mask')
 
-        boxes,classes = self.output[1:]
         # Nx4 boxes and N class tensor 
         valid_boxes, valid_classes = MultiObjectDetector.post_process_boxes(self.data[0],boxes,classes,len(self.class_lookup))
         # convert targets
@@ -89,6 +92,8 @@ class MultiObjectDetectionLoader(implements(Loader)):
         # 2) generate a random perturbation and perturb the frame
         perturb_params = {'translation_range':[-0.1,0.1],
                           'scaling_range':[0.9,1.1]}
+        # perturb_params = {'translation_range':[0.0,0.0],
+        #                   'scaling_range':[1.0,1.0]}                          
         perturbed_frame = RandomPerturber.perturb_frame(frame,perturb_params)
         crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
         output_size = [self.crop_size[1],self.crop_size[0]]

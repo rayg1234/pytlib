@@ -65,7 +65,8 @@ def assign_targets(box_preds, box_targets, dummy_target_masks=None):
 
 def multi_object_detector_loss(original_image, 
                                box_preds, 
-                               class_preds, 
+                               class_preds,
+                               masks,
                                targets, 
                                pos_to_neg_class_weight_ratio=0.25,
                                class_loss_weight=2.0,
@@ -114,4 +115,11 @@ def multi_object_detector_loss(original_image,
     total_negative_targets = torch.sum(F.softmax(class_preds.flatten(start_dim=2).transpose(1,2),dim=2)[:,:,1]>0.5)
     Logger().set('loss_component.total_negative_targets',total_negative_targets.item())
     Logger().set('loss_component.total_positive_targets',total_positive_targets.item())
-    return total_loss
+
+    total_mask_loss = 0
+    count = 0
+    for mask in masks:
+        total_mask_loss+=torch.sum(torch.abs(mask))
+        count+=mask.numel()
+    Logger().set('loss_component.mask_loss',(total_mask_loss/count).item())
+    return total_loss #+ 10*total_mask_loss/count
