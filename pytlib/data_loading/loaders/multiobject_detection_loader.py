@@ -10,9 +10,11 @@ from image.ptimage import PTImage,Ordering,ValueClass
 from image.random_perturber import RandomPerturber
 from image.image_utils import draw_objects_on_np_image
 from image.affine_transforms import resize_image_center_crop,apply_affine_to_frame
+import torch.nn.functional as F
 import numpy as np
 import random
 import torch
+from networks.mask_block import mask_function
 from interface import implements
 from visualization.image_visualizer import ImageVisualizer
 from networks.multi_object_detector import MultiObjectDetector
@@ -37,7 +39,10 @@ class MultiObjectDetectionSample(implements(Sample)):
         drawing_image = image_original.to_order_and_class(Ordering.HWC,ValueClass.BYTE0255).get_data().copy()
         boxes,classes = self.output[1],self.output[2]
         mask0 = self.output[3][0]
-        mask_image = PTImage.from_cwh_torch(mask0)
+        mask0 = mask_function(mask0)
+        # import ipdb;ipdb.set_trace()
+        mask_image = PTImage.from_cwh_torch(mask0).to_order_and_class(Ordering.CHW,ValueClass.BYTE0255)
+        mask_image.get_data()[mask_image.get_data()>0]=255
         ImageVisualizer().set_image(mask_image,parameters.get('title','') + ' : Mask')
 
         # Nx4 boxes and N class tensor 

@@ -1,5 +1,6 @@
 import torch
 from networks.mask_block import MaskConvBlock
+from torchvision.models.resnet import BasicBlock,Bottleneck
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,16 +8,16 @@ import math
 from torch.nn import ModuleList
 
 class MaskResnetCNN(nn.Module):
-    def __init__(self, block=MaskConvBlock, layers=[3, 4, 23, 3], initchans=3):
+    def __init__(self, layers=[3, 4, 23, 3], initchans=3):
         self.initchans = initchans
         self.inplanes = 64
         super(MaskResnetCNN, self).__init__()
         self.all_layers = ModuleList()
-        self.all_layers.append(self._make_layer(block, 64, 1, stride=2, inplanes=initchans))
-        self.all_layers.append(self._make_layer(block, 64, layers[0], stride=2))
-        self.all_layers.append(self._make_layer(block, 128, layers[1], stride=2))
-        self.all_layers.append(self._make_layer(block, 256, layers[2], stride=2))
-        self.all_layers.append(self._make_layer(block, 512, layers[3], stride=2))
+        self.all_layers.append(self._make_layer(MaskConvBlock, 64, 2, stride=2, inplanes=initchans))
+        self.all_layers.append(self._make_layer(MaskConvBlock, 64, layers[0], stride=2))
+        self.all_layers.append(self._make_layer(MaskConvBlock, 128, layers[1], stride=2))
+        self.all_layers.append(self._make_layer(MaskConvBlock, 256, layers[2], stride=2))
+        self.all_layers.append(self._make_layer(MaskConvBlock, 512, layers[3], stride=2))
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -48,8 +49,11 @@ class MaskResnetCNN(nn.Module):
         all_masks = []
         for blocks in self.all_layers:
             for block in blocks:
-                x,mask = block(x, mask)
-                all_masks.append(mask)
-        return x, all_masks
+                if block.__class__.__name__=='MaskConvBlock':
+                    x,mask = block(x, mask)
+                    all_masks.append(mask)
+                else:
+                    x = block(x)
+        return x, all_masks[:-1] # dont return the last mask since its not actually used
 
 

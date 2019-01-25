@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from loss_functions.box_loss import box_loss
 from utils.logger import Logger
 from utils.batch_box_utils import rescale_boxes, euc_distance_cost, generate_region_meshgrid
+from networks.mask_block import mask_function
 import numpy as np
 
 def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image):
@@ -118,8 +119,14 @@ def multi_object_detector_loss(original_image,
 
     total_mask_loss = 0
     count = 0
-    for mask in masks:
-        total_mask_loss+=torch.sum(torch.abs(mask))
-        count+=mask.numel()
-    Logger().set('loss_component.mask_loss',(total_mask_loss/count).item())
-    return total_loss #+ 10*total_mask_loss/count
+    mask_loss_factor = 0.1
+    for i,mask in enumerate(masks):
+        applied_mask = mask_function(mask)
+        total_mask_loss+=torch.sum(torch.abs(applied_mask))
+        count+=applied_mask.numel()
+        non_zeros = torch.nonzero(applied_mask).size(0)
+        Logger().set('loss_component.count_nonzero_fraction_{}'.format(i),(non_zeros/float(mask.numel())))
+
+    Logger().set('loss_component.mask_loss',mask_loss_factor*(total_mask_loss/count).item())
+
+    return total_loss + mask_loss_factor*total_mask_loss/count
