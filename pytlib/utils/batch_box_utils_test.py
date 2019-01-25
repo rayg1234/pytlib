@@ -1,6 +1,6 @@
 import unittest
 import torch
-from utils.batch_box_utils import batch_box_intersection, batch_box_area, batch_box_IOU, rescale_boxes, euc_distance_cost
+from utils.batch_box_utils import batch_box_intersection, batch_box_area, batch_box_IOU, rescale_boxes, euc_distance_cost, batch_nms
 from utils.test_utils import near_tensor_equality
 
 class TestBatchBoxUtils(unittest.TestCase):
@@ -93,6 +93,38 @@ class TestBatchBoxUtils(unittest.TestCase):
         areas = batch_box_area(boxes)
         expected_areas = torch.tensor([[1.,36.,0.]]).transpose(0,1)
         self.assertTrue(near_tensor_equality(areas,expected_areas))
+
+    def test_batch_nms_a(self):
+        boxes = torch.Tensor([[0,0,1,1],
+                              [0,0,1,1],
+                              [0,0,5,5],
+                              [1,1,6,6],
+                              [3,3,10,10],
+                              [3,3,6,6],
+                              [0,0,1,1]])
+
+        expected_result = torch.Tensor([[0,0,1,1],
+                                     [0,0,5,5],
+                                     [1,1,6,6],
+                                     [3,3,10,10],
+                                     [3,3,6,6]])
+        # thresh=0.5        
+        results, _ = batch_nms(boxes)
+        self.assertTrue(torch.all(torch.eq(results,expected_result)))
+
+    def test_batch_nms_b(self):
+        boxes = torch.Tensor([[0,0,1,1],
+                              [0,0,1,1],
+                              [0,0,5,5],
+                              [1,1,6,6],
+                              [3,3,10,10],
+                              [3,3,6,6],
+                              [0,0,1,1]])
+
+        expected_result = torch.Tensor([[0,0,1,1],
+                                        [0,0,5,5]])
+        results, _ = batch_nms(boxes,thresh=0.1)
+        self.assertTrue(torch.all(torch.eq(results,expected_result)))
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,6 +43,21 @@ def batch_box_IOU(t1,t2):
         torch.zeros_like(intersections), torch.div(intersections, unions))        
     return iou
 
+def batch_nms(boxes,thresh=0.5):
+    assert len(boxes.shape)==2 and boxes.shape[1]==4, 'boxes must be Nx4 tensors'
+    #compute IOU of every pair of boxes
+    # NxN grid of ious
+    ious = batch_box_IOU(boxes,boxes)
+    #loop over every row in upper triagle, find row with IOU greater than T, mark that index
+    indices = []
+    for i in range(0,boxes.shape[0]):
+        idxs = (ious[i,i+1:]>=thresh).nonzero() + i+1
+        indices.append(idxs)
+    all_unique_indices = torch.unique(torch.cat(indices))
+    mask = torch.ones_like(boxes[:,0],dtype=torch.uint8)
+    mask[all_unique_indices] = 0
+    return boxes[mask], mask
+
 def euc_distance_cost(boxes1,boxes2):
     assert len(boxes1.shape)==2 and boxes1.shape[1]==4, 'boxes must be Nx4 tensors'
     assert len(boxes2.shape)==2 and boxes2.shape[1]==4, 'boxes must be Nx4 tensors'

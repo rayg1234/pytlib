@@ -1,5 +1,6 @@
 # this is needed to make matplotlib work without explicitly connect to X
-import matplotlib 
+import matplotlib
+matplotlib.use('svg')
 
 import torch
 from image.ptimage import PTImage
