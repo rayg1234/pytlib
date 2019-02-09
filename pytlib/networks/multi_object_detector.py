@@ -5,16 +5,21 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
-# from networks.resnetcnn import ResNetCNN
+from networks.resnetcnn import ResNetCNN
 from networks.maskresnet import MaskResnetCNN
 from utils.batch_box_utils import rescale_boxes, generate_region_meshgrid, batch_nms
 import numpy as np
 
 class MultiObjectDetector(nn.Module):
-    def __init__(self, nboxes_per_pixel=5, num_classes=2):
+    def __init__(self, nboxes_per_pixel=5, num_classes=2, backbone_type='resnet'):
     	# num_classes to predict, includes background
         super(MultiObjectDetector, self).__init__()
-        self.feature_map_generator = MaskResnetCNN()
+        if backbone_type=='resnet':
+            self.feature_map_generator = ResNetCNN()
+        elif backbone_type=='maskresnet':
+            self.feature_map_generator = MaskResnetCNN()
+        else:
+            assert False, "Unknown backbone type"
         self.register_parameter('box_predictor_weights', None)
         self.register_parameter('class_predictor_weights', None)
         self.nboxes_per_pixel = nboxes_per_pixel
