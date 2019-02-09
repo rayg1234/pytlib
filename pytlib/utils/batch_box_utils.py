@@ -53,9 +53,10 @@ def batch_nms(boxes,thresh=0.5):
     for i in range(0,boxes.shape[0]):
         idxs = (ious[i,i+1:]>=thresh).nonzero() + i+1
         indices.append(idxs)
-    all_unique_indices = torch.unique(torch.cat(indices))
     mask = torch.ones_like(boxes[:,0],dtype=torch.uint8)
-    mask[all_unique_indices] = 0
+    if indices:
+        all_unique_indices = torch.unique(torch.cat(indices))
+        mask[all_unique_indices] = 0
     return boxes[mask], mask
 
 def euc_distance_cost(boxes1,boxes2):
