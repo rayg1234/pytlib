@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
 from networks.resnetcnn import ResNetCNN
-from utils.batch_box_utils import batch_nms
+from utils.batch_box_utils import rescale_boxes, generate_region_meshgrid, batch_nms
 import numpy as np
 
 class MultiObjectDetector(nn.Module):
