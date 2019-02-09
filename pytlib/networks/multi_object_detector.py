@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
 from networks.resnetcnn import ResNetCNN
-from utils.batch_box_utils import rescale_boxes, generate_region_meshgrid
+from utils.batch_box_utils import batch_nms
 import numpy as np
 
 class MultiObjectDetector(nn.Module):
@@ -70,7 +70,10 @@ class MultiObjectDetector(nn.Module):
         # only select those that are non-background
         valid_boxes = flatten_boxes[:,mask].transpose(0,1)
         valid_classes = argmax_classes[mask]
-        return valid_boxes, valid_classes
+
+        nms_boxes, mask = batch_nms(valid_boxes)
+        nms_classes = valid_classes[mask]
+        return nms_boxes, nms_classes
 
 
     def forward(self, x):   	
