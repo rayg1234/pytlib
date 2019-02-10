@@ -47,6 +47,12 @@ The following shows some example outputs of the encoding detector on trained fea
 
 ![encoding detector output](site_content/encoding_detector_output.png)
 
+## [Anchorless Object Detector](pytlib/configuration/multobjectdet_config.py)
+
+Most SOTA object detectors regress on anchor boxes to make the problem easier to learn. But anchor boxes introduce other complexities such as when anchors fail to match against objects, prediction is not even attempted. Furthermore the performance of the detector is strongly coupled to the choice anchors, an undesirable hyperparameter that forces overfitting some prior dataset. Here is a simple implementation of a 1-stage anchorless detector where a detector head just regresses directly to some fixed number of bounding boxes, trained on KITTI dataset.
+
+![anchorless detector output](site_content/multi_object_det_output.svg)
+
 # Running Locally on Native Ubuntu 16.04
 
 Install: `bash pytlib/install.sh`
