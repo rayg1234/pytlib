@@ -25,7 +25,7 @@ Example implementation (extended from [pytorch vae for MNIST](https://github.com
 ![vae on stanford cars](site_content/vae_example.svg)
 
 ## [Sequential VAE, (DRAW)](pytlib/configuration/draw_mnist_config.py)
-An implementation of the [Deep Recurrent Attentive Writer](https://arxiv.org/abs/1502.04623). This recurrent writer uses the VAE gaussian prior sampler, a vanilla RNN (instead of LSTM), and the same Gaussian attention mechanism used in the paper. The MNIST dataset is way too easy of a problem. The training was very quick with a relatively small batch and converges well below 10k iterations. The goal here was to tryout the Gaussian attention mechanism. Moving toward, one direction I have is to investigate the [Inverse Draw](https://openai.com/requests-for-research/#inverse-draw) problem. Another is to use the recurrent attention mechanism for the detection problem. Some results is shown below.
+An implementation of the [Deep Recurrent Attentive Writer](https://arxiv.org/abs/1502.04623). This recurrent writer uses the VAE gaussian prior sampler, a vanilla RNN (instead of LSTM), and the same Gaussian attention mechanism used in the paper. The MNIST dataset is way too easy of a problem. The training was very quick with a relatively small batch and converges well below 10k iterations. The goal here was to tryout the Gaussian attention mechanism. Moving toward, one direction I have is to investigate the [Inverse Draw](https://openai.com/requests-for-research/#inverse-draw) problem. Another is to use the recurrent attention mechanism for the detection problem. Some results is shown below. Implementation is [here](pytlib/networks/draw.py) and loss is [here](pytlib/loss_functions/vae_loss.py).
 
 <p align="center">
 <img src="site_content/draw_output.png" width="500">
@@ -49,7 +49,7 @@ The following shows some example outputs of the encoding detector on trained fea
 
 ## [Anchorless Object Detector](pytlib/configuration/multobjectdet_config.py)
 
-Most SOTA object detectors regress on anchor boxes to make the problem easier to learn. But anchor boxes introduce other complexities such as when anchors fail to match against objects, prediction is not even attempted. Furthermore the performance of the detector is strongly coupled to the choice anchors, an undesirable hyperparameter that forces overfitting some prior dataset. Here is a simple implementation of a 1-stage anchorless detector where a detector head just regresses directly to some fixed number of bounding boxes, trained on KITTI dataset. Checkout the [detector implementation](pytlib/networks/multi_object_detector.py) and the [loss functions](pytlib/loss_functions/multi_objct_detector_loss.py).
+Most SOTA object detectors regress on anchor boxes to make the problem easier to learn. But anchor boxes introduce other complexities such as when anchors fail to match against objects, prediction is not even attempted. Furthermore the performance of the detector is strongly coupled to the choice anchors, an undesirable hyperparameter that forces overfitting some prior dataset. Here is a simple implementation of a 1-stage anchorless detector where a detector head just regresses directly to some fixed number of bounding boxes, trained on KITTI dataset. Checkout the [detector implementation](pytlib/networks/multi_object_detector.py) and the [loss functions](pytlib/loss_functions/multi_object_detector_loss.py).
 
 ![anchorless detector output](site_content/multi_object_det_output.png)
 
