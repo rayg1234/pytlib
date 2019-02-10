@@ -18,7 +18,7 @@ def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image
     class_targets = targets[:,:,0]
 
     # scale predictions by visual regions
-    # use a meshgrid, for example we have 2x2 visual regions with 32pix strides
+    # use a meshgrid, for example we have 2x2 feature map with 32pix strides
     # then the grid looks like
     # yy = [[16,16],[48,48]]
     # xx = [[16,48],[16,48]]
@@ -43,16 +43,13 @@ def assign_targets(box_preds, box_targets, dummy_target_masks=None):
     if dummy_target_masks is None:
         dummy_target_masks = [torch.ones_like(box_targets[0,:,0],dtype=torch.uint8)]*box_targets.shape[0]
 
-    # first construct cost function using IOU
-    # for each box in box_targets, create IOU cost against a row in box_preds
     assert len(box_preds.shape)==3 and len(box_targets.shape)==3, 'boxes must be BxNx4'
     assert len(dummy_target_masks)==box_preds.shape[0], 'dummy_masks must match batch size'
     # explicit loop over batches
     pred_indices,target_indices = [[],[]],[[],[]]
     for i in range(0,box_targets.shape[0]):
-        # TODO, dont use IOU cost, use distance based cost
+        # Note, not using IOU cost here because most boxes would never get matched
         cost = euc_distance_cost(box_preds[i,:,:],box_targets[i,dummy_target_masks[i],:])
-        # cost = 1 - batch_box_IOU(box_preds[i,:,:],box_targets[i,dummy_target_masks[i],:])
         original_target_indices = (dummy_target_masks[i]!=0).nonzero().squeeze(1).cpu().numpy()
         # next use scipy's hungarian to create the assignment
         row_inds, col_inds = scipy.optimize.linear_sum_assignment(cost.detach().cpu().numpy())
@@ -106,6 +103,7 @@ def multi_object_detector_loss(original_image,
     Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
     total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
         + 1/(1.+pos_to_neg_class_weight_ratio)*negative_class_loss       
+    
     # 5) total loss = w0*class_loss + w1*box_loss
     Logger().set('loss_component.total_class_loss',total_class_loss.mean().item())
     total_loss = class_loss_weight*total_class_loss + box_loss_weight*total_box_loss
