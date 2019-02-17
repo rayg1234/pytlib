@@ -9,7 +9,7 @@ from networks.multi_object_detector import MultiObjectDetector
 from loss_functions.multi_object_detector_loss import multi_object_detector_loss
 import random
 
-classes = ['Car']
+classes = ['Car','Cyclist','Pedestrian']
 def get_loader():
     source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10000)
     return MultiObjectDetectionLoader(source,crop_size=[1024,320],obj_types=classes,max_objects=100)

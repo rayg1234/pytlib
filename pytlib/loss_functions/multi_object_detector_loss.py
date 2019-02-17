@@ -75,6 +75,8 @@ def multi_object_detector_loss(original_image,
     # dummy_masks: list, batch items of N
     p_box_preds, p_box_targets, p_class_preds, p_class_targets, dummy_target_masks = \
         preprocess_targets_and_preds(targets, box_preds, class_preds, original_image)
+    # total number of classes including bg
+    num_classes = p_class_preds.shape[2]
 
     # 2) globally assign targets against predictions
     pred_indices, target_indices = assign_targets(p_box_preds, p_box_targets, dummy_target_masks)
@@ -96,7 +98,7 @@ def multi_object_detector_loss(original_image,
     
     mask = torch.ones_like(p_class_preds,dtype=torch.uint8)
     mask[pred_indices] = 0
-    neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,2)
+    neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,num_classes)
     neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(p_class_preds.shape[2]-1)
     Logger().set('loss_component.negative_class_targets_size',neg_targets.flatten().shape[0])
     negative_class_loss = F.nll_loss(neg_preds,neg_targets)
