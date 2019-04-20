@@ -48,7 +48,7 @@ class MultiObjectDetectionSample(implements(Sample)):
         if target_boxes.shape[0]>0:
             draw_objects_on_np_image(drawing_image,self.__convert_to_objects(target_boxes,target_classes),color=(255,0,0))
         if valid_boxes.shape[0]>0:
-            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=(0,255,0))   
+            draw_objects_on_np_image(drawing_image,self.__convert_to_objects(valid_boxes,valid_classes),color=None)   
         ImageVisualizer().set_image(PTImage(drawing_image),parameters.get('title','') + ' : Output')
 
     def set_output(self,output):
