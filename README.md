@@ -61,13 +61,15 @@ Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
 
 Train an example simple autoencoder for 100 iterations, batch size of 32: `python run/trainer.py -t configuration/mnist_ae_config.py -i 100 -b 32 -v 100`
 
-This will train (on cpu) a basic CNN autoencoder on the mnist dataset and produce a visualization at the end of the 100 iterations. All the data is stored in `tmp` directory in the current directory. To view the visualization:
+This will train (on cpu*) a basic CNN autoencoder on the mnist dataset and produce a visualization at the end of the 100 iterations. All the data is stored in `tmp` directory in the current directory. To view the visualization:
 
 `eog tmp/visualizations_00000100.svg`
 
 Try adjusting some parameters in the configuration. For example you can switch to training on the gpu by simply setting `cuda=true` inside the `TrainConfiguration` initializer line. 
 
 More helpful instructions to come ...
+
+*After upgrading to pytorch 1.0, CPU training seems to be busted. Will only run right now if you have a GPU
 
 # Running with Docker
 Create the docker container run `docker-compose up -d --force-recreate --build`
