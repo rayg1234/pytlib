@@ -6,38 +6,69 @@ import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
 from networks.resnetcnn import ResNetCNN
-from networks.mlp import MLP
+from networks.conv_stack import TransposedConvolutionStack, ConvolutionStack
 import numpy as np
 
 class BaseMonoDepthEstimator(nn.Module):
-    def __init__(self):
+    def __init__(self, inchans=3,nframes=3):
         super(BaseMonoDepthEstimator, self).__init__()
-        # create 2 networks
-        # 1) a depth network - encoder-decoder combo
-        self.encoder = ResNetCNN()
-        self.decoder = None #placeholder
+        # 3 parameters for translation and 3 for rotation
+        self.inchans = inchans
+        self.ego_vector_dim = 6
+        self.nframes = nframes
+        self.ego_prediction_size = self.ego_vector_dim * (self.nframes -1)
+        # TODO refactor this part, don't hardcode these
+        self.out_channel_size = 256
+
+        # Depth network - encoder-decoder combo
+        # initially lets use a vanilla ConvStack + TransposedConvStack combo
+        # TODO replace this with a resnet-like Conv+TConv network with skip connections
+        self.encoder = ConvolutionStack(self.inchans)
+        self.encoder.append(16,3,2)
+        self.encoder.append(32,3,2)
+        self.encoder.append(64,3,2)
+        self.encoder.append(128,3,2)
+        self.encoder.append(self.out_channel_size,3,2)
+        self.decoder = TransposedConvolutionStack(self.out_channel_size,final_relu=False,padding=1)
+        self.decoder.append(128,3,2)
+        self.decoder.append(64,3,2)
+        self.decoder.append(32,3,2)
+        self.decoder.append(16,3,2)
+        self.decoder.append(3,3,2)
+
         # 2) an ego motion network - use the encoder from (1)
-        # with an additional FC layer
-        # mlp for decoding ego motion, placeholder
-        self.ego_motion_decoder = None
+        # and append extra cnns
+        self.ego_motion_cnn = ConvolutionStack(self.out_channel_size*nframes)
+        self.ego_motion_cnn.append(128,3,2)
+        self.ego_motion_cnn.append(64,3,2)
+        self.ego_motion_cnn.append(self.ego_prediction_size,1,1)
 
 
-    def forward(self, x):   	
+    def forward(self, x):       
         # for each frame, run through the depth and ego motion networks
         # assume input is BxKxCxWxH
         assert len(x.shape)==5, 'Input must be BxKxCxWxH!'
+        assert x.shape[1]==self.nframes, 'Input sequence length must match nframes!, expected {}, found {}'.format(self.nframes, x.shape[1])
+
         batch_size = x.shape[0]
-        nframes = x.shape[1]
-        unstacked_frames = torch.chunk(x,nframes,1)
+        unstacked_frames = torch.chunk(x,self.nframes,1)
         unstacked_frames = [torch.squeeze(x,1) for x in unstacked_frames]
-        ego_vectors = []
+        encoded_features = []
         depth_maps = []
+
+        # first predict depth in all frames
         for frame in unstacked_frames:
-        	features = self.encoder.forward(frame)
-        	# pass through, replace with actual decoders
-        	ego_vector = features
-        	depth_map = features
-        	ego_vectors.append(ego_vector)
-        	depth_maps.append(depth_map)
+            features = self.encoder.forward(frame)
+            # pass through, replace with actual decoders
+            depth_map = self.decoder.forward(features)
+            encoded_features.append(features)
+            depth_maps.append(depth_map)
+
+        # next predict ego_motion, stack feature maps
+        stacked_features = torch.cat(encoded_features,1)
+        ego_motion_features = self.ego_motion_cnn(stacked_features)
+        # reduce mean along the spatial dimensions
+        ego_vectors = torch.mean(ego_motion_features,[2,3])
+
         # restack these and return
-        return torch.stack(ego_vectors,1), torch.stack(depth_maps,1)
+        return ego_vectors, torch.stack(depth_maps,1)

@@ -53,8 +53,14 @@ class TransposedConvolutionStack(nn.Module):
 
     def forward(self, x, output_dims=[]):
         # print self.convs
+        if output_dims:
+            assert len(output_dims)==len(self.convs), "number of output_dims must match number of tconvs!"
         for i,c in enumerate(self.convs):
-            x = c(x,output_size=output_dims[i]) if output_dims else c(x)
+            if not output_dims:
+                output_dim = [x.shape[2:][0]*c.stride[0],x.shape[2:][1]*c.stride[1]]
+            else:
+                output_dim = output_dims[i]
+            x = c(x,output_size=output_dim)
             x = self.batchnorms[i](x)
             if i<len(self.convs)-1 or self.final_relu:
                 x = F.relu(x)

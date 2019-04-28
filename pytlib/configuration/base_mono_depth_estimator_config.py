@@ -5,6 +5,7 @@ from data_loading.loaders.multi_loader import MultiLoader
 import torch.optim as optim
 import torch.nn as nn
 from networks.base_mono_depth_estimator import BaseMonoDepthEstimator
+from loss_functions.mono_depth_loss import mono_depth_loss
 import random
 
 def get_loader():
@@ -15,5 +16,5 @@ loader = (get_loader,dict())
 # loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
 model = (BaseMonoDepthEstimator,dict())
 optimizer = (optim.Adam,dict(lr=1e-4))
-loss = None # placeholder
+loss = mono_depth_loss # placeholder
 train_config = TrainConfiguration(loader,optimizer,model,loss,True)
