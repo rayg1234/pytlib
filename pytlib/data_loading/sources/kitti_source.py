@@ -7,6 +7,7 @@ from os.path import isfile, join, basename, splitext
 from data_loading.sources.source import Source
 from collections import defaultdict
 from interface import Interface, implements
+import numpy as np
 
 class KITTILabel:
     @classmethod
@@ -32,6 +33,10 @@ class KITTILabel:
 
 class KITTISource(implements(Source)):
 
+    image_dir = 'image_02'
+    label_dir = 'label_02'
+    calib_dir = 'calib'
+
     def __init__(self,dir_path,max_frames=float("inf")):
         self.dir_path = dir_path
         self.frames = []
@@ -41,9 +46,28 @@ class KITTISource(implements(Source)):
         self.size = len(self.frames)
         self.cur = 0
 
-    def __load_labelled_frames(self,frame_dir,labels_file):
+    def __load_camera_matrix_from_calib(self,calib_file,line_prefix='P2'):
+        # only load the p_rect calibration
+        with open(calib_file, 'r') as f:
+            lines = f.readlines()
+            lines = [line.rstrip() for line in lines]
+            mat = None
+            for line in lines:
+                nline = line.split(': ')
+                if nline[0]==line_prefix:
+                    mat = nline[1].split(' ')
+                    mat = np.array([float(r) for r in mat], dtype=float)
+                    mat = mat.reshape((3,4))[0:3, 0:3]
+                    break
+        return mat
+
+
+    def __load_labelled_frames(self,frame_dir,labels_file,calib_file=None):
         files = [f for f in listdir(frame_dir) if isfile(join(frame_dir, f))]
         labels = KITTILabel.labels_from_file(labels_file) if labels_file is not None else []
+        calibration_mat = None
+        if calib_file:
+            calibration_mat = self.__load_camera_matrix_from_calib(calib_file)
         frames = []
         for f in files:
             file_index = int(splitext(basename(f))[0])
@@ -51,50 +75,29 @@ class KITTISource(implements(Source)):
             for l in labels:
                 if int(l.frame_idx) == file_index:
                     objects.append(l.to_object())
-            frames.append(Frame(join(frame_dir,f),objects))
+            frames.append(Frame(join(frame_dir,f),objs=objects,calib_mat=calibration_mat))
         return frames
-
-    # label folders are of the form label_02
-    def __parse_label(self,full_path,label_prefix):
-        chunks =  os.path.basename(full_path).split('_')
-        if len(chunks)==2 and chunks[0]==label_prefix and chunks[1].isdigit():
-            return int(chunks[1])
-        else:
-            return None
-
-    # image folders are of the form image_02
-    def __parse_imagedir(self,full_path,image_prefix):
-        chunks = os.path.basename(full_path).split('_')
-        if len(chunks)==2 and chunks[0]==image_prefix and chunks[1].isdigit() and os.path.isdir(full_path):
-            return int(chunks[1])
-        else:
-            return None
 
     # KITTI images files are numerical only, ie: 00001, 00002 etc...
     def __validate_file_name(self,file_name):
         return file_name.isdigit()
 
     # assumes image dirs are of type image_xx and labels are label_xx.txt
-    def __load_frames(self,dir_path,frame_dir_prefix='image',label_prefix='label'):
-        imagedirs = dict()
-        labelfiles = dict()
-        for item in listdir(dir_path):
-            full_item_path = os.path.join(dir_path,item)
-            ret = self.__parse_imagedir(full_item_path,frame_dir_prefix)
-            if ret:
-                imagedirs[ret] = full_item_path
-            ret = self.__parse_label(full_item_path,label_prefix)
-            if ret:
-                labelfiles[ret] = full_item_path
-
-        for k,image_path in imagedirs.items():
-            for item in listdir(image_path):
-                if self.__validate_file_name(item):
-                    label_path = os.path.join(labelfiles[k],item+'.txt') if k in labelfiles else None
-                    new_frames = self.__load_labelled_frames(os.path.join(image_path,item),label_path)
-                    if len(self.frames) >= self.max_frames:
-                        return
-                    self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
+    def __load_frames(self,dir_path):
+        imagedir_full = os.path.join(dir_path,KITTISource.image_dir)
+        labeldir_full = os.path.join(dir_path,KITTISource.label_dir)
+        calibdir_full = os.path.join(dir_path,KITTISource.calib_dir)
+        assert os.path.exists(imagedir_full), "Cannot find image dir at {}".format(imagedir_full)
+        assert os.path.exists(labeldir_full), "Cannot find image dir at {}".format(labeldir_full)
+        assert os.path.exists(calibdir_full), "Cannot find image dir at {}".format(calibdir_full)
+        for item in listdir(imagedir_full):
+            if self.__validate_file_name(item):
+                label_path = os.path.join(labeldir_full,item+'.txt')
+                calib_path = os.path.join(calibdir_full,item+'.txt')
+                new_frames = self.__load_labelled_frames(os.path.join(imagedir_full,item),label_path,calib_path)
+                if len(self.frames) >= self.max_frames:
+                    return
+                self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
 
 
     def next(self):

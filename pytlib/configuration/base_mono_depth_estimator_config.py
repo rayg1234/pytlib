@@ -9,7 +9,7 @@ from loss_functions.mono_depth_loss import mono_depth_loss
 import random
 
 def get_loader():
-    source = KITTISource('/home/ray/Data/KITTI/training',max_frames=10)
+    source = KITTISource('/home/ray/Data/KITTI/tracking/training',max_frames=10)
     return SequenceVideoLoader(source,crop_size=[1024,320])
 
 loader = (get_loader,dict())

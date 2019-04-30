@@ -48,6 +48,7 @@ class SequenceVideoLoader(implements(Loader)):
         perturb_params = {'translation_range':[-0.1,0.1],
                           'scaling_range':[0.9,1.1]}
         perturbed_frames = []
+        # TODO: also apply perturbation to instrincs
         for f in frames:
             perturbed_frame = RandomPerturber.perturb_frame(f,perturb_params)
             crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)
@@ -63,6 +64,7 @@ class SequenceVideoLoader(implements(Loader)):
         for f in perturbed_frames:
             img = f.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
             input_tensors.append(torch.Tensor(img.get_data().astype(float)))
+
 
         # the input is now 3xCxWxH
         sample = SequenceVideoSample([torch.stack(input_tensors,dim=0)],
