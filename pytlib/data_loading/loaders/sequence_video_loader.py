@@ -61,14 +61,15 @@ class SequenceVideoLoader(implements(Loader)):
         # -make a tensor with a stack of 3 frame 
         # -add the calibration to the target
         input_tensors = []
+        calib_mats = []
         for f in perturbed_frames:
             img = f.image.to_order_and_class(Ordering.CHW,ValueClass.FLOAT01)
             input_tensors.append(torch.Tensor(img.get_data().astype(float)))
-
+            calib_mats.append(torch.Tensor(f.calib_mat))
 
         # the input is now 3xCxWxH
         sample = SequenceVideoSample([torch.stack(input_tensors,dim=0)],
-                                     [torch.Tensor(0)])
+                                     [torch.stack(calib_mats)])
         return sample
 
 
