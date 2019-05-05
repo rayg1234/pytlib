@@ -34,7 +34,7 @@ class BaseMonoDepthEstimator(nn.Module):
         self.decoder.append(64,3,2)
         self.decoder.append(32,3,2)
         self.decoder.append(16,3,2)
-        self.decoder.append(3,3,2)
+        self.decoder.append(1,3,2)
 
         # 2) an ego motion network - use the encoder from (1)
         # and append extra cnns
@@ -52,7 +52,7 @@ class BaseMonoDepthEstimator(nn.Module):
 
         batch_size = x.shape[0]
         unstacked_frames = torch.chunk(x,self.nframes,1)
-        unstacked_frames = [torch.squeeze(x,1) for x in unstacked_frames]
+        unstacked_frames = [torch.squeeze(y,1) for y in unstacked_frames]
         encoded_features = []
         depth_maps = []
 
@@ -60,7 +60,7 @@ class BaseMonoDepthEstimator(nn.Module):
         for frame in unstacked_frames:
             features = self.encoder.forward(frame)
             # pass through, replace with actual decoders
-            depth_map = self.decoder.forward(features)
+            depth_map = self.decoder.forward(features).squeeze(1)
             encoded_features.append(features)
             depth_maps.append(depth_map)
 
@@ -68,7 +68,8 @@ class BaseMonoDepthEstimator(nn.Module):
         stacked_features = torch.cat(encoded_features,1)
         ego_motion_features = self.ego_motion_cnn(stacked_features)
         # reduce mean along the spatial dimensions
-        ego_vectors = torch.mean(ego_motion_features,[2,3])
+        ego_vectors = torch.mean(ego_motion_features,[2,3]).reshape(batch_size,self.nframes-1,-1)
+        depth_maps = torch.stack(depth_maps,1)
 
-        # restack these and return
-        return ego_vectors, torch.stack(depth_maps,1)
+        # frames, ego_vectors, and depth_maps
+        return x, ego_vectors, depth_maps
