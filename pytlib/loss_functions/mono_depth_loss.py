@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from image.cam_math import image_to_cam
 
-def mono_depth_loss(original_images, ego_motion_vectors,depth_maps,calib_frames):
+def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
     batch_size = calib_frames.shape[0]
     assert calib_frames.shape[1]==3, 'Currently only support 3-sequence frames!'
     assert len(original_images.shape)==5, 'Image shape should be BxKxCxHxW'
@@ -15,12 +15,14 @@ def mono_depth_loss(original_images, ego_motion_vectors,depth_maps,calib_frames)
 
     # step 2) Generate transformation matrix from ego_motion_vectors
 
-    # step 3) Transform Frame1 -> Frame2 using transformation matrix
-    # then apply camera matrix to get back to camera coords, this
-    # would require sampling
+    # step 3) Transform Frame1 (cam_coords) -> Frame2 (cam_coords) 
+    # using transformation matrix from step 2)
 
-    # step 4) repeat step 3) for Frame2 -> Frame3 
-    # step 5) apply reconstruction loss
+    # step 4) reconstruct a new 2D image using new projection matrix
+    
+
+    # step 5) repeat step 3) for Frame2 -> Frame3 
+    # step 6) apply reconstruction loss
 
     # TODO placeholder function to get the NN to run
     return torch.sum(ego_motion_vectors)

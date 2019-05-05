@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F 
 import numpy as np
 
 def image_to_cam(image, depth, instrincs):
@@ -14,9 +15,7 @@ def image_to_cam(image, depth, instrincs):
         and second dimension represents 3D points (x,y,z,r,g,b)
     """
     # use meshgrid here
-    # X_cam{x,y} = K^-1 * X_image{i,j}
-    # then to set the correct depth per pixel: X_cam{x,y}*=d*X_cam_z{x,y} 
-
+    # X_cam{x,y} = d * K^-1 * X_image{i,j}
     assert len(image.shape)==3, 'Image should CxHxW'
     assert len(depth.shape)==2, 'depth should HxW'
     assert image.shape[-1] == depth.shape[-1], 'Image W should match depth_map W'
@@ -29,7 +28,33 @@ def image_to_cam(image, depth, instrincs):
     # scale by the depth
     depth_mul = torch.flatten(depth).expand(3,4)
     cam_coords = torch.mul(depth_mul,cam_coords)
-    return cam_coords, image.reshape(image.shape[0],-1)
+    return cam_coords
+
+def cam_to_image(proj_mat, cam_coords, original_image):
+    """
+    projects a set of 3D coords to reconstruct a 2D image
+    Args:
+        proj_mat: the 3x3 projection matrix from 3D to 2D
+        cam_coords: the homogenous coords in 3D, Nx3 points
+        original_image: the original image to transform and sample from
+    Returns:
+        the projected 2D image, 2D mask of valid pixels
+    """
+    # First project the 3D cam coords to 2D grid (Nx2xWxH)
+    # next use the differentiable grid sampling function
+    # to sample from the original image
+    assert len(original_image.shape)==3, 'Image should CxHxW'
+    projected2D = torch.matmul(proj_mat, cam_coords)
+    # next normalize the 2D points
+    epsilon = torch.ones_like(projected2D[2])*1e-8
+    # coords in 2xHxW
+    coords2D = torch.div(projected2D[0:2],projected2D[2]+epsilon)
+    grid2D = coords2D.reshape(2,original_image.shape[1],original_image.shape[2])
+    grid2D = grid2D.transpose(0,1)
+    grid2D = grid2D.transpose(1,2)
+    # finally apply bilinear affine sampling
+    output = F.grid_sample(original_image.unsqueeze(0), grid2D.unsqueeze(0), mode='bilinear', padding_mode='zeros')
+    return output
 
 def euler_to_mat(vec3):
     """Converts euler angles to rotation matrix.
