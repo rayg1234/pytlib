@@ -66,7 +66,7 @@ class KITTISource(implements(Source)):
         files = [f for f in listdir(frame_dir) if isfile(join(frame_dir, f))]
         labels = KITTILabel.labels_from_file(labels_file) if labels_file is not None else []
         calibration_mat = None
-        if calib_file:
+        if os.path.isfile(calib_file):
             calibration_mat = self.__load_camera_matrix_from_calib(calib_file)
         frames = []
         for f in files:

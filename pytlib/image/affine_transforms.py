@@ -29,7 +29,8 @@ def resize_image_center_crop(ptimage,output_resolution):
 def apply_affine_to_frame(frame,affine,output_size):
     perturbed_frame = Frame(frame.image_path)
     perturbed_frame.image = affine.apply_to_image(frame.image,output_size)
-    perturbed_frame.calib_mat = affine.apply_to_matrix(frame.calib_mat)
+    if frame.calib_mat:
+        perturbed_frame.calib_mat = affine.apply_to_matrix(frame.calib_mat)
     for i,obj in enumerate(frame.objects):
         # filter out completely out of bound objects
         perturbed_obj_box = affine.apply_to_box(obj.box)
