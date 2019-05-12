@@ -20,13 +20,14 @@ def image_to_cam(image, depth, instrincs):
     assert len(depth.shape)==2, 'depth should HxW'
     assert image.shape[-1] == depth.shape[-1], 'Image W should match depth_map W'
     assert image.shape[-2] == depth.shape[-2], 'Image H should match depth_map H'
-    hh,ww = torch.meshgrid(torch.arange(0,depth.shape[0]),torch.arange(0,depth.shape[1]))
+    hh,ww = torch.meshgrid(torch.arange(0,depth.shape[0],dtype=image.dtype,device=image.device),
+                           torch.arange(0,depth.shape[1],dtype=image.dtype,device=image.device))
     flat_hh, flat_ww = torch.flatten(hh), torch.flatten(ww)
     # 3x(H*W) vectors
     points = torch.stack([flat_hh,flat_ww,torch.ones_like(flat_hh)])
     cam_coords = torch.matmul(torch.inverse(instrincs),points.float())
     # scale by the depth
-    depth_mul = torch.flatten(depth).expand(3,4)
+    depth_mul = torch.flatten(depth).expand(3,depth.numel())
     cam_coords = torch.mul(depth_mul,cam_coords)
     return cam_coords
 
@@ -35,7 +36,7 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     projects a set of 3D coords to reconstruct a 2D image
     Args:
         proj_mat: the 3x3 projection matrix from 3D to 2D
-        cam_coords: the homogenous coords in 3D, Nx3 points
+        cam_coords: the homogenous coords in 3D, 3xN points
         original_image: the original image to transform and sample from
     Returns:
         the projected 2D image, 2D mask of valid pixels
@@ -44,6 +45,7 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     # next use the differentiable grid sampling function
     # to sample from the original image
     assert len(original_image.shape)==3, 'Image should CxHxW'
+    assert len(cam_coords.shape)==2 and cam_coords.shape[0]==3, 'cam coords must be 3xN'
     projected2D = torch.matmul(proj_mat, cam_coords)
     # next normalize the 2D points
     epsilon = torch.ones_like(projected2D[2])*1e-8

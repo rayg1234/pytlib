@@ -1,28 +1,55 @@
 import torch
 import torch.nn.functional as F
-from image.cam_math import image_to_cam
+from image.cam_math import image_to_cam,cam_to_image,six_dof_vec_to_matrix
+
+#TODO: this is for initial dev only, make the entire loss function batched
+def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_frames):
+    cam_coords = []
+    num_frames = calib_frames.shape[0]
+
+    # step 1) Use inverse cam_matrix and depth to convert
+    # frame 1,2,3 into camera coordinates    
+    for i in range(0,num_frames):
+        cam_coords.append(image_to_cam(original_images[i],depth_maps[i],calib_frames[i]))
+
+    transforms = []
+    # step 2) Generate transformation matrix from ego_motion_vectors
+    for i in range(0,num_frames-1):
+        transforms.append(six_dof_vec_to_matrix(ego_motion_vectors[i]))
+
+    # step 3) Transform Frame i (cam_coords) -> Frame i+1(cam_coords) 
+    # Then construct a new 2D image using new projection matrix
+    total_loss = torch.zeros([0],dtype=original_images.dtype,device=original_images.device)
+    for i in range(0,num_frames-1):
+        # augment cam coords with row of 1's to 4D vecs
+        ones_row = torch.ones_like(cam_coords[i])[0,:].unsqueeze(0)
+        augmented_vecs = torch.cat((cam_coords[i],ones_row),dim=0)
+        cur_frame_coords = torch.matmul(transforms[i],augmented_vecs)
+        import ipdb;ipdb.set_trace()
+        warped_image = cam_to_image(calib_frames[i],cur_frame_coords[0:3,:],original_images[i])
+        # compare warped_image to next real image
+        # don't use 0 pixels for loss
+        loss = F.smooth_l1_loss(warped_image,original_images[i+1])
+        total_loss+=loss
+    return total_loss
 
 def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
     batch_size = calib_frames.shape[0]
-    assert calib_frames.shape[1]==3, 'Currently only support 3-sequence frames!'
+    num_frames = calib_frames.shape[1]
+    assert num_frames==3, 'Currently only support 3-sequence frames!'
     assert len(original_images.shape)==5, 'Image shape should be BxKxCxHxW'
     assert len(ego_motion_vectors.shape)==3, 'Ego vector shape should be Bx(K-1)x6'
     assert ego_motion_vectors.shape[2]==6, 'Ego vector shape should be Bx(K-1)x6'
     assert len(depth_maps.shape)==4, 'Depth map should BxKxHxW'
-    # step 1) Use inverse cam_matrix and depth to convert
-    # frame 1,2,3 into camera coordinates 
-    import ipdb;ipdb.set_trace()
 
-    # step 2) Generate transformation matrix from ego_motion_vectors
 
-    # step 3) Transform Frame1 (cam_coords) -> Frame2 (cam_coords) 
-    # using transformation matrix from step 2)
-
-    # step 4) reconstruct a new 2D image using new projection matrix
-    
-
-    # step 5) repeat step 3) for Frame2 -> Frame3 
-    # step 6) apply reconstruction loss
-
-    # TODO placeholder function to get the NN to run
-    return torch.sum(ego_motion_vectors)
+    # loop over all batches manually for now
+    # TODO: change all helpers here to handle batches
+    loss = torch.zeros([0],dtype=original_images.dtype,device=original_images.device)
+    for b in range(0,batch_size):
+        single_batch_loss = process_single_batch(original_images[b,:],
+                                                 ego_motion_vectors[b,:],
+                                                 depth_maps[b,:],
+                                                 calib_frames[b,:])
+        loss+=single_batch_loss
+    return loss
