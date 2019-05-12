@@ -35,8 +35,8 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     """
     projects a set of 3D coords to reconstruct a 2D image
     Args:
-        proj_mat: the 3x3 projection matrix from 3D to 2D
-        cam_coords: the homogenous coords in 3D, 3xN points
+        proj_mat: the 4x3 projection matrix from 3D to 2D
+        cam_coords: the homogenous coords in 3D, 4xN points
         original_image: the original image to transform and sample from
     Returns:
         the projected 2D image, 2D mask of valid pixels
@@ -45,7 +45,7 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     # next use the differentiable grid sampling function
     # to sample from the original image
     assert len(original_image.shape)==3, 'Image should CxHxW'
-    assert len(cam_coords.shape)==2 and cam_coords.shape[0]==3, 'cam coords must be 3xN'
+    assert len(cam_coords.shape)==2 and cam_coords.shape[0]==4, 'cam coords must be 3xN'
     projected2D = torch.matmul(proj_mat, cam_coords)
     # next normalize the 2D points
     epsilon = torch.ones_like(projected2D[2])*1e-8
@@ -55,8 +55,9 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     grid2D = grid2D.transpose(0,1)
     grid2D = grid2D.transpose(1,2)
     # finally apply bilinear affine sampling
+
     output = F.grid_sample(original_image.unsqueeze(0), grid2D.unsqueeze(0), mode='bilinear', padding_mode='zeros')
-    return output
+    return output.squeeze(0)
 
 def euler_to_mat(vec3):
     """Converts euler angles to rotation matrix.

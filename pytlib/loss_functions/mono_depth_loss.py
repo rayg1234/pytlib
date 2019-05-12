@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 from image.cam_math import image_to_cam,cam_to_image,six_dof_vec_to_matrix
+from visualization.image_visualizer import ImageVisualizer
+from image.ptimage import PTImage
 
 #TODO: this is for initial dev only, make the entire loss function batched
 def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_frames):
@@ -19,17 +21,24 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
 
     # step 3) Transform Frame i (cam_coords) -> Frame i+1(cam_coords) 
     # Then construct a new 2D image using new projection matrix
-    total_loss = torch.zeros([0],dtype=original_images.dtype,device=original_images.device)
+    total_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     for i in range(0,num_frames-1):
         # augment cam coords with row of 1's to 4D vecs
         ones_row = torch.ones_like(cam_coords[i])[0,:].unsqueeze(0)
         augmented_vecs = torch.cat((cam_coords[i],ones_row),dim=0)
         cur_frame_coords = torch.matmul(transforms[i],augmented_vecs)
-        import ipdb;ipdb.set_trace()
-        warped_image = cam_to_image(calib_frames[i],cur_frame_coords[0:3,:],original_images[i])
+        intrin_filler_right = torch.zeros(3,dtype=original_images.dtype,device=original_images.device).unsqueeze(1)
+        intrin_filler_bottom = torch.zeros(4,dtype=original_images.dtype,device=original_images.device).unsqueeze(0)
+        intrin_filler_bottom[0,3] = 1
+        hom_calib = torch.cat((calib_frames[i],intrin_filler_right),dim=1)
+        hom_calib = torch.cat((hom_calib,intrin_filler_bottom),dim=0)
+        warped_image = cam_to_image(hom_calib,cur_frame_coords,original_images[i])
         # compare warped_image to next real image
         # don't use 0 pixels for loss
+        ptimage = PTImage.from_cwh_torch(warped_image)
+        ImageVisualizer().set_image(ptimage,'warped_image {}'.format(i))
         loss = F.smooth_l1_loss(warped_image,original_images[i+1])
+
         total_loss+=loss
     return total_loss
 
@@ -45,7 +54,7 @@ def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
 
     # loop over all batches manually for now
     # TODO: change all helpers here to handle batches
-    loss = torch.zeros([0],dtype=original_images.dtype,device=original_images.device)
+    loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     for b in range(0,batch_size):
         single_batch_loss = process_single_batch(original_images[b,:],
                                                  ego_motion_vectors[b,:],

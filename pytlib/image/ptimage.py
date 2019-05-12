@@ -133,7 +133,7 @@ class PTImage:
 
     @classmethod
     def from_cwh_torch(cls,torch_img):
-        return cls(data=torch_img.cpu().numpy(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
+        return cls(data=torch_img.detach().cpu().numpy(),ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
     @classmethod
     def from_2d_numpy(cls,map2d):

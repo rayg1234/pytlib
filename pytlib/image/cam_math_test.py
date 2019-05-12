@@ -85,12 +85,12 @@ class TestCamMath(unittest.TestCase):
                                    [1,1,1,1]])             
         output_image = cam_to_image(proj_mat, cam_coords, image)
         # TODO add output here
-        expected_output = torch.Tensor([[[[1.5000, 1.5000],
+        expected_output = torch.Tensor([[[1.5000, 1.5000],
                                           [1.5000, 1.5000]],
                                          [[2.5000, 2.5000],
                                           [2.5000, 2.5000]],
                                          [[3.5000, 3.5000],
-                                          [3.5000, 3.5000]]]])
+                                          [3.5000, 3.5000]]])
         self.assertTrue(near_tensor_equality(output_image,expected_output))
 
 
