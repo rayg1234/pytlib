@@ -147,7 +147,7 @@ class PTImage:
     @classmethod
     def from_2d_wh_torch(cls,img2d):
         # assumes img2d has 2 dimensions
-        map2d = img2d.cpu().numpy().squeeze()
+        map2d = img2d.detach().cpu().numpy().squeeze()
         assert len(map2d.shape)==2, 'img2d must have only 2 dimenions, found {}'.format(map2d.shape)
         map3d = np.expand_dims(map2d, axis=0)
         map3d = np.repeat(map3d,3,axis=0)

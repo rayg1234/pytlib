@@ -69,7 +69,8 @@ class KITTISource(implements(Source)):
         if os.path.isfile(calib_file):
             calibration_mat = self.__load_camera_matrix_from_calib(calib_file)
         frames = []
-        for f in files:
+        sorted_files = sorted(files, key=lambda x: int(splitext(basename(x))[0]))
+        for f in sorted_files:
             file_index = int(splitext(basename(f))[0])
             objects = []
             for l in labels:

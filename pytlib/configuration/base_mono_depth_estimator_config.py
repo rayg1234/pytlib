@@ -10,10 +10,11 @@ import random
 
 def get_loader():
     source = KITTISource('/home/ray/Data/KITTI/tracking/training',max_frames=10)
-    return SequenceVideoLoader(source,crop_size=[1024,320])
+    return SequenceVideoLoader(source,crop_size=[512,160])
+    # return SequenceVideoLoader(source,crop_size=[1024,320])
 
-loader = (get_loader,dict())
-# loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
+# loader = (get_loader,dict())
+loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=4))
 model = (BaseMonoDepthEstimator,dict())
 optimizer = (optim.Adam,dict(lr=1e-4))
 loss = mono_depth_loss # placeholder

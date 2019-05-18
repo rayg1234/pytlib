@@ -17,6 +17,7 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
     transforms = []
     # step 2) Generate transformation matrix from ego_motion_vectors
     for i in range(0,num_frames-1):
+        # fake_ego_motion_vec = torch.zeros_like(ego_motion_vectors[i])
         transforms.append(six_dof_vec_to_matrix(ego_motion_vectors[i]))
 
     # step 3) Transform Frame i (cam_coords) -> Frame i+1(cam_coords) 
@@ -33,16 +34,19 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
         intrin_filler_bottom[0,3] = 1
         hom_calib = torch.cat((calib_frames[i],intrin_filler_right),dim=1)
         hom_calib = torch.cat((hom_calib,intrin_filler_bottom),dim=0)
-        # this function should also return a mask for the valid pixels
-        warped_image = cam_to_image(hom_calib,cur_frame_coords,original_images[i])
+        warped_image, mask = cam_to_image(hom_calib,cur_frame_coords,original_images[i])
         warped_images.append(warped_image)
         # compare warped_image to next real image
         # don't use 0 pixels for loss
         ptimage = PTImage.from_cwh_torch(warped_image)
+        ptmask = PTImage.from_2d_wh_torch(mask)
+        orig_image = PTImage.from_cwh_torch(original_images[i])
+        ImageVisualizer().set_image(orig_image,'original_images {}'.format(i))
         ImageVisualizer().set_image(ptimage,'warped_image {}'.format(i))
-        loss = F.smooth_l1_loss(warped_image,original_images[i+1])
-
-        total_loss+=loss
+        ImageVisualizer().set_image(ptmask,'mask {}'.format(i))
+        loss = F.smooth_l1_loss(warped_image,original_images[i+1],reduction='none')
+        loss = loss * mask
+        total_loss+=loss.mean()
     return total_loss, warped_images
 
 def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):

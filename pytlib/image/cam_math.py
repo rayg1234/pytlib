@@ -58,15 +58,18 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     # first we need to normalize these coords to between [-1,1] in
     # the input spatial dimensions, any coords outside [-1,1] are handled
     # by padding.
-    coords2D[0,:] = torch.div(coords2D[0,:],original_image.shape[2]-1)
-    coords2D[1,:] = torch.div(coords2D[1,:],original_image.shape[1]-1)
-    coords2D = coords2D*2 - 1
+    scaling = torch.ones_like(coords2D)
+    scaling[0,:] = original_image.shape[2]-1
+    scaling[1,:] = original_image.shape[1]-1
+    coords2D = (coords2D/scaling)*2 - 1
     grid2D = coords2D.reshape(2,original_image.shape[1],original_image.shape[2])
     grid2D = grid2D.transpose(0,1)
     grid2D = grid2D.transpose(1,2)
     # finally apply bilinear affine sampling
+    mask = torch.ones_like(original_image)
+    output_mask = F.grid_sample(mask.unsqueeze(0), grid2D.unsqueeze(0), mode='nearest', padding_mode='zeros')
     output = F.grid_sample(original_image.unsqueeze(0), grid2D.unsqueeze(0), mode='bilinear', padding_mode='zeros')
-    return output.squeeze(0)
+    return output.squeeze(0), output_mask.squeeze(0)[0,:,:]
 
 def euler_to_mat(vec3):
     """Converts euler angles to rotation matrix.

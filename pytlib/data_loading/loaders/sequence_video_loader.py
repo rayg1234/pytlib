@@ -36,19 +36,19 @@ class SequenceVideoLoader(implements(Loader)):
     def next(self):
         # randomly pick 3 frames in a row
         num_frames_in_src = len(self.source)
-        print("Number of frames in src {}".format(num_frames_in_src))
+        # print("Number of frames in src {}".format(num_frames_in_src))
 
         # 1) choose the first frame from 0 -> N-2
         frames = []
-        first_frame = random.randint(0,num_frames_in_src - 2)
+        first_frame = random.randint(0,num_frames_in_src - self.num_frames)
         for i in range(0,self.num_frames):
             frames.append(self.source[first_frame+i])
 
         # 2) generate a random perturbation and perturb all the frames
-        perturb_params = {'translation_range':[-0.1,0.1],
-                          'scaling_range':[0.9,1.1]}
+        # note, need to apply same perts to all frames
+        perturb_params = {'translation_range':[0.0,0.0],
+                          'scaling_range':[1.0,1.0]}
         perturbed_frames = []
-        # TODO: also apply perturbation to instrincs
         for f in frames:
             perturbed_frame = RandomPerturber.perturb_frame(f,perturb_params)
             crop_affine = resize_image_center_crop(perturbed_frame.image,self.crop_size)

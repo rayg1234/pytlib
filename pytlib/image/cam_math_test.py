@@ -83,7 +83,7 @@ class TestCamMath(unittest.TestCase):
                                    [0,0,1,1],
                                    [1,1,1,1],
                                    [1,1,1,1]])            
-        output_image = cam_to_image(proj_mat, cam_coords, image)
+        output_image,_ = cam_to_image(proj_mat, cam_coords, image)
         self.assertTrue(near_tensor_equality(output_image,image))
 
     def test_cam_to_image_non_square(self):
@@ -101,8 +101,35 @@ class TestCamMath(unittest.TestCase):
                                    [0,0,0,1,1,1],
                                    [1,1,1,1,1,1],
                                    [1,1,1,1,1,1]])             
-        output_image = cam_to_image(proj_mat, cam_coords, image)
+        output_image,_ = cam_to_image(proj_mat, cam_coords, image)
         self.assertTrue(near_tensor_equality(output_image,image))
+
+    def test_cam_to_image_mask(self):
+        image = torch.Tensor([[[0,0,0],
+                               [0,5,0]],
+                              [[1,6,1],
+                               [1,1,1]],
+                              [[2,7,2],
+                               [2,2,2]]])   
+        proj_mat = torch.Tensor([[1,0,0,0],
+                                 [0,1,0,0],
+                                 [0,0,1,0],
+                                 [0,0,0,1]])                                         
+        cam_coords = torch.Tensor([[0,1,2,0,1,2],
+                                   [1,1,1,2,2,2],
+                                   [1,1,1,1,1,1],
+                                   [1,1,1,1,1,1]])             
+        output_image,mask = cam_to_image(proj_mat, cam_coords, image)
+        expected_mask = torch.Tensor([[1., 1., 1.],
+                                      [0., 0., 0.]])
+        expected_out = torch.Tensor([[[0., 5., 0.],
+                                      [0., 0., 0.]],
+                                     [[1., 1., 1.],
+                                      [0., 0., 0.]],
+                                     [[2., 2., 2.],
+                                      [0., 0., 0.]]])
+        self.assertTrue(near_tensor_equality(output_image,image))
+
 
 if __name__ == '__main__':
     unittest.main()
