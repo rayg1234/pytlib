@@ -22,6 +22,7 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
     # step 3) Transform Frame i (cam_coords) -> Frame i+1(cam_coords) 
     # Then construct a new 2D image using new projection matrix
     total_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
+    warped_images = []
     for i in range(0,num_frames-1):
         # augment cam coords with row of 1's to 4D vecs
         ones_row = torch.ones_like(cam_coords[i])[0,:].unsqueeze(0)
@@ -32,7 +33,9 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
         intrin_filler_bottom[0,3] = 1
         hom_calib = torch.cat((calib_frames[i],intrin_filler_right),dim=1)
         hom_calib = torch.cat((hom_calib,intrin_filler_bottom),dim=0)
+        # this function should also return a mask for the valid pixels
         warped_image = cam_to_image(hom_calib,cur_frame_coords,original_images[i])
+        warped_images.append(warped_image)
         # compare warped_image to next real image
         # don't use 0 pixels for loss
         ptimage = PTImage.from_cwh_torch(warped_image)
@@ -40,7 +43,7 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
         loss = F.smooth_l1_loss(warped_image,original_images[i+1])
 
         total_loss+=loss
-    return total_loss
+    return total_loss, warped_images
 
 def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
     batch_size = calib_frames.shape[0]
@@ -56,9 +59,9 @@ def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
     # TODO: change all helpers here to handle batches
     loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     for b in range(0,batch_size):
-        single_batch_loss = process_single_batch(original_images[b,:],
-                                                 ego_motion_vectors[b,:],
-                                                 depth_maps[b,:],
-                                                 calib_frames[b,:])
+        single_batch_loss, _ = process_single_batch(original_images[b,:],
+                                                    ego_motion_vectors[b,:],
+                                                    depth_maps[b,:],
+                                                    calib_frames[b,:])
         loss+=single_batch_loss
     return loss

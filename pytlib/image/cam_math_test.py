@@ -17,8 +17,8 @@ class TestCamMath(unittest.TestCase):
                                [0,0,1]])
 
         output_coords = image_to_cam(image,depth,intrin)
-        expected_output_coords = torch.Tensor([[0., 0., 5., 5.],
-                                               [0., 1., 0., 5.],
+        expected_output_coords = torch.Tensor([[0., 1., 0., 5.],
+                                               [0., 0., 5., 5.],
                                                [1., 1., 5., 5.]])
         self.assertTrue(near_tensor_equality(expected_output_coords,output_coords))
 
@@ -75,24 +75,34 @@ class TestCamMath(unittest.TestCase):
         image = torch.Tensor([[[0,0],[2,2]],
                               [[1,1],[3,3]],
                               [[2,2],[4,4]]])   
-        proj_mat = torch.Tensor([[1,0,0,1],
-                                 [0,-1,0,5],
-                                 [0,0,-1,10],
+        proj_mat = torch.Tensor([[1,0,0,0],
+                                 [0,1,0,0],
+                                 [0,0,1,0],
                                  [0,0,0,1]])
-        cam_coords = torch.Tensor([[0,0,0,0],
+        cam_coords = torch.Tensor([[0,1,0,1],
+                                   [0,0,1,1],
                                    [1,1,1,1],
-                                   [2,2,2,2],
-                                   [1,1,1,1]])             
+                                   [1,1,1,1]])            
         output_image = cam_to_image(proj_mat, cam_coords, image)
-        # TODO add output here
-        expected_output = torch.Tensor([[[1.5000, 1.5000],
-                                          [1.5000, 1.5000]],
-                                         [[2.5000, 2.5000],
-                                          [2.5000, 2.5000]],
-                                         [[3.5000, 3.5000],
-                                          [3.5000, 3.5000]]])
-        self.assertTrue(near_tensor_equality(output_image,expected_output))
+        self.assertTrue(near_tensor_equality(output_image,image))
 
+    def test_cam_to_image_non_square(self):
+        image = torch.Tensor([[[0,0,0],
+                               [0,5,0]],
+                              [[1,6,1],
+                               [1,1,1]],
+                              [[2,7,2],
+                               [2,2,2]]])   
+        proj_mat = torch.Tensor([[1,0,0,0],
+                                 [0,1,0,0],
+                                 [0,0,1,0],
+                                 [0,0,0,1]])                                         
+        cam_coords = torch.Tensor([[0,1,2,0,1,2],
+                                   [0,0,0,1,1,1],
+                                   [1,1,1,1,1,1],
+                                   [1,1,1,1,1,1]])             
+        output_image = cam_to_image(proj_mat, cam_coords, image)
+        self.assertTrue(near_tensor_equality(output_image,image))
 
 if __name__ == '__main__':
     unittest.main()

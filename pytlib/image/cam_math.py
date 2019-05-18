@@ -20,9 +20,9 @@ def image_to_cam(image, depth, instrincs):
     assert len(depth.shape)==2, 'depth should HxW'
     assert image.shape[-1] == depth.shape[-1], 'Image W should match depth_map W'
     assert image.shape[-2] == depth.shape[-2], 'Image H should match depth_map H'
-    hh,ww = torch.meshgrid(torch.arange(0,depth.shape[0],dtype=image.dtype,device=image.device),
+    ww,hh = torch.meshgrid(torch.arange(0,depth.shape[0],dtype=image.dtype,device=image.device),
                            torch.arange(0,depth.shape[1],dtype=image.dtype,device=image.device))
-    flat_hh, flat_ww = torch.flatten(hh), torch.flatten(ww)
+    flat_ww, flat_hh = torch.flatten(ww), torch.flatten(hh)
     # 3x(H*W) vectors
     points = torch.stack([flat_hh,flat_ww,torch.ones_like(flat_hh)])
     cam_coords = torch.matmul(torch.inverse(instrincs),points.float())
@@ -37,7 +37,7 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     Args:
         proj_mat: the 4x3 projection matrix from 3D to 2D
         cam_coords: the homogenous coords in 3D, 4xN points
-        original_image: the original image to transform and sample from
+        original_image: the original image to transform and sample from, in CHW
     Returns:
         the projected 2D image, 2D mask of valid pixels
     """
@@ -46,16 +46,25 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     # to sample from the original image
     assert len(original_image.shape)==3, 'Image should CxHxW'
     assert len(cam_coords.shape)==2 and cam_coords.shape[0]==4, 'cam coords must be 3xN'
+    num_cam_points = cam_coords.shape[1]
+    num_pixels = original_image.shape[1]*original_image.shape[2]
+    assert num_cam_points==num_pixels, \
+        'number of cam points {} must match original image points {}'.format(num_cam_points,num_pixels)
     projected2D = torch.matmul(proj_mat, cam_coords)
     # next normalize the 2D points
     epsilon = torch.ones_like(projected2D[2])*1e-8
-    # coords in 2xHxW
+    # coords from 2x(HxW) -> 2xHxW -> 2xHxW
     coords2D = torch.div(projected2D[0:2],projected2D[2]+epsilon)
+    # first we need to normalize these coords to between [-1,1] in
+    # the input spatial dimensions, any coords outside [-1,1] are handled
+    # by padding.
+    coords2D[0,:] = torch.div(coords2D[0,:],original_image.shape[2]-1)
+    coords2D[1,:] = torch.div(coords2D[1,:],original_image.shape[1]-1)
+    coords2D = coords2D*2 - 1
     grid2D = coords2D.reshape(2,original_image.shape[1],original_image.shape[2])
     grid2D = grid2D.transpose(0,1)
     grid2D = grid2D.transpose(1,2)
     # finally apply bilinear affine sampling
-
     output = F.grid_sample(original_image.unsqueeze(0), grid2D.unsqueeze(0), mode='bilinear', padding_mode='zeros')
     return output.squeeze(0)
 
