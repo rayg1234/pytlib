@@ -7,6 +7,7 @@ from image.ptimage import PTImage,Ordering,ValueClass
 import numpy as np
 import random
 import torch
+from visualization.image_visualizer import ImageVisualizer
 
 class SequenceVideoSample(implements(Sample)):
     def __init__(self,data,target):
@@ -16,7 +17,12 @@ class SequenceVideoSample(implements(Sample)):
 
     def visualize(self,parameters={}):
         # visualizes a sequence
-        pass
+        for i in range(self.data[0].shape[0]):
+            img = PTImage.from_cwh_torch(self.data[0][i])
+            ImageVisualizer().set_image(img,parameters.get('title','') + ' : Image {}'.format(i))
+        for i in range(self.output[2].shape[0]):
+            depth_map = PTImage.from_2d_wh_torch(self.output[2][i])
+            ImageVisualizer().set_image(depth_map,parameters.get('title','') + ' : DepthMap {}'.format(i))
 
     def set_output(self,output):
         self.output = output

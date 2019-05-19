@@ -9,12 +9,12 @@ from loss_functions.mono_depth_loss import mono_depth_loss
 import random
 
 def get_loader():
-    source = KITTISource('/home/ray/Data/KITTI/tracking/training',max_frames=10)
+    source = KITTISource('/home/ray/Data/KITTI/tracking/training',max_frames=10000)
     return SequenceVideoLoader(source,crop_size=[512,160])
     # return SequenceVideoLoader(source,crop_size=[1024,320])
 
 # loader = (get_loader,dict())
-loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=4))
+loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
 model = (BaseMonoDepthEstimator,dict())
 optimizer = (optim.Adam,dict(lr=1e-4))
 loss = mono_depth_loss # placeholder

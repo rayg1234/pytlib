@@ -41,9 +41,9 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
         ptimage = PTImage.from_cwh_torch(warped_image)
         ptmask = PTImage.from_2d_wh_torch(mask)
         orig_image = PTImage.from_cwh_torch(original_images[i])
-        ImageVisualizer().set_image(orig_image,'original_images {}'.format(i))
-        ImageVisualizer().set_image(ptimage,'warped_image {}'.format(i))
-        ImageVisualizer().set_image(ptmask,'mask {}'.format(i))
+        # ImageVisualizer().set_image(orig_image,'original_images {}'.format(i))
+        # ImageVisualizer().set_image(ptimage,'warped_image {}'.format(i))
+        # ImageVisualizer().set_image(ptmask,'mask {}'.format(i))
         loss = F.smooth_l1_loss(warped_image,original_images[i+1],reduction='none')
         loss = loss * mask
         total_loss+=loss.mean()
