@@ -35,6 +35,8 @@ class BaseMonoDepthEstimator(nn.Module):
         self.decoder.append(32,3,2)
         self.decoder.append(16,3,2)
         self.decoder.append(1,3,2)
+        self.final_conv_layer0 = nn.Conv2d(1, 1, 1, stride=1, padding=0)
+        self.final_conv_layer1 = nn.Conv2d(1, 1, 1, stride=1, padding=0)
 
         # 2) an ego motion network - use the encoder from (1)
         # and append extra cnns
@@ -60,7 +62,10 @@ class BaseMonoDepthEstimator(nn.Module):
         for frame in unstacked_frames:
             features = self.encoder.forward(frame)
             # pass through, replace with actual decoders
-            depth_map = self.decoder.forward(features).squeeze(1)
+            depth_map = self.decoder.forward(features)
+            depth_map = self.final_conv_layer0(depth_map)
+            depth_map = self.final_conv_layer1(depth_map)
+            depth_map = F.sigmoid(depth_map.squeeze(1))
             encoded_features.append(features)
             depth_maps.append(depth_map)
 

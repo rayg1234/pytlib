@@ -10,16 +10,16 @@ class TestCamMath(unittest.TestCase):
         image = torch.Tensor([[[0,0],[2,2]],
                               [[1,1],[3,3]],
                               [[2,2],[4,4]]])
-        depth = torch.Tensor([[1,1],
+        disp = torch.Tensor([[1,1],
                               [5,5]])
         intrin = torch.Tensor([[1,0,0],
                                [0,1,0],
                                [0,0,1]])
 
-        output_coords = image_to_cam(image,depth,intrin)
-        expected_output_coords = torch.Tensor([[0., 1., 0., 5.],
-                                               [0., 0., 5., 5.],
-                                               [1., 1., 5., 5.]])
+        output_coords = image_to_cam(image,disp,intrin)
+        expected_output_coords = torch.Tensor([[0., 1., 0., 0.2],
+                                               [0., 0., 0.2, 0.2],
+                                               [1., 1., 0.2, 0.2]])
         self.assertTrue(near_tensor_equality(expected_output_coords,output_coords))
 
     def test_euler_to_mat_base(self):
@@ -128,7 +128,8 @@ class TestCamMath(unittest.TestCase):
                                       [0., 0., 0.]],
                                      [[2., 2., 2.],
                                       [0., 0., 0.]]])
-        self.assertTrue(near_tensor_equality(output_image,image))
+        self.assertTrue(near_tensor_equality(output_image,expected_out))
+        self.assertTrue(near_tensor_equality(mask,expected_mask))
 
 
 if __name__ == '__main__':

@@ -2,11 +2,11 @@ import torch
 import torch.nn.functional as F 
 import numpy as np
 
-def image_to_cam(image, depth, instrincs):
+def image_to_cam(image, disp, instrincs):
     """
     Args:
         image: CxHxW image
-        depth: HxW depth map
+        disp: HxW disparity map
         instrincs: 3x3 instrinc matrix
     Returns:
         a Nx3 tensor that represents the pixels in cam coordinates
@@ -17,16 +17,18 @@ def image_to_cam(image, depth, instrincs):
     # use meshgrid here
     # X_cam{x,y} = d * K^-1 * X_image{i,j}
     assert len(image.shape)==3, 'Image should CxHxW'
-    assert len(depth.shape)==2, 'depth should HxW'
-    assert image.shape[-1] == depth.shape[-1], 'Image W should match depth_map W'
-    assert image.shape[-2] == depth.shape[-2], 'Image H should match depth_map H'
-    ww,hh = torch.meshgrid(torch.arange(0,depth.shape[0],dtype=image.dtype,device=image.device),
-                           torch.arange(0,depth.shape[1],dtype=image.dtype,device=image.device))
+    assert len(disp.shape)==2, 'disp should HxW'
+    assert image.shape[-1] == disp.shape[-1], 'Image W should match depth_map W'
+    assert image.shape[-2] == disp.shape[-2], 'Image H should match depth_map H'
+    ww,hh = torch.meshgrid(torch.arange(0,disp.shape[0],dtype=image.dtype,device=image.device),
+                           torch.arange(0,disp.shape[1],dtype=image.dtype,device=image.device))
     flat_ww, flat_hh = torch.flatten(ww), torch.flatten(hh)
     # 3x(H*W) vectors
     points = torch.stack([flat_hh,flat_ww,torch.ones_like(flat_hh)])
     cam_coords = torch.matmul(torch.inverse(instrincs),points.float())
-    # scale by the depth
+    # scale by the depth, here disp is between 0-1 (since it was sigmoided)
+    # depth = disp
+    depth = 1/(disp+1e-8) 
     depth_mul = torch.flatten(depth).expand(3,depth.numel())
     cam_coords = torch.mul(depth_mul,cam_coords)
     return cam_coords
@@ -55,6 +57,7 @@ def cam_to_image(proj_mat, cam_coords, original_image):
     epsilon = torch.ones_like(projected2D[2])*1e-8
     # coords from 2x(HxW) -> 2xHxW -> 2xHxW
     coords2D = torch.div(projected2D[0:2],projected2D[2]+epsilon)
+
     # first we need to normalize these coords to between [-1,1] in
     # the input spatial dimensions, any coords outside [-1,1] are handled
     # by padding.

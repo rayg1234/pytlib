@@ -31,6 +31,10 @@ class ValueClass:
     FLOAT01 = {'dtype':'float','range':[0,1]}
     BYTE0255 = {'dtype':'uint8','range':[0,255]}
 
+    @staticmethod
+    def custom_value_class(d,r):
+        return {'dtype':d,'range':r}
+
 class PTImage:
     def __init__(self,data=None,pil_image_path='',ordering=Ordering.HWC,vc=ValueClass.BYTE0255,persist=True):
         self.image_path = pil_image_path
@@ -76,7 +80,7 @@ class PTImage:
         else:
             cur_ax = axes
         # cur_ax.imshow(display_img.get_data())
-        cur_ax.imshow(display_img.get_data().squeeze(), vmin=0, vmax=255)
+        cur_ax.imshow(display_img.get_data().squeeze(),vmin=0,vmax=255)
         if display:
             plt.show(block=True)
             plt.close()
@@ -145,11 +149,14 @@ class PTImage:
         return cls(data=map3d,ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
 
     @classmethod
-    def from_2d_wh_torch(cls,img2d):
+    def from_2d_wh_torch(cls,img2d,log_scale=False):
         # assumes img2d has 2 dimensions
         map2d = img2d.detach().cpu().numpy().squeeze()
         assert len(map2d.shape)==2, 'img2d must have only 2 dimenions, found {}'.format(map2d.shape)
         map3d = np.expand_dims(map2d, axis=0)
         map3d = np.repeat(map3d,3,axis=0)
-        # import ipdb;ipdb.set_trace()
-        return cls(data=map3d,ordering=Ordering.CHW,vc=ValueClass.FLOAT01)
+        if log_scale:
+            mmin,mmax = np.min(map3d),np.max(map3d)
+            map3d = np.log(map3d-mmin+1)
+        vc=ValueClass.custom_value_class('float',[np.min(map3d),np.max(map3d)])
+        return cls(data=map3d,ordering=Ordering.CHW,vc=vc)

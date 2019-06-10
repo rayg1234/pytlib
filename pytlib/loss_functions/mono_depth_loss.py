@@ -3,17 +3,23 @@ import torch.nn.functional as F
 from image.cam_math import image_to_cam,cam_to_image,six_dof_vec_to_matrix
 from visualization.image_visualizer import ImageVisualizer
 from image.ptimage import PTImage
+from utils.logger import Logger
+from loss_functions.ssim_loss import ssim
+import numpy as np
 
 #TODO: this is for initial dev only, make the entire loss function batched
-def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_frames):
+def process_single_batch(original_images,ego_motion_vectors,disp_maps,calib_frames,batch_number=0,mask_loss_factor=0.1):
     cam_coords = []
     num_frames = calib_frames.shape[0]
-
+    Logger().set('loss_component.disp_maps_mean',disp_maps.data.mean().item())
+    Logger().set('loss_component.disp_maps_min',disp_maps.data.min().item())
+    Logger().set('loss_component.disp_maps_max',disp_maps.data.max().item())
+    Logger().set('loss_component.ego_motion_vectors[0]',
+        np.array2string(ego_motion_vectors[0].detach().cpu().numpy()))
     # step 1) Use inverse cam_matrix and depth to convert
     # frame 1,2,3 into camera coordinates    
     for i in range(0,num_frames):
-        cam_coords.append(image_to_cam(original_images[i],depth_maps[i],calib_frames[i]))
-
+        cam_coords.append(image_to_cam(original_images[i],disp_maps[i],calib_frames[i]))
     transforms = []
     # step 2) Generate transformation matrix from ego_motion_vectors
     for i in range(0,num_frames-1):
@@ -22,7 +28,8 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
 
     # step 3) Transform Frame i (cam_coords) -> Frame i+1(cam_coords) 
     # Then construct a new 2D image using new projection matrix
-    total_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
+    total_re_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
+    total_ssim_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     warped_images = []
     for i in range(0,num_frames-1):
         # augment cam coords with row of 1's to 4D vecs
@@ -42,21 +49,30 @@ def process_single_batch(original_images,ego_motion_vectors,depth_maps,calib_fra
         ptmask = PTImage.from_2d_wh_torch(mask)
         orig_image = PTImage.from_cwh_torch(original_images[i])
         # ImageVisualizer().set_image(orig_image,'original_images {}'.format(i))
-        # ImageVisualizer().set_image(ptimage,'warped_image {}'.format(i))
-        # ImageVisualizer().set_image(ptmask,'mask {}'.format(i))
+        ImageVisualizer().set_image(ptimage,'warped_image {}-{}'.format(batch_number,i))
+        # ImageVisualizer().set_image(ptmask,'mask {}-{}'.format(batch_number,i))
         loss = F.smooth_l1_loss(warped_image,original_images[i+1],reduction='none')
         loss = loss * mask
-        total_loss+=loss.mean()
-    return total_loss, warped_images
+        # add loss to prevent mask from going to 0
+        mask_loss = mask_loss_factor*F.smooth_l1_loss(mask, torch.ones_like(mask))
+        Logger().set('loss_component.mask_mean.{}-{}'.format(batch_number,i),mask.mean().data.item())    
+        total_re_loss += (loss.mean() + mask_loss)
+        # ssim also needs a mask
+        total_ssim_loss+=(1-ssim(warped_image.unsqueeze(0),original_images[i+1].unsqueeze(0)))/2
 
-def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
+    Logger().set('loss_component.mask_loss.{}'.format(batch_number),mask_loss.data.item())    
+    Logger().set('loss_component.batch_re_loss.{}'.format(batch_number),total_re_loss.data.item())
+    Logger().set('loss_component.batch_ssim_loss.{}'.format(batch_number),total_ssim_loss.data.item())
+    return total_re_loss+total_ssim_loss, warped_images
+
+def mono_depth_loss(original_images,ego_motion_vectors,disp_maps,calib_frames):
     batch_size = calib_frames.shape[0]
     num_frames = calib_frames.shape[1]
     assert num_frames==3, 'Currently only support 3-sequence frames!'
     assert len(original_images.shape)==5, 'Image shape should be BxKxCxHxW'
     assert len(ego_motion_vectors.shape)==3, 'Ego vector shape should be Bx(K-1)x6'
     assert ego_motion_vectors.shape[2]==6, 'Ego vector shape should be Bx(K-1)x6'
-    assert len(depth_maps.shape)==4, 'Depth map should BxKxHxW'
+    assert len(disp_maps.shape)==4, 'Depth map should BxKxHxW'
 
 
     # loop over all batches manually for now
@@ -65,7 +81,8 @@ def mono_depth_loss(original_images,ego_motion_vectors,depth_maps,calib_frames):
     for b in range(0,batch_size):
         single_batch_loss, _ = process_single_batch(original_images[b,:],
                                                     ego_motion_vectors[b,:],
-                                                    depth_maps[b,:],
-                                                    calib_frames[b,:])
+                                                    disp_maps[b,:],
+                                                    calib_frames[b,:],
+                                                    b)
         loss+=single_batch_loss
     return loss
