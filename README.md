@@ -52,6 +52,7 @@ The following shows some example outputs of the encoding detector on trained fea
 Most SOTA object detectors regress on anchor boxes to make the problem easier to learn. But anchor boxes introduce other complexities such as when anchors fail to match against objects, prediction is not even attempted. Furthermore the performance of the detector is strongly coupled to the choice anchors, an undesirable hyperparameter that forces overfitting some prior dataset. Here is a simple implementation of a 1-stage anchorless detector where a detector head just regresses directly to some fixed number of bounding boxes, trained on KITTI dataset. Checkout the [detector implementation](pytlib/networks/multi_object_detector.py) and the [loss functions](pytlib/loss_functions/multi_object_detector_loss.py).
 
 ![anchorless detector output](site_content/multi_object_det_output.png)
+![anchorless detector output](site_content/multiobject_detector_output2.png)
 
 
 ## [Mono Depth Estimator](pytlib/configuration/base_mono_depth_estimator_config.py)
