@@ -71,6 +71,9 @@ This will train (on cpu*) a basic CNN autoencoder on the mnist dataset and produ
 
 Try adjusting some parameters in the configuration. For example you can switch to training on the gpu by simply setting `cuda=true` inside the `TrainConfiguration` initializer line. 
 
+To run all tests to verify code...
+`bash run_tests.sh`
+
 More helpful instructions to come ...
 
 *After upgrading to pytorch 1.0, CPU training seems to be busted. Will only run right now if you have a GPU
