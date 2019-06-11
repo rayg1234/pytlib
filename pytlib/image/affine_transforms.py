@@ -29,10 +29,13 @@ def resize_image_center_crop(ptimage,output_resolution):
 def apply_affine_to_frame(frame,affine,output_size):
     perturbed_frame = Frame(frame.image_path)
     perturbed_frame.image = affine.apply_to_image(frame.image,output_size)
+    if frame.calib_mat is not None:
+        perturbed_frame.calib_mat = affine.apply_to_matrix(frame.calib_mat)
     for i,obj in enumerate(frame.objects):
         # filter out completely out of bound objects
         perturbed_obj_box = affine.apply_to_box(obj.box)
         perturbed_polygons = affine.apply_to_polygons(obj.polygons)
+
         if Box.intersection(perturbed_obj_box,perturbed_frame.image.get_bounding_box()) is not None:
             obj_copy = copy.deepcopy(obj)
             obj_copy.box = perturbed_obj_box
