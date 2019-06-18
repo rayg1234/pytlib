@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch.nn import ModuleList
 from torch.autograd import Variable
 from networks.resnetcnn import ResNetCNN
+from networks.unet import UNet
 from networks.conv_stack import TransposedConvolutionStack, ConvolutionStack
 import numpy as np
 
@@ -17,30 +18,15 @@ class BaseMonoDepthEstimator(nn.Module):
         self.ego_vector_dim = 6
         self.nframes = nframes
         self.ego_prediction_size = self.ego_vector_dim * (self.nframes -1)
-        # TODO refactor this part, don't hardcode these
-        self.out_channel_size = 256
 
         # Depth network - encoder-decoder combo
-        # initially lets use a vanilla ConvStack + TransposedConvStack combo
-        # TODO replace this with a resnet-like Conv+TConv network with skip connections
-        self.encoder = ConvolutionStack(self.inchans)
-        self.encoder.append(16,3,2)
-        self.encoder.append(32,3,2)
-        self.encoder.append(64,3,2)
-        self.encoder.append(128,3,2)
-        self.encoder.append(self.out_channel_size,3,2)
-        self.decoder = TransposedConvolutionStack(self.out_channel_size,final_relu=False,padding=1)
-        self.decoder.append(128,3,2)
-        self.decoder.append(64,3,2)
-        self.decoder.append(32,3,2)
-        self.decoder.append(16,3,2)
-        self.decoder.append(1,3,2)
+        self.unet = UNet(3,1)
         self.final_conv_layer0 = nn.Conv2d(1, 1, 1, stride=1, padding=0)
         self.final_conv_layer1 = nn.Conv2d(1, 1, 1, stride=1, padding=0)
 
         # 2) an ego motion network - use the encoder from (1)
         # and append extra cnns
-        self.ego_motion_cnn = ConvolutionStack(self.out_channel_size*nframes)
+        self.ego_motion_cnn = ConvolutionStack(self.unet.feature_channels()*nframes)
         self.ego_motion_cnn.append(128,3,2)
         self.ego_motion_cnn.append(64,3,2)
         self.ego_motion_cnn.append(self.ego_prediction_size,1,1)
@@ -60,13 +46,11 @@ class BaseMonoDepthEstimator(nn.Module):
 
         # first predict depth in all frames
         for frame in unstacked_frames:
-            features = self.encoder.forward(frame)
-            # pass through, replace with actual decoders
-            depth_map = self.decoder.forward(features)
-            depth_map = self.final_conv_layer0(depth_map)
-            depth_map = self.final_conv_layer1(depth_map)
-            depth_map = F.sigmoid(depth_map.squeeze(1))
+            depth_map, features = self.unet.forward(frame)
             encoded_features.append(features)
+            # depth_map = self.final_conv_layer0(depth_map)
+            # depth_map = self.final_conv_layer1(depth_map)
+            depth_map = F.sigmoid(depth_map.squeeze(1))
             depth_maps.append(depth_map)
 
         # next predict ego_motion, stack feature maps

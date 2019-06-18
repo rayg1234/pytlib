@@ -30,7 +30,8 @@ def process_single_batch(original_images,ego_motion_vectors,disp_maps,calib_fram
     # Then construct a new 2D image using new projection matrix
     total_re_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     total_ssim_loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
-    warped_images = []
+    total_mask_loss =  torch.zeros([],dtype=original_images.dtype,device=original_images.device)
+    out_images = []
     for i in range(0,num_frames-1):
         # augment cam coords with row of 1's to 4D vecs
         ones_row = torch.ones_like(cam_coords[i])[0,:].unsqueeze(0)
@@ -42,7 +43,7 @@ def process_single_batch(original_images,ego_motion_vectors,disp_maps,calib_fram
         hom_calib = torch.cat((calib_frames[i],intrin_filler_right),dim=1)
         hom_calib = torch.cat((hom_calib,intrin_filler_bottom),dim=0)
         warped_image, mask = cam_to_image(hom_calib,cur_frame_coords,original_images[i])
-        warped_images.append(warped_image)
+        out_images.append(warped_image)
         # compare warped_image to next real image
         # don't use 0 pixels for loss
         ptimage = PTImage.from_cwh_torch(warped_image)
@@ -50,20 +51,21 @@ def process_single_batch(original_images,ego_motion_vectors,disp_maps,calib_fram
         orig_image = PTImage.from_cwh_torch(original_images[i])
         # ImageVisualizer().set_image(orig_image,'original_images {}'.format(i))
         ImageVisualizer().set_image(ptimage,'warped_image {}-{}'.format(batch_number,i))
-        # ImageVisualizer().set_image(ptmask,'mask {}-{}'.format(batch_number,i))
-        loss = F.smooth_l1_loss(warped_image,original_images[i+1],reduction='none')
-        loss = loss * mask
-        # add loss to prevent mask from going to 0
-        mask_loss = mask_loss_factor*F.smooth_l1_loss(mask, torch.ones_like(mask))
+        ImageVisualizer().set_image(ptmask,'mask {}-{}'.format(batch_number,i))
         Logger().set('loss_component.mask_mean.{}-{}'.format(batch_number,i),mask.mean().data.item())    
-        total_re_loss += (loss.mean() + mask_loss)
-        # ssim also needs a mask
-        total_ssim_loss+=(1-ssim(warped_image.unsqueeze(0),original_images[i+1].unsqueeze(0)))/2
 
-    Logger().set('loss_component.mask_loss.{}'.format(batch_number),mask_loss.data.item())    
+        masked_warp_image = warped_image.unsqueeze(0) * mask
+        masked_gt_image = original_images[i+1].unsqueeze(0) * mask
+        re_loss = F.smooth_l1_loss(masked_warp_image,masked_gt_image,reduction='none')
+        # add loss to prevent mask from going to 0
+        # total_mask_loss += mask_loss_factor*F.smooth_l1_loss(mask, torch.ones_like(mask))
+        total_re_loss += re_loss.mean()
+        total_ssim_loss += (1-ssim(masked_warp_image,masked_gt_image))/2
+
+    Logger().set('loss_component.mask_loss.{}'.format(batch_number),total_mask_loss.data.item())    
     Logger().set('loss_component.batch_re_loss.{}'.format(batch_number),total_re_loss.data.item())
     Logger().set('loss_component.batch_ssim_loss.{}'.format(batch_number),total_ssim_loss.data.item())
-    return total_re_loss+total_ssim_loss, warped_images
+    return total_re_loss+total_ssim_loss+total_mask_loss,out_images
 
 def mono_depth_loss(original_images,ego_motion_vectors,disp_maps,calib_frames):
     batch_size = calib_frames.shape[0]
@@ -79,10 +81,10 @@ def mono_depth_loss(original_images,ego_motion_vectors,disp_maps,calib_frames):
     # TODO: change all helpers here to handle batches
     loss = torch.zeros([],dtype=original_images.dtype,device=original_images.device)
     for b in range(0,batch_size):
-        single_batch_loss, _ = process_single_batch(original_images[b,:],
-                                                    ego_motion_vectors[b,:],
-                                                    disp_maps[b,:],
-                                                    calib_frames[b,:],
-                                                    b)
+        single_batch_loss = process_single_batch(original_images[b,:],
+                                                 ego_motion_vectors[b,:],
+                                                 disp_maps[b,:],
+                                                 calib_frames[b,:],
+                                                 b)
         loss+=single_batch_loss
     return loss

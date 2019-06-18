@@ -57,6 +57,10 @@ Most SOTA object detectors regress on anchor boxes to make the problem easier to
 ## [Mono Depth Estimator](pytlib/configuration/base_mono_depth_estimator_config.py)
 A basic unsupervised mono depth estimator implementation using ideas borrowed from [here](https://arxiv.org/pdf/1806.01260.pdf). The network attempts to estimate the 3D transformation of camera motion between two adjacent frames as well as the depth in each frame simultaneously. It uses the reconstruction and structural similarity losses between the predicted frame and the actual frame to learn the transformations. (WIP)  
 
+![depth output](site_content/depth_output0.png)
+![depth output](site_content/depth_output1.png)
+
+
 # Running Locally on Native Ubuntu 16.04
 
 Install: `bash pytlib/install.sh`

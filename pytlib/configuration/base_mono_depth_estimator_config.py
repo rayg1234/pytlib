@@ -16,6 +16,6 @@ def get_loader():
 # loader = (get_loader,dict())
 loader = (MultiLoader,dict(loader=get_loader,loader_args=dict(),num_procs=8))
 model = (BaseMonoDepthEstimator,dict())
-optimizer = (optim.Adam,dict(lr=1e-4))
+optimizer = (optim.Adam,dict(lr=2e-5))
 loss = mono_depth_loss # placeholder
 train_config = TrainConfiguration(loader,optimizer,model,loss,True)
