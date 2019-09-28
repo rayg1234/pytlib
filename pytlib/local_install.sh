@@ -1,11 +1,11 @@
 #!/bin/bash
-sudo apt install python-pip
-sudo apt install python-tk
+sudo apt install python3-pip
+sudo apt install python3-tk
 sudo apt install graphviz
-sudo pip install virtualenv
+sudo pip3 install virtualenv
 virtualenv pytenv
-pwd > pytenv/lib/python2.7/site-packages/pyenv.pth
+# fix this to use the actual python version
+pwd > pytenv/lib/python3.5/site-packages/pyenv.pth
 source pytenv/bin/activate
-#pip install http://download.pytorch.org/whl/cu80/torch-0.2.0.post3-cp27-cp27mu-manylinux1_x86_64.whl
-pip install Cython
-pip install -r requirements.txt
+pip3 install Cython
+pip3 install -r requirements.txt
