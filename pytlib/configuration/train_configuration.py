@@ -1,10 +1,11 @@
+from builtins import object
 # Holds all the configuration data to train a model
 # the loader, optimizer and model are all passed in as tuples of the form
 # (class,params) so that they can be instantiated lazily later
 # This is done so that we can for example instantiate the optimizer after
 # the module's forward function has been called with the correct input 
 # to accomedate for dynamically allocated parameters
-class TrainConfiguration:
+class TrainConfiguration(object):
     def __init__(self,loader_params,optimizer_params,model_params,lossfn,cuda=True):
         self.loader_params = loader_params
         self.model_params = model_params

@@ -28,7 +28,7 @@ class MNISTSource(implements(Source)):
         frame = Frame.from_image_and_objects(ptimage,[obj])        
         return frame
 
-    def next(self):
+    def __next__(self):
         if self.cur >= len(self.dataset):
             raise StopIteration
         else:

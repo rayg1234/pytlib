@@ -99,7 +99,7 @@ class VAE(nn.Module):
 
         h3 = h2.view(-1,self.outchannel_size,self.conv_out_spatial[0],self.conv_out_spatial[1])
         h4 = self.decoder.forward(h3,self.conv_output_dims)
-        return F.sigmoid(h4)
+        return torch.sigmoid(h4)
 
     def forward(self, x):
         mu, logvar = self.encode(x)

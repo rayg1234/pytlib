@@ -1,3 +1,4 @@
+from past.builtins import basestring
 def format_path(path):
     if isinstance(path, basestring):
         return path.split('.')

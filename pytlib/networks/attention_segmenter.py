@@ -95,5 +95,5 @@ class AttentionSegmenter(nn.Module):
 
                 # return the sigmoided versions
         for i in range(len(outputs)):
-            outputs[i] = F.sigmoid(outputs[i])
+            outputs[i] = torch.sigmoid(outputs[i])
         return outputs

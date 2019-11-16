@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import range
+from past.utils import old_div
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
@@ -85,15 +89,15 @@ class TripletDetectionLoader(implements(Loader)):
         # TODO turn this into a re-usable filter module
         if self.mode=='train':
             for i,frame in enumerate(self.source):
-                crop_objs = filter(lambda x: x.obj_type in self.obj_types,frame.get_objects())
+                crop_objs = [x for x in frame.get_objects() if x.obj_type in self.obj_types]
                 if(len(crop_objs)>0):
                     self.frame_ids.append(i)
 
-            print 'The source has {0} items'.format(len(self.source))
+            print('The source has {0} items'.format(len(self.source)))
             if len(self.frame_ids)==0:
                 raise NoFramesException('No Valid Frames Found!')
 
-            print '{0} frames found'.format(len(self.frame_ids))
+            print('{0} frames found'.format(len(self.frame_ids)))
 
     # find a negative crop in a frame, must not contain an object of interest
     def find_negative_crop(self,frame,objects):
@@ -102,12 +106,12 @@ class TripletDetectionLoader(implements(Loader)):
         frame_size = frame.image.get_wh();
         max_attempts = 10
         for i in range(0,max_attempts):
-            randcx = random.randrange(self.crop_size[0]/2,frame_size[0]-self.crop_size[0]/2)
-            randcy = random.randrange(self.crop_size[1]/2,frame_size[1]-self.crop_size[1]/2)
-            new_box = Box(randcx - self.crop_size[0]/2, 
-                          randcy - self.crop_size[1]/2,
-                          randcx + self.crop_size[0]/2,
-                          randcy + self.crop_size[1]/2)
+            randcx = random.randrange(old_div(self.crop_size[0],2),frame_size[0]-old_div(self.crop_size[0],2))
+            randcy = random.randrange(old_div(self.crop_size[1],2),frame_size[1]-old_div(self.crop_size[1],2))
+            new_box = Box(randcx - old_div(self.crop_size[0],2), 
+                          randcy - old_div(self.crop_size[1],2),
+                          randcx + old_div(self.crop_size[0],2),
+                          randcy + old_div(self.crop_size[1],2))
             box_found = all(Box.intersection(x.box,new_box) is None for x in objects)
             if box_found:
                 return new_box
@@ -119,8 +123,8 @@ class TripletDetectionLoader(implements(Loader)):
         while neg_box is None:
             indices = random.sample(self.frame_ids,2)
             frame1,frame2 = [self.source[x] for x in indices]
-            frame1_objs = filter(lambda x: x.obj_type in self.obj_types,frame1.get_objects())
-            frame2_objs = filter(lambda x: x.obj_type in self.obj_types,frame2.get_objects())
+            frame1_objs = [x for x in frame1.get_objects() if x.obj_type in self.obj_types]
+            frame2_objs = [x for x in frame2.get_objects() if x.obj_type in self.obj_types]
             # get random pos boxes
             pos_box = random.choice(frame1_objs).box
             anchor_box = random.choice(frame2_objs).box
@@ -141,11 +145,11 @@ class TripletDetectionLoader(implements(Loader)):
 
         # now find all the boxes that intersect with the perturbed_pos_box
         intersected_boxes = []
-        for obj in filter(lambda x: x.obj_type in self.obj_types,frame1.get_objects()):
+        for obj in [x for x in frame1.get_objects() if x.obj_type in self.obj_types]:
              if Box.intersection(obj.box,perturbed_pos_box) is not None:
                 intersected_boxes.append(obj.box)
 
-        intersected_boxes = list(map(lambda x: affine_crop0.apply_to_box(x), intersected_boxes))
+        intersected_boxes = list([affine_crop0.apply_to_box(x) for x in intersected_boxes])
         # test display
         # disp_frame = Frame.from_image_and_objects(pos_crop,[Object(box_crop)])
         # disp_frame.visualize(display=True,title='pos frame')
@@ -173,7 +177,7 @@ class TripletDetectionLoader(implements(Loader)):
         return TripletDetectionSample(data,target)
 
     # pick a frame to generate positive and negative crop
-    def next(self):
+    def __next__(self):
         return self.load_train() if self.mode == 'train' else self.load_test()
  
 

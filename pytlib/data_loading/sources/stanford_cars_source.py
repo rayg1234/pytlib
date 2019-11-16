@@ -1,3 +1,4 @@
+from __future__ import print_function
 from interface import Interface, implements
 from image.box import Box
 from image.frame import Frame
@@ -14,7 +15,7 @@ class StanfordCarsSource(implements(Source)):
         self.cur = 0
 
     def __load_frames(self,cars_dir,labels_mat):
-        print 'Loading Stanford Cars Frames'
+        print('Loading Stanford Cars Frames')
         labels = scipy.io.loadmat(labels_mat)['annotations'][0]
         # load frames with labels
         for label in labels:
@@ -29,7 +30,7 @@ class StanfordCarsSource(implements(Source)):
             image_path = os.path.join(cars_dir,path[0])
             self.frames.append(Frame(image_path,[obj]))
 
-    def next(self):
+    def __next__(self):
         if self.cur >= len(self.frames):
             raise StopIteration
         else:

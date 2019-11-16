@@ -1,13 +1,17 @@
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
 from threading import Thread
-import Queue
+import queue
 from data_loading.loaders.loader import Loader
 from interface import Interface, implements
 import time
 
 def worker_function(worker,queue):
-    print 'Starting Load Worker {}'.format(id(worker))
+    print('Starting Load Worker {}'.format(id(worker)))
     while True:
-        next_sample = worker.next()
+        next_sample = next(worker)
         queue.put(next_sample)
     return
 
@@ -17,7 +21,7 @@ class MultiLoader(implements(Loader)):
         self.loader_args = loader_args
         self.num_procs = num_procs
         self.max_queue_size = max_queue_size
-        self.result_queue = Queue.Queue(self.max_queue_size)
+        self.result_queue = queue.Queue(self.max_queue_size)
         self.workers = []
         self.threads = []
 
@@ -29,7 +33,7 @@ class MultiLoader(implements(Loader)):
             p.daemon = True
             p.start()
 
-    def next(self):
+    def __next__(self):
         # while self.result_queue.empty():
         #     print 'Waiting for queue to fill'
             # time.sleep(0.001)

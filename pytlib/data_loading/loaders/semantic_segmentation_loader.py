@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
@@ -56,7 +58,7 @@ class SegmentationLoader(implements(Loader)):
         self.frame_ids = []
         self.max_frames = max_frames
 
-        print 'SegmentationLoader: finding valid frames'
+        print('SegmentationLoader: finding valid frames')
         # parallelize this, this is too slow
         for i,frame in enumerate(self.source):
             if len(self.frame_ids)>=self.max_frames:
@@ -70,13 +72,13 @@ class SegmentationLoader(implements(Loader)):
                     self.ids_to_obj_types[oid]=obj.obj_type
             if valid_obj_count>0:
                 self.frame_ids.append(i)
-        print 'The source has {0} items'.format(len(self.source))
+        print('The source has {0} items'.format(len(self.source)))
         if len(self.frame_ids)==0:
             raise NoFramesException('No Valid Frames Found!')
 
-        print '{0} frames and {1} classes found'.format(len(self.frame_ids),len(self.obj_types_to_ids))
+        print('{0} frames and {1} classes found'.format(len(self.frame_ids),len(self.obj_types_to_ids)))
 
-    def next(self):
+    def __next__(self):
         # 1) pick a random frame
         frame = self.source[random.choice(self.frame_ids)]
         # 2) generate a random perturbation and perturb the frame, this also perturbs the objects including segementation polygons
@@ -94,7 +96,7 @@ class SegmentationLoader(implements(Loader)):
         # loop over all object type and create a binary mask for each
         # declare a np array of whk
         masks = np.zeros(perturbed_frame.image.get_hw().tolist()+[len(self.obj_types_to_ids)])
-        for k,v in self.obj_types_to_ids.items():
+        for k,v in list(self.obj_types_to_ids.items()):
             # a) for all objs in the frame that belong to this type, create a merged mask
             polygons = []
             for obj in perturbed_frame.get_objects():

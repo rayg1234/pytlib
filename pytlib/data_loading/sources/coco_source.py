@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from interface import Interface, implements
 from data_loading.sources.source import Source
 from torchvision import datasets
@@ -35,12 +37,12 @@ class COCOSource(implements(Source)):
             polys = []
             if polygon and isinstance(polygon,list):
                 for seg in polygon:
-                    polys.append(Polygon(np.array(seg).reshape((int(len(seg)/2), 2))))
+                    polys.append(Polygon(np.array(seg).reshape((int(old_div(len(seg),2)), 2))))
             objects.append(Object(box,obj_type=obj_type,polygons=polys))
         frame = Frame.from_image_and_objects(ptimage,objects)        
         return frame
 
-    def next(self):
+    def __next__(self):
         if self.cur >= len(self.dataset):
             raise StopIteration
         else:

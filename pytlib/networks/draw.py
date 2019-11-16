@@ -164,7 +164,7 @@ class DRAW(nn.Module):
         for t in range(0,self.timesteps):
             # import ipdb;ipdb.set_trace()
             # Step 1: diff the input against the prev output
-            x_hat = xview - F.sigmoid(outputs[t].view(xview.size()))
+            x_hat = xview - torch.sigmoid(outputs[t].view(xview.size()))
             # Step 2: read
             rvec = read_fn(xview,x_hat,self.decoder_rnn.get_hidden_state())
             # Step 3: encoder rnn
@@ -185,6 +185,6 @@ class DRAW(nn.Module):
 
         # return the sigmoided versions
         for i in range(len(outputs)):
-            outputs[i] = F.sigmoid(outputs[i])
+            outputs[i] = torch.sigmoid(outputs[i])
         return outputs, mus, logvars
 

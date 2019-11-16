@@ -4,7 +4,7 @@ import os
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
-from box import Box
+from image.box import Box
 # This is a general representation of images
 # and act as a mediator between different types and storage orders
 # here is main use case:

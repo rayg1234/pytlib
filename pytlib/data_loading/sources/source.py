@@ -8,7 +8,7 @@ class Source(Interface):
     def __getitem__(self,index):
         raise NotImplementedError
 
-    def next(self):
+    def __next__(self):
         raise NotImplementedError
 
     def __len__(self):

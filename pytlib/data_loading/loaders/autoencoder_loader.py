@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 from image.frame import Frame
 from image.box import Box
 from image.object import Object
@@ -61,22 +64,22 @@ class AutoEncoderLoader(implements(Loader)):
         #index all the frames that have at least one item we want
         # TODO turn this into a re-usable filter module
         for i,frame in enumerate(self.source):
-            crop_objs = filter(lambda x: not self.obj_types or x.obj_type in self.obj_types,frame.get_objects())
+            crop_objs = [x for x in frame.get_objects() if not self.obj_types or x.obj_type in self.obj_types]
             if(len(crop_objs)>0):
                 self.frame_ids.append(i)
 
-        print 'The source has {0} items'.format(len(self.source))
+        print('The source has {0} items'.format(len(self.source)))
         if len(self.frame_ids)==0:
             raise NoFramesException('No Valid Frames Found!')
 
-        print '{0} frames found'.format(len(self.frame_ids))
+        print('{0} frames found'.format(len(self.frame_ids)))
 
-    def next(self):
+    def __next__(self):
         # just grab the next random frame
         frame = self.source[random.choice(self.frame_ids)]
         # frame.show_image_with_labels()
         # get a random crop object
-        crop_objs = filter(lambda x: not self.obj_types or x.obj_type in self.obj_types,frame.get_objects())
+        crop_objs = [x for x in frame.get_objects() if not self.obj_types or x.obj_type in self.obj_types]
         # print 'Num crop objs in sample: {0}'.format(len(crop_objs))
         crop = random.choice(crop_objs)
         # print 'crop_box: ' + str(crop.box)
@@ -89,8 +92,8 @@ class AutoEncoderLoader(implements(Loader)):
         # 2) Take crop, todo, change to using center crop to preserve aspect ratio
         # check if the affine is identity within some toleranc, then don't bother applying
         affine = Affine()
-        scalex = float(self.crop_size[0])/transformed_box.edges()[0]
-        scaley = float(self.crop_size[1])/transformed_box.edges()[1]
+        scalex = old_div(float(self.crop_size[0]),transformed_box.edges()[0])
+        scaley = old_div(float(self.crop_size[1]),transformed_box.edges()[1])
         affine.append(Affine.translation(-transformed_box.xy_min()))
         affine.append(Affine.scaling((scalex,scaley)))
 

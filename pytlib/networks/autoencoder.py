@@ -29,4 +29,4 @@ class AutoEncoder(nn.Module):
         # print output_dims
         # get outputs from conv and pass them back to deconv
         x = self.tconvs.forward(x,output_dims)
-        return F.sigmoid(x)
+        return torch.sigmoid(x)

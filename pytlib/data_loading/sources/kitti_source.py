@@ -1,3 +1,4 @@
+from builtins import object
 import os
 from image.box import Box
 from image.frame import Frame
@@ -8,7 +9,7 @@ from data_loading.sources.source import Source
 from collections import defaultdict
 from interface import Interface, implements
 
-class KITTILabel:
+class KITTILabel(object):
     @classmethod
     def labels_from_file(cls,filename):
         labels = []
@@ -87,7 +88,7 @@ class KITTISource(implements(Source)):
             if ret:
                 labelfiles[ret] = full_item_path
 
-        for k,image_path in imagedirs.items():
+        for k,image_path in list(imagedirs.items()):
             for item in listdir(image_path):
                 if self.__validate_file_name(item):
                     label_path = os.path.join(labelfiles[k],item+'.txt') if k in labelfiles else None
@@ -97,7 +98,7 @@ class KITTISource(implements(Source)):
                     self.frames.extend(new_frames[0:min(len(new_frames),self.max_frames - len(self.frames))])
 
 
-    def next(self):
+    def __next__(self):
         if self.cur >= len(self.frames):
             raise StopIteration
         else:

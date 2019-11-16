@@ -1,3 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import str
+from builtins import map
+from builtins import range
+from builtins import object
 # this is needed to make matplotlib work without explicitly connect to X
 import matplotlib 
 matplotlib.use('svg')
@@ -19,7 +25,7 @@ from run_utils import load,save,load_samples
 from utils.directory_tools import mkdir
 from utils.memory import Memory
 
-class Trainer:
+class Trainer(object):
     def __init__(self,model,args):
         self.model = model
         self.args = args
@@ -70,7 +76,7 @@ class Trainer:
             #############################################################
 
             #################### LOGGING, VIZ and SAVE ###################
-            print 'iteration: {0} loss: {1}'.format(self.iteration,loss.data.item())
+            print('iteration: {0} loss: {1}'.format(self.iteration,loss.data.item()))
 
             if self.args.compute_graph and i==self.iteration:
                 compute_graph(loss,output_file=os.path.join(self.args.output_dir,self.args.compute_graph))
@@ -88,7 +94,7 @@ class Trainer:
 
             if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
                 Batcher.debatch_outputs(sample_array,outputs)
-                map(lambda x:x.visualize({'title':random_str(5)}),sample_array)
+                list(map(lambda x:x.visualize({'title':random_str(5)}),sample_array))
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
             #############################################################
 
@@ -106,7 +112,7 @@ if __name__ == '__main__':
     parser.add_argument('-g','--compute_graph',default='cgraph',type=str,help='generate the computational graph on the first iteration and write to this file')
     args=parser.parse_args()
 
-    print "Loading Configuration ..."
+    print("Loading Configuration ...")
     config_file = imp.load_source('train_config', args.train_config)
     args.cuda = config_file.train_config.cuda
     random.seed(args.seed)
@@ -115,5 +121,5 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
     trainer = Trainer(config_file.train_config,args)
 
-    print "Starting Training ..."
+    print("Starting Training ...")
     trainer.train()
