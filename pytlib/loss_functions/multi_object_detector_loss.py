@@ -44,7 +44,7 @@ def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image
 
 def assign_targets(box_preds, box_targets, dummy_target_masks=None):
     if dummy_target_masks is None:
-        dummy_target_masks = [torch.ones_like(box_targets[0,:,0],dtype=torch.uint8)]*box_targets.shape[0]
+        dummy_target_masks = [torch.ones_like(box_targets[0,:,0],dtype=torch.bool)]*box_targets.shape[0]
 
     assert len(box_preds.shape)==3 and len(box_targets.shape)==3, 'boxes must be BxNx4'
     assert len(dummy_target_masks)==box_preds.shape[0], 'dummy_masks must match batch size'
@@ -99,7 +99,7 @@ def multi_object_detector_loss(original_image,
         positive_class_loss += F.nll_loss(p_class_preds[pred_indices], p_class_targets[target_indices].long())
         Logger().set('loss_component.positive_class_loss',positive_class_loss.mean().item())
     
-    mask = torch.ones_like(p_class_preds,dtype=torch.uint8)
+    mask = torch.ones_like(p_class_preds,dtype=torch.bool)
     mask[pred_indices] = 0
     neg_preds = torch.masked_select(p_class_preds,mask).reshape(-1,num_classes)
     neg_targets = neg_preds.new_ones(neg_preds.shape[0],dtype=torch.long)*(p_class_preds.shape[2]-1)

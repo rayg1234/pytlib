@@ -91,7 +91,7 @@ class KITTISource(implements(Source)):
         calibdir_full = os.path.join(dir_path,KITTISource.calib_dir)
         assert os.path.exists(imagedir_full), "Cannot find image dir at {}".format(imagedir_full)
         assert os.path.exists(labeldir_full), "Cannot find image dir at {}".format(labeldir_full)
-        assert os.path.exists(calibdir_full), "Cannot find image dir at {}".format(calibdir_full)
+        # assert os.path.exists(calibdir_full), "Cannot find image dir at {}".format(calibdir_full)
         for item in listdir(imagedir_full):
             if self.__validate_file_name(item):
                 label_path = os.path.join(labeldir_full,item+'.txt')

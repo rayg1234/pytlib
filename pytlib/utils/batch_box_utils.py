@@ -56,7 +56,7 @@ def batch_nms(boxes,thresh=0.5):
     for i in range(0,boxes.shape[0]):
         idxs = (ious[i,i+1:]>=thresh).nonzero() + i+1
         indices.append(idxs)
-    mask = torch.ones_like(boxes[:,0],dtype=torch.uint8)
+    mask = torch.ones_like(boxes[:,0],dtype=torch.bool)
     if indices:
         all_unique_indices = torch.unique(torch.cat(indices))
         mask[all_unique_indices] = 0
