@@ -9,7 +9,7 @@ import random
 from loss_functions.vae_loss import sequence_vae_loss
 
 def get_loader():
-    source = MNISTSource('/home/ray/Data/MNIST')
+    source = MNISTSource('mnist_example',download=True)
     return AutoEncoderLoader(source,crop_size=[28,28])
 
 loader = (get_loader,dict())

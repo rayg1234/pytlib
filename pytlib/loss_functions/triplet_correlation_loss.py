@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn.functional as F
 from utils.logger import Logger
@@ -22,7 +25,7 @@ def triplet_correlation_loss(anchor,pos,neg,dummy_target,margin=1.0,eps=1e-6):
     # for now, debatch this computation, to batch properly need to figure out how to broadcast in torch
     batch_size = anchor.size(0)
     pcps,pcns = [],[]
-    ne = anchor.nelement()/batch_size
+    ne = old_div(anchor.nelement(),batch_size)
     for i in range(0,batch_size):
         pcps.append(pearson_correlation_loss(anchor[i,:].view(ne),pos[i,:].view(ne)))
         pcns.append(pearson_correlation_loss(anchor[i,:].view(ne),neg[i,:].view(ne)))
@@ -38,7 +41,7 @@ def triplet_correlation_loss2(anchor,pcp,pcn,recon_output,mu,logvar,pos_map,neg_
     # take the ratio of the spatial extends
 
     vloss = vae_loss(recon_output,mu,logvar,recon_target)
-    pool_kernel = np.array(pos_map.size()[1:])/np.array(pcp.size()[-2:])
+    pool_kernel = old_div(np.array(pos_map.size()[1:]),np.array(pcp.size()[-2:]))
     pos_map_resized = torch.round(F.avg_pool2d(pos_map,tuple(pool_kernel)))
     neg_map_resized = torch.round(F.avg_pool2d(neg_map,tuple(pool_kernel)))
 

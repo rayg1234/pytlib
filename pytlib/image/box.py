@@ -1,10 +1,14 @@
+from __future__ import division
+from builtins import str
+from builtins import object
+from past.utils import old_div
 import torch
 import numpy as np
 
 class BoxCoordinatesInvalidException(Exception):
     pass
 
-class Box:
+class Box(object):
     def __init__(self,xmin,ymin,xmax,ymax):
         # if not (xmax>xmin and ymax>ymin):
         #     raise BoxCoordinatesInvalidException("BoxCoords invalid! [{0},{1}], [{2},{3}]".format(xmin,ymin,xmax,ymax))
@@ -43,7 +47,7 @@ class Box:
         return np.array([self.xmax,self.ymax])
 
     def center(self):
-        return np.array([(self.xmin+self.xmax)/2,(self.ymin+self.ymax)/2])
+        return np.array([old_div((self.xmin+self.xmax),2),old_div((self.ymin+self.ymax),2)])
 
     def edges(self):
         return np.array([self.xmax-self.xmin,self.ymax-self.ymin])
@@ -92,7 +96,7 @@ class Box:
     @staticmethod
     def box_to_tensor(box,frame_size):
         # normalize box coord to between 0 and 1
-        box_array = box.scale(1/np.array(frame_size,dtype=float)).to_single_array().astype(float)
+        box_array = box.scale(old_div(1,np.array(frame_size,dtype=float))).to_single_array().astype(float)
         return torch.Tensor(box_array)
 
     @staticmethod
@@ -100,7 +104,7 @@ class Box:
         # normalize box coord to between 0 and 1
         box_array = []
         for box in boxes:
-            box_array.append(box.scale(1/np.array(frame_size,dtype=float)).to_single_array().astype(float))
+            box_array.append(box.scale(old_div(1,np.array(frame_size,dtype=float))).to_single_array().astype(float))
         return torch.Tensor(np.stack(box_array))
 
     @staticmethod

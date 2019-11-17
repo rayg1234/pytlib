@@ -1,7 +1,9 @@
+from builtins import range
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from utils.logger import Logger
+from functools import reduce
 
 # KLD for two gaussians
 # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014

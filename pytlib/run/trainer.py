@@ -94,7 +94,7 @@ class Trainer(object):
 
             if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
                 Batcher.debatch_outputs(sample_array,outputs)
-                list(map(lambda x:x.visualize({'title':random_str(5)}),sample_array))
+                list([x.visualize({'title':random_str(5)}) for x in sample_array])
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'visualizations_{0:08d}.svg'.format(self.iteration)))
             #############################################################
 

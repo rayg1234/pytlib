@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from image.affine import Affine
 from image.frame import Frame
 from image.box import Box
@@ -8,7 +10,7 @@ import copy
 def crop_image_resize(ptimage,crop_box,output_resolution):
     affine = Affine()
     scale = min(float(output_resolution[0])/crop_box.edges()[0],float(output_resolution[1])/crop_box.edges()[1])
-    crop_offset = crop_box.xy_min() + 0.5*(np.array(crop_box.edges())-np.array(output_resolution)/scale)
+    crop_offset = crop_box.xy_min() + 0.5*(np.array(crop_box.edges())-old_div(np.array(output_resolution),scale))
     affine.append(Affine.translation(-crop_offset))
     affine.append(Affine.scaling([scale,scale]))
     # print affine.transform

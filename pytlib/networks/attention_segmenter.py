@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import torch
 import math
 import torch.nn as nn
@@ -40,7 +43,7 @@ class AttentionSegmenter(nn.Module):
     def init_weights(self,hstate):
         if self.att_decoder_weights is None:
             batch_size = hstate.size(0)
-            self.att_decoder_weights = nn.Parameter(torch.Tensor(5,hstate.nelement()/batch_size))
+            self.att_decoder_weights = nn.Parameter(torch.Tensor(5,old_div(hstate.nelement(),batch_size)))
             stdv = 1. / math.sqrt(self.att_decoder_weights.size(1))
             self.att_decoder_weights.data.uniform_(-stdv, stdv)
         if hstate.data.is_cuda:
@@ -54,7 +57,7 @@ class AttentionSegmenter(nn.Module):
         if x.is_cuda:
             dummy_glimpse = dummy_glimpse.cuda()
         dummy_feature_map = self.encoder.forward(dummy_glimpse)
-        self.att_rnn.forward(dummy_feature_map.view(batch_size,dummy_feature_map.nelement()/batch_size))
+        self.att_rnn.forward(dummy_feature_map.view(batch_size,old_div(dummy_feature_map.nelement(),batch_size)))
         self.att_rnn.reset_hidden_state(batch_size,x.data.is_cuda)
 
         outputs = []
@@ -84,7 +87,7 @@ class AttentionSegmenter(nn.Module):
             # import ipdb;ipdb.set_trace()
 
             # 4) update hidden state # think about this connection a bit more
-            self.att_rnn.forward(feature_map.view(batch_size,feature_map.nelement()/batch_size))
+            self.att_rnn.forward(feature_map.view(batch_size,old_div(feature_map.nelement(),batch_size)))
 
             # 5) use deconv network to get partial masks
             partial_mask = self.decoder.forward(feature_map,conv_output_dims)

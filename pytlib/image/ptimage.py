@@ -1,3 +1,4 @@
+from builtins import object
 import torch
 import copy
 import os
@@ -23,15 +24,15 @@ from image.box import Box
 # so for numpy c-style arraynd, we should prefer BCHW for accessing single elements from a batch
 # the pytorch tensor should also have this memory layout
 
-class Ordering:
+class Ordering(object):
     CHW = 'CHW'
     HWC = 'HWC'
 
-class ValueClass:
+class ValueClass(object):
     FLOAT01 = {'dtype':'float','range':[0,1]}
     BYTE0255 = {'dtype':'uint8','range':[0,255]}
 
-class PTImage:
+class PTImage(object):
     def __init__(self,data=None,pil_image_path='',ordering=Ordering.HWC,vc=ValueClass.BYTE0255,persist=True):
         self.image_path = pil_image_path
         self.ordering = ordering

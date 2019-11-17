@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 from utils.dict_utils import get_deep
 from image.affine import Affine
 from image.box import Box
@@ -7,7 +10,7 @@ import numpy as np
 import copy
 
 # class for generating random affine transformations on boxes and images
-class RandomPerturber:
+class RandomPerturber(object):
 
     @staticmethod
     def generate_random_affine(center,edges,params):
@@ -43,7 +46,7 @@ class RandomPerturber:
     @staticmethod
     def perturb_frame(frame,params):
         dims = frame.image.get_hw()
-        rand_affine = RandomPerturber.generate_random_affine(dims/2,dims,params)
+        rand_affine = RandomPerturber.generate_random_affine(old_div(dims,2),dims,params)
         perturbed_frame = Frame(frame.image_path)
         perturbed_frame.image = rand_affine.apply_to_image(frame.image,dims)
         for i,obj in enumerate(frame.objects):

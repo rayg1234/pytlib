@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import torch
 import scipy.optimize
 import torch.nn.functional as F
@@ -27,8 +30,8 @@ def preprocess_targets_and_preds(targets, box_preds, class_preds, original_image
     # and -1,1 are the edges of this region
     # use original_image.shape/cnn feature map shape to approximate the vision region size
     # TODO, check this works for non-multiple sizes of cnn reduction factor
-    region_size = np.array(original_image.shape[2:])/np.array(box_preds.shape[3:])
-    hh,ww = generate_region_meshgrid(box_preds.shape[3:], region_size, region_size/2)
+    region_size = old_div(np.array(original_image.shape[2:]),np.array(box_preds.shape[3:]))
+    hh,ww = generate_region_meshgrid(box_preds.shape[3:], region_size, old_div(region_size,2))
     rescaled_box_preds = rescale_boxes(box_preds, region_size, [hh,ww])
     rescaled_box_preds_flat = rescaled_box_preds.flatten(start_dim=2).transpose(1,2)
 
@@ -103,8 +106,8 @@ def multi_object_detector_loss(original_image,
     Logger().set('loss_component.negative_class_targets_size',neg_targets.flatten().shape[0])
     negative_class_loss = F.nll_loss(neg_preds,neg_targets)
     Logger().set('loss_component.negative_class_loss',negative_class_loss.mean().item())
-    total_class_loss = pos_to_neg_class_weight_ratio/(1.+pos_to_neg_class_weight_ratio)*positive_class_loss \
-        + 1/(1.+pos_to_neg_class_weight_ratio)*negative_class_loss       
+    total_class_loss = old_div(pos_to_neg_class_weight_ratio,(1.+pos_to_neg_class_weight_ratio))*positive_class_loss \
+        + old_div(1,(1.+pos_to_neg_class_weight_ratio))*negative_class_loss       
     
     # 5) total loss = w0*class_loss + w1*box_loss
     Logger().set('loss_component.total_class_loss',total_class_loss.mean().item())

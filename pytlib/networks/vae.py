@@ -38,7 +38,7 @@ class VAE(nn.Module):
         stdv = 1. / math.sqrt(self.linear_mu_weights.size(1))
         self.linear_mu_weights.data.uniform_(-stdv, stdv)
 
-        self.linear_logvar_weights = nfn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
+        self.linear_logvar_weights = nn.Parameter(torch.Tensor(self.encoding_size,self.linear_size))
         stdv = 1. / math.sqrt(self.linear_logvar_weights.size(1))
         self.linear_logvar_weights.data.uniform_(-stdv, stdv)
         

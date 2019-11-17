@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from networks.basic_rnn import BasicRNN
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,7 +38,7 @@ class DRAW(nn.Module):
         if self.use_attention:
             self.decoder_linear_weights = nn.Parameter(torch.Tensor(self.grid_size*self.grid_size,self.encoding_size))
         else:
-            self.decoder_linear_weights = nn.Parameter(torch.Tensor(x.nelement()/batch_size,self.encoding_size))
+            self.decoder_linear_weights = nn.Parameter(torch.Tensor(old_div(x.nelement(),batch_size),self.encoding_size))
         
         stdv = 1. / math.sqrt(self.decoder_linear_weights.size(1))
         self.decoder_linear_weights.data.uniform_(-stdv, stdv)        
@@ -69,24 +72,24 @@ class DRAW(nn.Module):
             b = b.cuda()
 
         # gx is Bx1, grid is (1xNx1), so this is a broadcast op -> BxNx1
-        mux = gx.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta.view((-1,1,1))
-        muy = gy.view((-1,1,1)) + (grid_points - N/2 - 0.5) * delta.view((-1,1,1))
+        mux = gx.view((-1,1,1)) + (grid_points - old_div(N,2) - 0.5) * delta.view((-1,1,1))
+        muy = gy.view((-1,1,1)) + (grid_points - old_div(N,2) - 0.5) * delta.view((-1,1,1))
 
         s2 = sigma2.view((-1,1,1))
-        fx = torch.exp(-(a-mux).pow(2)/(2*s2))
-        fy = torch.exp(-(b-muy).pow(2)/(2*s2))
+        fx = torch.exp(old_div(-(a-mux).pow(2),(2*s2)))
+        fy = torch.exp(old_div(-(b-muy).pow(2),(2*s2)))
         # normalize
-        fx = fx/torch.clamp(torch.sum(fx,2,keepdim=True),self.minclamp,self.maxclamp)
-        fy = fy/torch.clamp(torch.sum(fy,2,keepdim=True),self.minclamp,self.maxclamp)
+        fx = old_div(fx,torch.clamp(torch.sum(fx,2,keepdim=True),self.minclamp,self.maxclamp))
+        fy = old_div(fy,torch.clamp(torch.sum(fy,2,keepdim=True),self.minclamp,self.maxclamp))
         return fx,fy
 
     def generate_filter_params(self,state):
         filter_vector = self.filter_linear_layer(state)
         _gx,_gy,log_sigma2,log_delta,loggamma = filter_vector.split(1,1)
-        gx=(self.image_w+1)/2*(_gx+1)
-        gy=(self.image_h+1)/2*(_gy+1)
+        gx=old_div((self.image_w+1),2)*(_gx+1)
+        gy=old_div((self.image_h+1),2)*(_gy+1)
         sigma2=torch.exp(log_sigma2)
-        delta=(max(self.image_w,self.image_h)-1)/(self.grid_size-1)*torch.exp(log_delta)       
+        delta=old_div((max(self.image_w,self.image_h)-1),(self.grid_size-1))*torch.exp(log_delta)       
         gamma=torch.exp(loggamma)
         return gx,gy,sigma2,delta,gamma        
 
@@ -115,7 +118,7 @@ class DRAW(nn.Module):
         write_patch = F.linear(decoding,self.decoder_linear_weights).view(batch_size,self.grid_size,self.grid_size)
         gx,gy,sigma2,gamma,delta = self.generate_filter_params(decoding)
         fx,fy = self.generate_filter_matrices(gx,gy,sigma2,delta)
-        output = (1/gamma).view(-1,1,1)*torch.bmm(torch.bmm(fy.transpose(1,2),write_patch),fx)
+        output = (old_div(1,gamma)).view(-1,1,1)*torch.bmm(torch.bmm(fy.transpose(1,2),write_patch),fx)
         return output
 
     # this converts the encoding into both a mu and logvar vector
@@ -135,7 +138,7 @@ class DRAW(nn.Module):
     # takes an input, returns the sequence of outputs, mus, and logvars
     def forward(self,x):
         # flatten x to 1-d, except for batch dimension
-        xview = x.view(x.size()[0],x.nelement()/x.size()[0])
+        xview = x.view(x.size()[0],old_div(x.nelement(),x.size()[0]))
         # assume bchw dims
         self.image_w = x.size(3)
         self.image_h = x.size(2)

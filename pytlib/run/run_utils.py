@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import next
 from builtins import range
 import torch
 import os

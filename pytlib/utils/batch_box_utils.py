@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -65,10 +68,10 @@ def euc_distance_cost(boxes1,boxes2):
     # center squared cost: ((xmax1+xmin1)/2 - (xmax2+xmin2)/2))^2
     x_min1,y_min1,x_max1,y_max1 = torch.chunk(boxes1,4,dim=1)
     x_min2,y_min2,x_max2,y_max2 = torch.chunk(boxes2,4,dim=1)
-    cx1 = (x_max1+x_min1)/2
-    cx2 = (x_max2+x_min2)/2
-    cy1 = (y_max1+y_min1)/2
-    cy2 = (y_max2+y_min2)/2
+    cx1 = old_div((x_max1+x_min1),2)
+    cx2 = old_div((x_max2+x_min2),2)
+    cy1 = old_div((y_max1+y_min1),2)
+    cy2 = old_div((y_max2+y_min2),2)
     xx1,xx2 = torch.meshgrid(cx1.squeeze(),cx2.squeeze())
     yy1,yy2 = torch.meshgrid(cy1.squeeze(),cy2.squeeze())
     distx = (xx2-xx1)*(xx2-xx1)

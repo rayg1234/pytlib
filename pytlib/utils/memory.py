@@ -1,6 +1,9 @@
+from __future__ import division
 # derived from https://stackoverflow.com/questions/938733/total-memory-used-by-python-process
+from builtins import object
+from past.utils import old_div
 import os
-class Memory:
+class Memory(object):
 
     def __init__(self):
         self._proc_status = '/proc/%d/status' % os.getpid()
@@ -26,12 +29,12 @@ class Memory:
 
 
     def memory(self,scale='mB'):
-        return self._VmB('VmSize:') / self._scale[scale]
+        return old_div(self._VmB('VmSize:'), self._scale[scale])
 
 
     def resident(self,scale='mB'):
-        return self._VmB('VmRSS:') / self._scale[scale]
+        return old_div(self._VmB('VmRSS:'), self._scale[scale])
 
 
     def stacksize(self,scale='mB'):
-        return self._VmB('VmStk:') / self._scale[scale]
+        return old_div(self._VmB('VmStk:'), self._scale[scale])

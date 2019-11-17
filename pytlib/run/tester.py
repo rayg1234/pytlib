@@ -1,4 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # this is needed to make matplotlib work without explicitly connect to X
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
 import matplotlib 
 matplotlib.use('svg')
 
@@ -14,9 +20,9 @@ from utils.logger import Logger
 from utils.random_utils import random_str
 from utils.batcher import Batcher
 from visualization.image_visualizer import ImageVisualizer
-from run_utils import load,save,load_samples
+from .run_utils import load,save,load_samples
 
-class Tester:
+class Tester(object):
     def __init__(self,model,args):
         self.model = model
         self.args = args
@@ -52,7 +58,7 @@ class Tester:
             #############################################################
 
             #################### LOGGING, VIZ ###################
-            print 'iteration: {0}'.format(self.iteration)
+            print('iteration: {0}'.format(self.iteration))
 
             self.logger.set('time',time.time())
             self.logger.set('date',str(datetime.now()))
@@ -61,9 +67,9 @@ class Tester:
             self.iteration+=1
 
             Batcher.debatch_outputs(sample_array,outputs)
-            map(lambda x:x.visualize({'title':random_str(5),'mode':'test'}),sample_array)
+            list(map(lambda x:x.visualize({'title':random_str(5),'mode':'test'}),sample_array))
             if self.args.visualize_iter>0 and self.iteration%self.args.visualize_iter==0:
-                print 'dumping {}'.format('testviz_{0:08d}.svg'.format(self.iteration))
+                print('dumping {}'.format('testviz_{0:08d}.svg'.format(self.iteration)))
                 ImageVisualizer().dump_image(os.path.join(self.args.output_dir,'testviz_{0:08d}.svg'.format(self.iteration)))
 
             #############################################################
@@ -79,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('-e','--seed',type=int,help='the random seed for torch',default=123)
     args=parser.parse_args()
 
-    print "Loading Model ..."
+    print("Loading Model ...")
     config_file = imp.load_source('test_config', args.test_config)
     args.cuda = config_file.test_config.cuda
     random.seed(args.seed)
@@ -88,5 +94,5 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
     tester = Tester(config_file.test_config,args)
 
-    print "Starting Inference ..."
+    print("Starting Inference ...")
     tester.test()

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 from PIL import Image
 import numpy as np
 import os
@@ -12,7 +14,7 @@ from image.ptimage import PTImage,Ordering,ValueClass
 # default in CUDNN storage order. The image is loaded with PIL.
 # note we only store the numpy image and not the PIL image, this makes some processes like
 # visualization slower but makes the interface simpler.
-class Frame:
+class Frame(object):
     def __init__(self,image_path='',objs=[]):
         self.image_path = image_path
         self.objects = copy.deepcopy(objs)

@@ -1,9 +1,10 @@
+from builtins import object
 from pycocotools import mask 
 import numpy as np
 
 # This mostly wraps pycocotools mask functions for encoding and decoding polygons
 # having this wrapper will allow us to make a more general polygon class later
-class Polygon:
+class Polygon(object):
     # the data is just a 2D numpy array of points 
     def __init__(self,data):
         assert data.ndim==2

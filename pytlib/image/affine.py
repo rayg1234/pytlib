@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 from scipy.ndimage.interpolation import affine_transform
 from scipy.ndimage.interpolation import map_coordinates
 from image.box import Box
@@ -10,7 +12,7 @@ import math
 # if several affines are chained
 # ie: x.append(t1); x.append(t2),
 # then t1 is applied first followed by t2
-class Affine:
+class Affine(object):
 
     @classmethod
     def translation(cls,x):

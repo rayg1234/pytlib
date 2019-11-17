@@ -1,8 +1,9 @@
+from builtins import object
 from image.box import Box
 import copy
 
 # and Object contains an id,box,and type
-class Object:
+class Object(object):
     def __init__(self,box,unique_id=-1,obj_type='',polygons=[]):
         self.box = box # box object
         self.unique_id = unique_id # int
