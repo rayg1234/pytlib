@@ -1,5 +1,8 @@
+from __future__ import division
 # code derived from
 # https://github.com/Po-Hsun-Su/pytorch-ssim/blob/master/pytorch_ssim/__init__.py
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -8,7 +11,7 @@ from math import exp
 
 def gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
-    return gauss/gauss.sum()
+    return old_div(gauss,gauss.sum())
 
 def create_window(window_size, channel):
     _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
@@ -31,7 +34,7 @@ def _ssim(img1, img2, window, window_size, channel, size_average = True):
     C1 = 0.01**2
     C2 = 0.03**2
 
-    ssim_map = ((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
+    ssim_map = old_div(((2*mu1_mu2 + C1)*(2*sigma12 + C2)),((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2)))
 
     if size_average:
         return ssim_map.mean()

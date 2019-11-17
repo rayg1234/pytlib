@@ -1,3 +1,4 @@
+from builtins import range
 from data_loading.loaders.loader import Loader
 from data_loading.sample import Sample
 from interface import implements
@@ -41,7 +42,7 @@ class SequenceVideoLoader(implements(Loader)):
         self.crop_size = crop_size
         self.num_frames = num_frames
 
-    def next(self):
+    def __next__(self):
         # randomly pick 3 frames in a row
         num_frames_in_src = len(self.source)
         # print("Number of frames in src {}".format(num_frames_in_src))

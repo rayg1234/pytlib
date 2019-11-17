@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import torch
 import torch.nn.functional as F
 from image.cam_math import image_to_cam,cam_to_image,six_dof_vec_to_matrix
@@ -60,7 +63,7 @@ def process_single_batch(original_images,ego_motion_vectors,disp_maps,calib_fram
         # add loss to prevent mask from going to 0
         # total_mask_loss += mask_loss_factor*F.smooth_l1_loss(mask, torch.ones_like(mask))
         total_re_loss += re_loss.mean()
-        total_ssim_loss += (1-ssim(masked_warp_image,masked_gt_image))/2
+        total_ssim_loss += old_div((1-ssim(masked_warp_image,masked_gt_image)),2)
 
     Logger().set('loss_component.mask_loss.{}'.format(batch_number),total_mask_loss.data.item())    
     Logger().set('loss_component.batch_re_loss.{}'.format(batch_number),total_re_loss.data.item())
