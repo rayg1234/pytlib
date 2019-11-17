@@ -15,10 +15,12 @@ from image.ptimage import PTImage,Ordering,ValueClass
 # note we only store the numpy image and not the PIL image, this makes some processes like
 # visualization slower but makes the interface simpler.
 class Frame(object):
-    def __init__(self,image_path='',objs=[]):
+    def __init__(self,image_path='',objs=[],calib_mat=None):
         self.image_path = image_path
         self.objects = copy.deepcopy(objs)
         self.image = PTImage(pil_image_path=self.image_path,persist=False)
+        # 4x3 calibration matrix
+        self.calib_mat = calib_mat
 
     @classmethod
     def from_image_and_objects(cls,ptimage,objects=[]):

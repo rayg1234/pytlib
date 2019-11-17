@@ -49,6 +49,8 @@ class RandomPerturber(object):
         rand_affine = RandomPerturber.generate_random_affine(old_div(dims,2),dims,params)
         perturbed_frame = Frame(frame.image_path)
         perturbed_frame.image = rand_affine.apply_to_image(frame.image,dims)
+        if frame.calib_mat is not None:
+            perturbed_frame.calib_mat = rand_affine.apply_to_matrix(frame.calib_mat)
         for i,obj in enumerate(frame.objects):
             # filter out completely out of bound objects
             perturbed_obj_box = rand_affine.apply_to_box(obj.box)

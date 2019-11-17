@@ -51,7 +51,15 @@ The following shows some example outputs of the encoding detector on trained fea
 
 Most SOTA object detectors regress on anchor boxes to make the problem easier to learn. But anchor boxes introduce other complexities such as when anchors fail to match against objects, prediction is not even attempted. Furthermore the performance of the detector is strongly coupled to the choice anchors, an undesirable hyperparameter that forces overfitting some prior dataset. Here is a simple implementation of a 1-stage anchorless detector where a detector head just regresses directly to some fixed number of bounding boxes, trained on KITTI dataset. Checkout the [detector implementation](pytlib/networks/multi_object_detector.py) and the [loss functions](pytlib/loss_functions/multi_object_detector_loss.py).
 
-![anchorless detector output](site_content/multi_object_det_output.png)
+![anchorless detector output](site_content/multiobject_detector_output2.png)
+
+
+## [Mono Depth Estimator](pytlib/configuration/base_mono_depth_estimator_config.py)
+A basic unsupervised mono depth estimator implementation using ideas borrowed from [here](https://arxiv.org/pdf/1806.01260.pdf). The network attempts to estimate the 3D transformation of camera motion between two adjacent frames as well as the depth in each frame simultaneously. It uses the reconstruction and structural similarity losses between the predicted frame and the actual frame to learn the transformations. (WIP)  
+
+![depth output](site_content/depth_output0.png)
+![depth output](site_content/depth_output1.png)
+
 
 # Running Locally on Native Ubuntu 16.04
 
@@ -61,13 +69,18 @@ Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
 
 Train an example simple autoencoder for 100 iterations, batch size of 32: `python run/trainer.py -t configuration/mnist_ae_config.py -i 100 -b 32 -v 100`
 
-This will train (on cpu) a basic CNN autoencoder on the mnist dataset and produce a visualization at the end of the 100 iterations. All the data is stored in `tmp` directory in the current directory. To view the visualization:
+This will train (on cpu*) a basic CNN autoencoder on the mnist dataset and produce a visualization at the end of the 100 iterations. All the data is stored in `tmp` directory in the current directory. To view the visualization:
 
 `eog tmp/visualizations_00000100.svg`
 
 Try adjusting some parameters in the configuration. For example you can switch to training on the gpu by simply setting `cuda=true` inside the `TrainConfiguration` initializer line. 
 
+To run all tests to verify code...
+`bash run_tests.sh`
+
 More helpful instructions to come ...
+
+*After upgrading to pytorch 1.0, CPU training seems to be busted. Will only run right now if you have a GPU
 
 # Running with Docker
 Create the docker container run `docker-compose up -d --force-recreate --build`
