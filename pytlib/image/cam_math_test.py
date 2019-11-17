@@ -1,3 +1,6 @@
+from __future__ import division
+from __future__ import print_function
+from past.utils import old_div
 import unittest
 import torch
 from image.cam_math import image_to_cam,euler_to_mat,six_dof_vec_to_matrix,cam_to_image
@@ -35,7 +38,7 @@ class TestCamMath(unittest.TestCase):
         # rotate around x by pi
         r = torch.Tensor([np.pi,0,0])
         mat = euler_to_mat(r)
-        print mat
+        print(mat)
         expected_mat = torch.Tensor([[1,0,0],
                                      [0,-1,0],
                                      [0,0,-1]])
@@ -43,9 +46,9 @@ class TestCamMath(unittest.TestCase):
 
     def test_euler_to_mat_rot_x(self):
         # rotate around z by pi/2
-        r = torch.Tensor([0,0,np.pi/2])
+        r = torch.Tensor([0,0,old_div(np.pi,2)])
         mat = euler_to_mat(r)
-        print mat
+        print(mat)
         expected_mat = torch.Tensor([[0,-1,0],
                                      [1,0,0],
                                      [0,0,1]])
@@ -54,7 +57,7 @@ class TestCamMath(unittest.TestCase):
     def test_six_dof_vec_to_matrix_base(self):
         vec6 = torch.Tensor([0,0,0,0,0,0])
         mat = six_dof_vec_to_matrix(vec6)
-        print mat
+        print(mat)
         expected_mat = torch.Tensor([[1,0,0,0],
                                      [0,1,0,0],
                                      [0,0,1,0],
@@ -64,7 +67,7 @@ class TestCamMath(unittest.TestCase):
     def test_six_dof_vec_to_matrix_simple(self):
         vec6 = torch.Tensor([1,5,10,np.pi,0,0])
         mat = six_dof_vec_to_matrix(vec6)
-        print mat
+        print(mat)
         expected_mat = torch.Tensor([[1,0,0,1],
                                      [0,-1,0,5],
                                      [0,0,-1,10],
