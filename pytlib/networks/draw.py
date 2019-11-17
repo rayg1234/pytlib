@@ -72,12 +72,12 @@ class DRAW(nn.Module):
             b = b.cuda()
 
         # gx is Bx1, grid is (1xNx1), so this is a broadcast op -> BxNx1
-        mux = gx.view((-1,1,1)) + (grid_points - old_div(N,2) - 0.5) * delta.view((-1,1,1))
-        muy = gy.view((-1,1,1)) + (grid_points - old_div(N,2) - 0.5) * delta.view((-1,1,1))
+        mux = gx.view((-1,1,1)) + (grid_points.float() - old_div(N,2) - 0.5) * delta.view((-1,1,1))
+        muy = gy.view((-1,1,1)) + (grid_points.float() - old_div(N,2) - 0.5) * delta.view((-1,1,1))
 
         s2 = sigma2.view((-1,1,1))
-        fx = torch.exp(old_div(-(a-mux).pow(2),(2*s2)))
-        fy = torch.exp(old_div(-(b-muy).pow(2),(2*s2)))
+        fx = torch.exp(old_div(-(a.float()-mux).pow(2),(2*s2)))
+        fy = torch.exp(old_div(-(b.float()-muy).pow(2),(2*s2)))
         # normalize
         fx = old_div(fx,torch.clamp(torch.sum(fx,2,keepdim=True),self.minclamp,self.maxclamp))
         fy = old_div(fy,torch.clamp(torch.sum(fy,2,keepdim=True),self.minclamp,self.maxclamp))
