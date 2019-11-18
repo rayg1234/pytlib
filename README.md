@@ -63,9 +63,7 @@ A basic unsupervised mono depth estimator implementation using ideas borrowed fr
 
 # Running Locally on Native Ubuntu 16.04
 
-Install: `bash pytlib/install.sh`
-
-Start up virtualenv: `cd pytlib; source pytenv/bin/activate`
+Install: `bash pytlib/local_install.sh`
 
 Train an example simple autoencoder for 100 iterations, batch size of 32: `python run/trainer.py -t configuration/mnist_ae_config.py -i 100 -b 32 -v 100`
 
